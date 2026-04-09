@@ -1,0 +1,73 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.swp
+*~
+
+# NuGet
+**/packages/*
+!**/packages/build/
+*.nupkg
+**/[Pp]ackages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Rider
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+*.egg
+.venv/
+venv/
+env/
+.env
+*.pth
+
+# ML models
+*.pt
+*.pth
+*.onnx
+*.h5
+models/*.bin
+
+# IDE
+.vscode/
+*.code-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Test results
+TestResults/
+coverage/
+*.coverage
+
+# Temp
+*.tmp
+*.bak
+*.swp
