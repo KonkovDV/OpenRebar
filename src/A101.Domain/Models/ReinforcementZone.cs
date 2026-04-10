@@ -12,6 +12,17 @@ public enum RebarDirection
 }
 
 /// <summary>
+/// Vertical position of reinforcement in slab cross-section.
+/// </summary>
+public enum RebarLayer
+{
+    /// <summary>Bottom reinforcement (lower face, tension in span).</summary>
+    Bottom,
+    /// <summary>Top reinforcement (upper face, tension over supports).</summary>
+    Top
+}
+
+/// <summary>
 /// Classification of a reinforcement zone by complexity.
 /// </summary>
 public enum ZoneType
@@ -34,6 +45,7 @@ public sealed class ReinforcementZone
     public required ReinforcementSpec Spec { get; init; }
     public required RebarDirection Direction { get; init; }
     public required ZoneType ZoneType { get; init; }
+    public RebarLayer Layer { get; init; } = RebarLayer.Bottom;
 
     /// <summary>
     /// If complex zone was decomposed, the resulting sub-rectangles.
@@ -66,6 +78,12 @@ public sealed record RebarSegment
     /// <summary>Required anchorage length at end (mm).</summary>
     public required double AnchorageLengthEnd { get; init; }
 
+    /// <summary>Rebar mark/part number for specification (e.g. "1", "2a").</summary>
+    public string? Mark { get; init; }
+
     /// <summary>Total length including anchorage (mm).</summary>
     public double TotalLength => Start.DistanceTo(End) + AnchorageLengthStart + AnchorageLengthEnd;
+
+    /// <summary>Clear span between anchorage zones (mm).</summary>
+    public double ClearSpan => Start.DistanceTo(End);
 }

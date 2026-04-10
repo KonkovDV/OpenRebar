@@ -25,7 +25,7 @@ public static class Bootstrap
         services.AddSingleton<IIsolineParser, DxfIsolineParser>();
         services.AddSingleton<IZoneDetector, StandardZoneDetector>();
         services.AddSingleton<IReinforcementCalculator, StandardReinforcementCalculator>();
-        services.AddSingleton<IRebarOptimizer, FirstFitDecreasingOptimizer>();
+        services.AddSingleton<IRebarOptimizer, ColumnGenerationOptimizer>();
         services.AddSingleton<ISupplierCatalogLoader, FileSupplierCatalogLoader>();
 
         // PNG parser (with optional ML service)

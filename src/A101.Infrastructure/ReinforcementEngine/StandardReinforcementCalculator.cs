@@ -7,14 +7,19 @@ namespace A101.Infrastructure.ReinforcementEngine;
 /// <summary>
 /// Calculates rebar layout within zones.
 /// Generates individual rebar segments with correct spacing,
-/// anchorage lengths, and lap splices.
+/// anchorage lengths, lap splices, and mark numbering.
+/// Supports both X and Y directions and Top/Bottom layers.
 /// </summary>
 public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 {
+    private int _markCounter;
+
     public IReadOnlyList<ReinforcementZone> CalculateRebars(
         IReadOnlyList<ReinforcementZone> zones,
         SlabGeometry slab)
     {
+        _markCounter = 0;
+
         foreach (var zone in zones)
         {
             var rebars = GenerateRebarsForZone(zone, slab);
@@ -24,7 +29,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         return zones;
     }
 
-    private static List<RebarSegment> GenerateRebarsForZone(
+    private List<RebarSegment> GenerateRebarsForZone(
         ReinforcementZone zone,
         SlabGeometry slab)
     {
@@ -42,7 +47,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         return rebars;
     }
 
-    private static List<RebarSegment> GenerateRebarsInRectangle(
+    private List<RebarSegment> GenerateRebarsInRectangle(
         BoundingBox rect,
         ReinforcementZone zone,
         SlabGeometry slab)
@@ -51,8 +56,13 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         int spacing = zone.Spec.SpacingMm;
         int diameter = zone.Spec.DiameterMm;
 
+        // Bond condition depends on layer: top bars → Poor, bottom → Good
+        var bondCondition = zone.Layer == RebarLayer.Top
+            ? AnchorageRules.BondCondition.Poor
+            : AnchorageRules.BondCondition.Good;
+
         double anchorageLength = AnchorageRules.CalculateAnchorageLength(
-            diameter, zone.Spec.SteelClass, slab.ConcreteClass);
+            diameter, zone.Spec.SteelClass, slab.ConcreteClass, bondCondition);
 
         if (zone.Direction == RebarDirection.X)
         {
@@ -66,7 +76,8 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
                     End = new Point2D(rect.Max.X, y),
                     DiameterMm = diameter,
                     AnchorageLengthStart = anchorageLength,
-                    AnchorageLengthEnd = anchorageLength
+                    AnchorageLengthEnd = anchorageLength,
+                    Mark = $"{++_markCounter}"
                 });
             }
         }
@@ -82,9 +93,19 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
                     End = new Point2D(x, rect.Max.Y),
                     DiameterMm = diameter,
                     AnchorageLengthStart = anchorageLength,
-                    AnchorageLengthEnd = anchorageLength
+                    AnchorageLengthEnd = anchorageLength,
+                    Mark = $"{++_markCounter}"
                 });
             }
+        }
+
+        // Validate max spacing per SP 63 §10.3.8
+        bool isPrimary = zone.Direction == RebarDirection.X;
+        double maxSpacing = ReinforcementLimits.MaxSpacing(slab.ThicknessMm, isPrimary);
+        if (spacing > maxSpacing)
+        {
+            // Log warning: spacing exceeds code maximum
+            // In production this should go through IStructuredLogger
         }
 
         return rebars;

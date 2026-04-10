@@ -31,7 +31,7 @@ public sealed class DxfIsolineParser : IIsolineParser
             cancellationToken.ThrowIfCancellationRequested();
 
             // Extract polylines and hatches as zone boundaries
-            var (polygon, color) = ExtractPolygonFromEntity(entity);
+            var (polygon, color) = ExtractPolygonFromEntity(entity, dxfFile);
             if (polygon is null || color is null)
                 continue;
 
@@ -54,7 +54,8 @@ public sealed class DxfIsolineParser : IIsolineParser
     }
 
     private static (Polygon? Polygon, IsolineColor? Color) ExtractPolygonFromEntity(
-        IxMilia.Dxf.Entities.DxfEntity entity)
+        IxMilia.Dxf.Entities.DxfEntity entity,
+        IxMilia.Dxf.DxfFile dxfFile)
     {
         switch (entity)
         {
@@ -66,7 +67,7 @@ public sealed class DxfIsolineParser : IIsolineParser
                     .Select(v => new Point2D(v.X, v.Y))
                     .ToList();
 
-                var color = MapDxfColor(polyline.Color);
+                var color = ResolveEntityColor(polyline, dxfFile);
                 return (new Polygon(vertices), color);
             }
 
@@ -78,7 +79,7 @@ public sealed class DxfIsolineParser : IIsolineParser
 
                 if (vertices.Count < 3) return (null, null);
 
-                var color = MapDxfColor(polyline3d.Color);
+                var color = ResolveEntityColor(polyline3d, dxfFile);
                 return (new Polygon(vertices), color);
             }
 
@@ -89,38 +90,33 @@ public sealed class DxfIsolineParser : IIsolineParser
 
     private static IsolineColor? MapDxfColor(IxMilia.Dxf.DxfColor dxfColor)
     {
-        // DXF uses ACI (AutoCAD Color Index) — map to RGB
-        // For ByLayer/ByBlock, we'd need context; skip for now
+        // For ByLayer/ByBlock we'd need layer context; fallback to null
         if (dxfColor.IsByLayer || dxfColor.IsByBlock)
             return null;
 
-        // ACI color index → approximate RGB mapping
-        var (r, g, b) = AciToRgb(dxfColor.RawValue);
+        // ACI color index → RGB mapping (full 256-entry palette)
+        short aci = dxfColor.RawValue;
+        if (aci is < 1 or > 255) return null;
+        var (r, g, b) = AciPalette.GetRgb(aci);
         return new IsolineColor(r, g, b);
     }
 
     /// <summary>
-    /// Simplified ACI → RGB mapping for common LIRA-SAPR colors.
-    /// Full mapping requires the 256-entry ACI palette.
+    /// Resolve color for entities with ByLayer color — looks up layer's color.
     /// </summary>
-    private static (byte R, byte G, byte B) AciToRgb(short aci) => aci switch
+    private static IsolineColor? ResolveEntityColor(
+        IxMilia.Dxf.Entities.DxfEntity entity,
+        IxMilia.Dxf.DxfFile dxfFile)
     {
-        1 => (255, 0, 0),       // Red
-        2 => (255, 255, 0),     // Yellow
-        3 => (0, 255, 0),       // Green
-        4 => (0, 255, 255),     // Cyan
-        5 => (0, 0, 255),       // Blue
-        6 => (255, 0, 255),     // Magenta
-        7 => (255, 255, 255),   // White
-        8 => (128, 128, 128),   // Dark gray
-        9 => (192, 192, 192),   // Light gray
-        10 => (255, 0, 0),      // Red
-        30 => (255, 127, 0),    // Orange
-        40 => (255, 191, 0),    // Gold
-        50 => (255, 255, 0),    // Yellow
-        90 => (0, 191, 0),      // Dark green
-        150 => (0, 0, 191),     // Dark blue
-        200 => (191, 0, 191),   // Dark magenta
-        _ => (128, 128, 128),   // Default gray
-    };
+        if (!entity.Color.IsByLayer)
+            return MapDxfColor(entity.Color);
+
+        // Resolve from layer
+        var layer = dxfFile.Layers.FirstOrDefault(l =>
+            string.Equals(l.Name, entity.Layer, StringComparison.OrdinalIgnoreCase));
+
+        if (layer is null) return null;
+        return MapDxfColor(layer.Color);
+    }
+
 }
