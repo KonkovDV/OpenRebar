@@ -55,6 +55,7 @@ public sealed class OptimizeRebarCuttingUseCase
             double linearMass = ReinforcementLimits.GetLinearMass(diameter);
             double totalLengthM = result.TotalRebarLengthMm / 1000.0;
             double totalMassKg = totalLengthM * linearMass;
+            double? estimatedCost = EstimatePurchasedStockCost(result, catalog, linearMass);
 
             var enrichedResult = new OptimizationResult
             {
@@ -64,7 +65,7 @@ public sealed class OptimizeRebarCuttingUseCase
                 TotalWastePercent = result.TotalWastePercent,
                 TotalRebarLengthMm = result.TotalRebarLengthMm,
                 TotalMassKg = totalMassKg,
-                EstimatedCost = result.EstimatedCost
+                EstimatedCost = estimatedCost
             };
 
             report.DiameterReports.Add(new DiameterOptimizationReport
@@ -77,6 +78,28 @@ public sealed class OptimizeRebarCuttingUseCase
         }
 
         return report;
+    }
+
+    private static double? EstimatePurchasedStockCost(
+        OptimizationResult result,
+        SupplierCatalog catalog,
+        double linearMassKgPerM)
+    {
+        double totalCost = 0;
+        bool hasPricing = false;
+
+        foreach (var plan in result.CuttingPlans)
+        {
+            var stock = catalog.AvailableLengths.FirstOrDefault(s => Math.Abs(s.LengthMm - plan.StockLengthMm) < 0.1);
+            if (stock?.PricePerTon is null)
+                continue;
+
+            hasPricing = true;
+            double purchasedMassKg = (plan.StockLengthMm / 1000.0) * linearMassKgPerM;
+            totalCost += purchasedMassKg / 1000.0 * stock.PricePerTon.Value;
+        }
+
+        return hasPricing ? totalCost : null;
     }
 }
 

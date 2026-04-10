@@ -138,6 +138,8 @@ public class ColumnGenerationOptimizerTests
 
         var result = _optimizer.Optimize(lengths, stock, DefaultSettings);
 
-        result.TotalStockBarsNeeded.Should().BeGreaterThan(0);
+        result.TotalStockBarsNeeded.Should().Be(3);
+        result.CuttingPlans.Should().OnlyContain(plan => plan.StockLengthMm == 6000,
+            "three 5.5m pieces fit more economically into 6m stock than into 11.7m stock");
     }
 }

@@ -51,12 +51,13 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             };
         }
 
-        // Choose best stock length (longest available)
-        var preferredStock = stockLengths
+        var availableStock = stockLengths
             .Where(s => s.InStock)
-            .OrderByDescending(s => s.LengthMm)
-            .First();
-        double stockLength = preferredStock.LengthMm;
+            .OrderBy(s => s.LengthMm)
+            .ToList();
+
+        if (availableStock.Count == 0)
+            throw new InvalidOperationException("No in-stock bar lengths are available for optimization.");
 
         // Aggregate demand: distinct lengths → counts
         var demand = AggregrateDemand(requiredLengths, settings.SawCutWidthMm);
@@ -64,6 +65,30 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
         double[] itemLengths = demand.Select(d => d.EffectiveLength).ToArray();
         int[] itemDemand = demand.Select(d => d.Count).ToArray();
+
+        var candidates = availableStock
+            .Select(stock =>
+            {
+                var result = OptimizeForStockLength(requiredLengths, demand, itemLengths, itemDemand, stock.LengthMm);
+                double? costProxy = stock.PricePerTon.HasValue
+                    ? result.CuttingPlans.Sum(plan => plan.StockLengthMm) * stock.PricePerTon.Value
+                    : null;
+
+                return new Candidate(stock, result, costProxy);
+            })
+            .ToList();
+
+        return ChooseBestCandidate(candidates, requiredLengths.Count, settings).Result;
+    }
+
+    private static OptimizationResult OptimizeForStockLength(
+        IReadOnlyList<double> requiredLengths,
+        List<DemandItem> demand,
+        double[] itemLengths,
+        int[] itemDemand,
+        double stockLength)
+    {
+        int m = demand.Count;
 
         // Build initial feasible patterns (one item type per pattern, max fit)
         var patterns = BuildInitialPatterns(itemLengths, stockLength, m);
@@ -423,4 +448,41 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     }
 
     #endregion
+
+            private sealed record Candidate(StockLength Stock, OptimizationResult Result, double? CostProxy);
+
+            private static Candidate ChooseBestCandidate(
+                IReadOnlyList<Candidate> candidates,
+                int itemCount,
+                OptimizationSettings settings)
+            {
+                double minCost = candidates.Where(c => c.CostProxy.HasValue).Select(c => c.CostProxy!.Value).DefaultIfEmpty(0).Min();
+                double maxCost = candidates.Where(c => c.CostProxy.HasValue).Select(c => c.CostProxy!.Value).DefaultIfEmpty(0).Max();
+
+                return candidates
+                    .OrderBy(c => ScoreCandidate(c, itemCount, settings, minCost, maxCost))
+                    .ThenBy(c => c.Result.TotalWastePercent)
+                    .ThenBy(c => c.Result.TotalStockBarsNeeded)
+                    .First();
+            }
+
+            private static double ScoreCandidate(
+                Candidate candidate,
+                int itemCount,
+                OptimizationSettings settings,
+                double minCost,
+                double maxCost)
+            {
+                double wasteScore = candidate.Result.TotalWastePercent / 100.0;
+                double installScore = itemCount > 0
+                    ? (double)candidate.Result.TotalStockBarsNeeded / itemCount
+                    : 0;
+
+                double costScore = 0;
+                if (candidate.CostProxy.HasValue && maxCost > minCost)
+                    costScore = (candidate.CostProxy.Value - minCost) / (maxCost - minCost);
+
+                return settings.WasteWeight * wasteScore
+                     + settings.InstallationWeight * installScore
+                     + settings.CostWeight * costScore;
 }
