@@ -33,28 +33,18 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         ReinforcementZone zone,
         SlabGeometry slab)
     {
-        var rebars = new List<RebarSegment>();
-
-        // Get zone bounding box (or iterate sub-rectangles for complex zones)
-        var rectangles = zone.SubRectangles ?? [zone.Boundary.GetBoundingBox()];
-
-        foreach (var rect in rectangles)
-        {
-            var zoneRebars = GenerateRebarsInRectangle(rect, zone, slab);
-            rebars.AddRange(zoneRebars);
-        }
-
-        return rebars;
+        return GenerateRebarsInPolygon(zone.Boundary, zone, slab);
     }
 
-    private List<RebarSegment> GenerateRebarsInRectangle(
-        BoundingBox rect,
+    private List<RebarSegment> GenerateRebarsInPolygon(
+        Polygon polygon,
         ReinforcementZone zone,
         SlabGeometry slab)
     {
         var rebars = new List<RebarSegment>();
         int spacing = zone.Spec.SpacingMm;
         int diameter = zone.Spec.DiameterMm;
+        var bbox = polygon.GetBoundingBox();
 
         // Bond condition depends on layer: top bars → Poor, bottom → Good
         var bondCondition = zone.Layer == RebarLayer.Top
@@ -66,36 +56,52 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
         if (zone.Direction == RebarDirection.X)
         {
-            // Rebars run along X axis, spaced along Y
-            double startY = rect.Min.Y + spacing / 2.0;
-            for (double y = startY; y <= rect.Max.Y; y += spacing)
+            double startY = bbox.Min.Y + spacing / 2.0;
+            for (double y = startY; y < bbox.Max.Y; y += spacing)
             {
-                rebars.Add(new RebarSegment
+                var intervals = GetHorizontalIntervals(polygon, y);
+                intervals = SubtractOpeningIntervals(intervals, slab.Openings.Select(o => GetHorizontalIntervals(o, y)));
+
+                foreach (var (start, end) in intervals)
                 {
-                    Start = new Point2D(rect.Min.X, y),
-                    End = new Point2D(rect.Max.X, y),
-                    DiameterMm = diameter,
-                    AnchorageLengthStart = anchorageLength,
-                    AnchorageLengthEnd = anchorageLength,
-                    Mark = $"{++_markCounter}"
-                });
+                    if (end - start < 1e-6)
+                        continue;
+
+                    rebars.Add(new RebarSegment
+                    {
+                        Start = new Point2D(start, y),
+                        End = new Point2D(end, y),
+                        DiameterMm = diameter,
+                        AnchorageLengthStart = anchorageLength,
+                        AnchorageLengthEnd = anchorageLength,
+                        Mark = $"{++_markCounter}"
+                    });
+                }
             }
         }
         else // RebarDirection.Y
         {
-            // Rebars run along Y axis, spaced along X
-            double startX = rect.Min.X + spacing / 2.0;
-            for (double x = startX; x <= rect.Max.X; x += spacing)
+            double startX = bbox.Min.X + spacing / 2.0;
+            for (double x = startX; x < bbox.Max.X; x += spacing)
             {
-                rebars.Add(new RebarSegment
+                var intervals = GetVerticalIntervals(polygon, x);
+                intervals = SubtractOpeningIntervals(intervals, slab.Openings.Select(o => GetVerticalIntervals(o, x)));
+
+                foreach (var (start, end) in intervals)
                 {
-                    Start = new Point2D(x, rect.Min.Y),
-                    End = new Point2D(x, rect.Max.Y),
-                    DiameterMm = diameter,
-                    AnchorageLengthStart = anchorageLength,
-                    AnchorageLengthEnd = anchorageLength,
-                    Mark = $"{++_markCounter}"
-                });
+                    if (end - start < 1e-6)
+                        continue;
+
+                    rebars.Add(new RebarSegment
+                    {
+                        Start = new Point2D(x, start),
+                        End = new Point2D(x, end),
+                        DiameterMm = diameter,
+                        AnchorageLengthStart = anchorageLength,
+                        AnchorageLengthEnd = anchorageLength,
+                        Mark = $"{++_markCounter}"
+                    });
+                }
             }
         }
 
@@ -109,5 +115,89 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         }
 
         return rebars;
+    }
+
+    private static IReadOnlyList<(double Start, double End)> GetHorizontalIntervals(Polygon polygon, double y)
+    {
+        var intersections = new List<double>();
+        var vertices = polygon.Vertices;
+
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            var a = vertices[i];
+            var b = vertices[(i + 1) % vertices.Count];
+
+            if ((a.Y <= y && b.Y > y) || (b.Y <= y && a.Y > y))
+            {
+                double t = (y - a.Y) / (b.Y - a.Y);
+                intersections.Add(a.X + t * (b.X - a.X));
+            }
+        }
+
+        intersections.Sort();
+        var intervals = new List<(double Start, double End)>();
+        for (int i = 0; i + 1 < intersections.Count; i += 2)
+            intervals.Add((intersections[i], intersections[i + 1]));
+
+        return intervals;
+    }
+
+    private static IReadOnlyList<(double Start, double End)> GetVerticalIntervals(Polygon polygon, double x)
+    {
+        var intersections = new List<double>();
+        var vertices = polygon.Vertices;
+
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            var a = vertices[i];
+            var b = vertices[(i + 1) % vertices.Count];
+
+            if ((a.X <= x && b.X > x) || (b.X <= x && a.X > x))
+            {
+                double t = (x - a.X) / (b.X - a.X);
+                intersections.Add(a.Y + t * (b.Y - a.Y));
+            }
+        }
+
+        intersections.Sort();
+        var intervals = new List<(double Start, double End)>();
+        for (int i = 0; i + 1 < intersections.Count; i += 2)
+            intervals.Add((intersections[i], intersections[i + 1]));
+
+        return intervals;
+    }
+
+    private static IReadOnlyList<(double Start, double End)> SubtractOpeningIntervals(
+        IReadOnlyList<(double Start, double End)> baseIntervals,
+        IEnumerable<IReadOnlyList<(double Start, double End)>> openingIntervalSets)
+    {
+        var current = baseIntervals.ToList();
+
+        foreach (var openingIntervals in openingIntervalSets)
+        {
+            foreach (var opening in openingIntervals)
+            {
+                var next = new List<(double Start, double End)>();
+
+                foreach (var interval in current)
+                {
+                    if (opening.End <= interval.Start || opening.Start >= interval.End)
+                    {
+                        next.Add(interval);
+                        continue;
+                    }
+
+                    if (opening.Start > interval.Start)
+                        next.Add((interval.Start, Math.Min(opening.Start, interval.End)));
+
+                    if (opening.End < interval.End)
+                        next.Add((Math.Max(opening.End, interval.Start), interval.End));
+                }
+
+                current = next;
+            }
+        }
+
+        return current;
     }
 }

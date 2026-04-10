@@ -121,6 +121,79 @@ public class StandardReinforcementCalculatorTests
     }
 
     [Fact]
+    public void CalculateRebars_LShapedZone_ShouldClipBarsToPolygon()
+    {
+        var zone = new ReinforcementZone
+        {
+            Id = "L-ZONE",
+            Boundary = new Polygon([
+                new Point2D(0, 0),
+                new Point2D(4000, 0),
+                new Point2D(4000, 1000),
+                new Point2D(1000, 1000),
+                new Point2D(1000, 4000),
+                new Point2D(0, 4000)
+            ]),
+            Spec = new ReinforcementSpec { DiameterMm = 12, SpacingMm = 200, SteelClass = "A500C" },
+            Direction = RebarDirection.X,
+            ZoneType = ZoneType.Complex,
+            Layer = RebarLayer.Bottom
+        };
+
+        _calculator.CalculateRebars([zone], TestSlab);
+
+        zone.Rebars.Should().NotBeEmpty();
+
+        var upperBars = zone.Rebars.Where(r => r.Start.Y > 1000).ToList();
+        upperBars.Should().NotBeEmpty();
+        upperBars.Should().OnlyContain(r => r.End.X <= 1000 + 0.001,
+            "bars above the notch must be clipped to the narrow leg of the L-shape");
+
+        var lowerBars = zone.Rebars.Where(r => r.Start.Y < 1000).ToList();
+        lowerBars.Should().Contain(r => r.End.X > 3000,
+            "bars in the lower strip should still span the wide part of the polygon");
+    }
+
+    [Fact]
+    public void CalculateRebars_ShouldSplitBarsAroundOpening()
+    {
+        var slabWithOpening = new SlabGeometry
+        {
+            OuterBoundary = TestSlab.OuterBoundary,
+            Openings =
+            [
+                new Polygon([
+                    new Point2D(1500, 1500),
+                    new Point2D(2500, 1500),
+                    new Point2D(2500, 2500),
+                    new Point2D(1500, 2500)
+                ])
+            ],
+            ThicknessMm = 200,
+            CoverMm = 25,
+            ConcreteClass = "B25"
+        };
+
+        var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+            new BoundingBox(new Point2D(0, 0), new Point2D(4000, 4000)));
+
+        _calculator.CalculateRebars([zone], slabWithOpening);
+
+        var openingBandBars = zone.Rebars
+            .Where(r => r.Start.Y > 1500 && r.Start.Y < 2500)
+            .OrderBy(r => r.Start.X)
+            .ToList();
+
+        openingBandBars.Should().NotBeEmpty();
+        openingBandBars.Should().Contain(r => r.End.X <= 1500 + 0.001,
+            "bars before the opening should stop at the opening edge");
+        openingBandBars.Should().Contain(r => r.Start.X >= 2500 - 0.001,
+            "bars after the opening should restart after the opening edge");
+        openingBandBars.Should().NotContain(r => r.Start.X < 1500 && r.End.X > 2500,
+            "no bar may pass through the opening span");
+    }
+
+    [Fact]
     public void CalculateRebars_EmptyZones_ShouldReturnEmptyList()
     {
         var result = _calculator.CalculateRebars([], TestSlab);

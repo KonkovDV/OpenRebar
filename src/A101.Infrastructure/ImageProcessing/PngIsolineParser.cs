@@ -165,21 +165,77 @@ public sealed class PngIsolineParser : IIsolineParser
     {
         if (pixels.Count < 3) return null;
 
-        // Simple approach: convex hull of pixel coordinates
-        int minX = pixels.Min(p => p.X);
-        int minY = pixels.Min(p => p.Y);
-        int maxX = pixels.Max(p => p.X);
-        int maxY = pixels.Max(p => p.Y);
+        var pixelSet = pixels.ToHashSet();
+        var edges = new Dictionary<(int X, int Y), (int X, int Y)>();
 
-        // For MVP: return bounding box as polygon
-        var vertices = new List<Point2D>
+        foreach (var (x, y) in pixels)
         {
-            new(minX, minY),
-            new(maxX, minY),
-            new(maxX, maxY),
-            new(minX, maxY)
-        };
+            if (!pixelSet.Contains((x, y - 1)))
+                edges[(x, y)] = (x + 1, y);
 
-        return new Polygon(vertices);
+            if (!pixelSet.Contains((x + 1, y)))
+                edges[(x + 1, y)] = (x + 1, y + 1);
+
+            if (!pixelSet.Contains((x, y + 1)))
+                edges[(x + 1, y + 1)] = (x, y + 1);
+
+            if (!pixelSet.Contains((x - 1, y)))
+                edges[(x, y + 1)] = (x, y);
+        }
+
+        if (edges.Count == 0)
+            return null;
+
+        var start = edges.Keys
+            .OrderBy(p => p.Y)
+            .ThenBy(p => p.X)
+            .First();
+
+        var outline = new List<(int X, int Y)>();
+        var current = start;
+        int safety = 0;
+
+        do
+        {
+            outline.Add(current);
+
+            if (!edges.TryGetValue(current, out var next))
+                return null;
+
+            current = next;
+            safety++;
+        }
+        while (current != start && safety <= edges.Count + 1);
+
+        if (outline.Count < 3 || safety > edges.Count + 1)
+            return null;
+
+        var simplified = SimplifyOrthogonalLoop(outline);
+        if (simplified.Count < 3)
+            return null;
+
+        return new Polygon(simplified.Select(p => new Point2D(p.X, p.Y)).ToList());
+    }
+
+    private static List<(int X, int Y)> SimplifyOrthogonalLoop(List<(int X, int Y)> outline)
+    {
+        var simplified = new List<(int X, int Y)>();
+
+        for (int i = 0; i < outline.Count; i++)
+        {
+            var prev = outline[(i - 1 + outline.Count) % outline.Count];
+            var current = outline[i];
+            var next = outline[(i + 1) % outline.Count];
+
+            if (!AreCollinear(prev, current, next))
+                simplified.Add(current);
+        }
+
+        return simplified;
+    }
+
+    private static bool AreCollinear((int X, int Y) a, (int X, int Y) b, (int X, int Y) c)
+    {
+        return (a.X == b.X && b.X == c.X) || (a.Y == b.Y && b.Y == c.Y);
     }
 }
