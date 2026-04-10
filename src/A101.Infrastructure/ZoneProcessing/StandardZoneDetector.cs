@@ -51,7 +51,7 @@ public sealed class StandardZoneDetector : IZoneDetector
 
         // Check if zone overlaps with an opening → Special
         bool isSpecial = slab.Openings.Any(opening =>
-            BoundingBoxesOverlap(bbox, opening.GetBoundingBox()));
+            PolygonsOverlap(zone.Boundary, opening));
 
         if (isSpecial)
         {
@@ -92,5 +92,74 @@ public sealed class StandardZoneDetector : IZoneDetector
     {
         return a.Min.X < b.Max.X && a.Max.X > b.Min.X &&
                a.Min.Y < b.Max.Y && a.Max.Y > b.Min.Y;
+    }
+
+    private static bool PolygonsOverlap(Polygon first, Polygon second)
+    {
+        if (!BoundingBoxesOverlap(first.GetBoundingBox(), second.GetBoundingBox()))
+            return false;
+
+        if (HasIntersectingEdges(first, second))
+            return true;
+
+        return first.Vertices.Any(vertex => PolygonDecomposition.IsPointInPolygon(vertex, second)) ||
+               second.Vertices.Any(vertex => PolygonDecomposition.IsPointInPolygon(vertex, first));
+    }
+
+    private static bool HasIntersectingEdges(Polygon first, Polygon second)
+    {
+        for (int i = 0; i < first.Vertices.Count; i++)
+        {
+            var a1 = first.Vertices[i];
+            var a2 = first.Vertices[(i + 1) % first.Vertices.Count];
+
+            for (int j = 0; j < second.Vertices.Count; j++)
+            {
+                var b1 = second.Vertices[j];
+                var b2 = second.Vertices[(j + 1) % second.Vertices.Count];
+
+                if (SegmentsIntersect(a1, a2, b1, b2))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool SegmentsIntersect(Point2D a1, Point2D a2, Point2D b1, Point2D b2)
+    {
+        double o1 = Orientation(a1, a2, b1);
+        double o2 = Orientation(a1, a2, b2);
+        double o3 = Orientation(b1, b2, a1);
+        double o4 = Orientation(b1, b2, a2);
+
+        if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) &&
+            (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0))
+        {
+            return true;
+        }
+
+        return IsZero(o1) && IsPointOnSegment(b1, a1, a2) ||
+               IsZero(o2) && IsPointOnSegment(b2, a1, a2) ||
+               IsZero(o3) && IsPointOnSegment(a1, b1, b2) ||
+               IsZero(o4) && IsPointOnSegment(a2, b1, b2);
+    }
+
+    private static double Orientation(Point2D a, Point2D b, Point2D c)
+    {
+        return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+    }
+
+    private static bool IsPointOnSegment(Point2D point, Point2D start, Point2D end, double tolerance = 1e-6)
+    {
+        return point.X >= Math.Min(start.X, end.X) - tolerance &&
+               point.X <= Math.Max(start.X, end.X) + tolerance &&
+               point.Y >= Math.Min(start.Y, end.Y) - tolerance &&
+               point.Y <= Math.Max(start.Y, end.Y) + tolerance;
+    }
+
+    private static bool IsZero(double value, double tolerance = 1e-6)
+    {
+        return Math.Abs(value) <= tolerance;
     }
 }

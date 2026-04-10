@@ -102,6 +102,39 @@ public class StandardZoneDetectorTests
     }
 
     [Fact]
+    public void ZoneWhoseBoundingBoxOverlapsOpeningButPolygonDoesNot_ShouldRemainComplex()
+    {
+        var opening = new Polygon([
+            new Point2D(2000, 2000), new Point2D(3000, 2000),
+            new Point2D(3000, 3000), new Point2D(2000, 3000)
+        ]);
+
+        var slabWithOpening = new SlabGeometry
+        {
+            OuterBoundary = TestSlab.OuterBoundary,
+            Openings = [opening],
+            ThicknessMm = 200,
+            CoverMm = 25,
+            ConcreteClass = "B25"
+        };
+
+        var zone = MakeZone([
+            new Point2D(1000, 1000),
+            new Point2D(4000, 1000),
+            new Point2D(4000, 1500),
+            new Point2D(1500, 1500),
+            new Point2D(1500, 4000),
+            new Point2D(1000, 4000)
+        ]);
+
+        var result = _detector.ClassifyAndDecompose([zone], slabWithOpening);
+
+        result.Should().HaveCount(1);
+        result[0].ZoneType.Should().Be(ZoneType.Complex,
+            "the opening sits inside the L-shape notch, so bbox overlap alone must not trigger special classification");
+    }
+
+    [Fact]
     public void MultipleZones_ShouldAllBeClassified()
     {
         var zones = new[]

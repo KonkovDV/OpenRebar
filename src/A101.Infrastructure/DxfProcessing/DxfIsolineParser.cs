@@ -1,5 +1,6 @@
 using A101.Domain.Models;
 using A101.Domain.Ports;
+using IxMilia.Dxf.Entities;
 
 namespace A101.Infrastructure.DxfProcessing;
 
@@ -11,7 +12,7 @@ public sealed class DxfIsolineParser : IIsolineParser
 {
     public IReadOnlyList<string> SupportedExtensions => [".dxf"];
 
-    public async Task<IReadOnlyList<ReinforcementZone>> ParseAsync(
+    public Task<IReadOnlyList<ReinforcementZone>> ParseAsync(
         string filePath,
         ColorLegend legend,
         CancellationToken cancellationToken = default)
@@ -50,7 +51,7 @@ public sealed class DxfIsolineParser : IIsolineParser
             });
         }
 
-        return zones;
+        return Task.FromResult<IReadOnlyList<ReinforcementZone>>(zones);
     }
 
     private static (Polygon? Polygon, IsolineColor? Color) ExtractPolygonFromEntity(
@@ -59,33 +60,321 @@ public sealed class DxfIsolineParser : IIsolineParser
     {
         switch (entity)
         {
-            case IxMilia.Dxf.Entities.DxfLwPolyline polyline:
+            case DxfLwPolyline polyline:
             {
-                if (polyline.Vertices.Count < 3) return (null, null);
-
-                var vertices = polyline.Vertices
-                    .Select(v => new Point2D(v.X, v.Y))
-                    .ToList();
+                var polygon = BuildPolygonFromLwPolyline(polyline);
+                if (polygon is null) return (null, null);
 
                 var color = ResolveEntityColor(polyline, dxfFile);
-                return (new Polygon(vertices), color);
+                return (polygon, color);
             }
 
-            case IxMilia.Dxf.Entities.DxfPolyline polyline3d:
+            case DxfPolyline polyline3d:
             {
-                var vertices = polyline3d.Vertices
-                    .Select(v => new Point2D(v.Location.X, v.Location.Y))
-                    .ToList();
-
-                if (vertices.Count < 3) return (null, null);
+                var polygon = BuildPolygonFromPolyline(polyline3d);
+                if (polygon is null) return (null, null);
 
                 var color = ResolveEntityColor(polyline3d, dxfFile);
-                return (new Polygon(vertices), color);
+                return (polygon, color);
+            }
+
+            case DxfHatch hatch:
+            {
+                var polygon = BuildPolygonFromHatch(hatch);
+                if (polygon is null) return (null, null);
+
+                var color = ResolveEntityColor(hatch, dxfFile);
+                return (polygon, color);
             }
 
             default:
                 return (null, null);
         }
+    }
+
+    private static Polygon? BuildPolygonFromLwPolyline(DxfLwPolyline polyline)
+    {
+        if (polyline.Vertices.Count < 2)
+            return null;
+
+        var points = new List<Point2D>();
+        for (int i = 0; i < polyline.Vertices.Count - 1; i++)
+        {
+            var current = polyline.Vertices[i];
+            var next = polyline.Vertices[i + 1];
+            AppendBulgedEdge(points, current.X, current.Y, next.X, next.Y, current.Bulge);
+        }
+
+        if (polyline.IsClosed)
+        {
+            var current = polyline.Vertices[^1];
+            var next = polyline.Vertices[0];
+            AppendBulgedEdge(points, current.X, current.Y, next.X, next.Y, current.Bulge);
+        }
+
+        return CreatePolygon(points);
+    }
+
+    private static Polygon? BuildPolygonFromPolyline(DxfPolyline polyline)
+    {
+        if (polyline.Vertices.Count < 2)
+            return null;
+
+        var points = new List<Point2D>();
+        for (int i = 0; i < polyline.Vertices.Count - 1; i++)
+        {
+            var current = polyline.Vertices[i];
+            var next = polyline.Vertices[i + 1];
+            AppendBulgedEdge(
+                points,
+                current.Location.X,
+                current.Location.Y,
+                next.Location.X,
+                next.Location.Y,
+                current.Bulge);
+        }
+
+        if (polyline.IsClosed)
+        {
+            var current = polyline.Vertices[^1];
+            var next = polyline.Vertices[0];
+            AppendBulgedEdge(
+                points,
+                current.Location.X,
+                current.Location.Y,
+                next.Location.X,
+                next.Location.Y,
+                current.Bulge);
+        }
+
+        return CreatePolygon(points);
+    }
+
+    private static Polygon? BuildPolygonFromHatch(DxfHatch hatch)
+    {
+        var candidates = hatch.BoundaryPaths
+            .Select(BuildPolygonFromBoundaryPath)
+            .Where(p => p is not null)
+            .Cast<Polygon>()
+            .OrderByDescending(p => p.CalculateArea())
+            .ToList();
+
+        return candidates.FirstOrDefault();
+    }
+
+    private static Polygon? BuildPolygonFromBoundaryPath(DxfHatch.BoundaryPathBase path)
+    {
+        return path switch
+        {
+            DxfHatch.PolylineBoundaryPath polylinePath => BuildPolygonFromPolylineBoundaryPath(polylinePath),
+            DxfHatch.NonPolylineBoundaryPath nonPolylinePath => BuildPolygonFromNonPolylineBoundaryPath(nonPolylinePath),
+            _ => null
+        };
+    }
+
+    private static Polygon? BuildPolygonFromPolylineBoundaryPath(DxfHatch.PolylineBoundaryPath path)
+    {
+        if (path.Vertices.Count < 2)
+            return null;
+
+        var points = new List<Point2D>();
+        for (int i = 0; i < path.Vertices.Count - 1; i++)
+        {
+            var current = path.Vertices[i];
+            var next = path.Vertices[i + 1];
+            AppendBulgedEdge(
+                points,
+                current.Location.X,
+                current.Location.Y,
+                next.Location.X,
+                next.Location.Y,
+                current.Bulge);
+        }
+
+        if (path.IsClosed)
+        {
+            var current = path.Vertices[^1];
+            var next = path.Vertices[0];
+            AppendBulgedEdge(
+                points,
+                current.Location.X,
+                current.Location.Y,
+                next.Location.X,
+                next.Location.Y,
+                current.Bulge);
+        }
+
+        return CreatePolygon(points);
+    }
+
+    private static Polygon? BuildPolygonFromNonPolylineBoundaryPath(DxfHatch.NonPolylineBoundaryPath path)
+    {
+        if (path.Edges.Count == 0)
+            return null;
+
+        var points = new List<Point2D>();
+
+        foreach (var edge in path.Edges)
+        {
+            switch (edge)
+            {
+                case DxfHatch.LineBoundaryPathEdge lineEdge:
+                    AppendOrderedSegment(
+                        points,
+                        [
+                            new Point2D(lineEdge.StartPoint.X, lineEdge.StartPoint.Y),
+                            new Point2D(lineEdge.EndPoint.X, lineEdge.EndPoint.Y)
+                        ]);
+                    break;
+
+                case DxfHatch.CircularArcBoundaryPathEdge arcEdge:
+                    AppendOrderedSegment(
+                        points,
+                        SampleCircularArc(
+                            arcEdge.Center.X,
+                            arcEdge.Center.Y,
+                            arcEdge.Radius,
+                            arcEdge.StartAngle,
+                            arcEdge.EndAngle,
+                            arcEdge.IsCounterClockwise));
+                    break;
+            }
+        }
+
+        return CreatePolygon(points);
+    }
+
+    private static void AppendBulgedEdge(
+        List<Point2D> points,
+        double startX,
+        double startY,
+        double endX,
+        double endY,
+        double bulge)
+    {
+        var start = new Point2D(startX, startY);
+        var end = new Point2D(endX, endY);
+        AppendPoint(points, start);
+
+        if (Math.Abs(bulge) <= 1e-10)
+        {
+            AppendPoint(points, end);
+            return;
+        }
+
+        if (!DxfArc.TryCreateFromVertices(startX, startY, bulge, endX, endY, out var arc))
+        {
+            AppendPoint(points, end);
+            return;
+        }
+
+        var sampled = SampleCircularArc(
+            arc.Center.X,
+            arc.Center.Y,
+            arc.Radius,
+            AngleFromCenter(startX, startY, arc.Center.X, arc.Center.Y),
+            AngleFromCenter(endX, endY, arc.Center.X, arc.Center.Y),
+            bulge > 0);
+
+        foreach (var point in sampled.Skip(1))
+            AppendPoint(points, point);
+    }
+
+    private static IReadOnlyList<Point2D> SampleCircularArc(
+        double centerX,
+        double centerY,
+        double radius,
+        double startAngle,
+        double endAngle,
+        bool isCounterClockwise)
+    {
+        double sweep = isCounterClockwise
+            ? NormalizePositiveAngle(endAngle - startAngle)
+            : NormalizePositiveAngle(startAngle - endAngle);
+
+        int segments = Math.Max(4, (int)Math.Ceiling(sweep / 15.0));
+        var points = new List<Point2D>(segments + 1);
+
+        for (int i = 0; i <= segments; i++)
+        {
+            double delta = sweep * i / segments;
+            double angle = isCounterClockwise
+                ? startAngle + delta
+                : startAngle - delta;
+
+            double angleRad = angle * Math.PI / 180.0;
+            points.Add(new Point2D(
+                centerX + radius * Math.Cos(angleRad),
+                centerY + radius * Math.Sin(angleRad)));
+        }
+
+        return points;
+    }
+
+    private static void AppendOrderedSegment(List<Point2D> points, IReadOnlyList<Point2D> segment)
+    {
+        if (segment.Count == 0)
+            return;
+
+        if (points.Count == 0)
+        {
+            foreach (var point in segment)
+                AppendPoint(points, point);
+            return;
+        }
+
+        var last = points[^1];
+        var startDistance = last.DistanceTo(segment[0]);
+        var endDistance = last.DistanceTo(segment[^1]);
+
+        if (endDistance + 1e-6 < startDistance)
+        {
+            for (int i = segment.Count - 1; i >= 0; i--)
+                AppendPoint(points, segment[i]);
+            return;
+        }
+
+        foreach (var point in segment)
+            AppendPoint(points, point);
+    }
+
+    private static void AppendPoint(List<Point2D> points, Point2D point)
+    {
+        if (points.Count == 0 || !AlmostEqual(points[^1], point))
+            points.Add(point);
+    }
+
+    private static Polygon? CreatePolygon(List<Point2D> points)
+    {
+        if (points.Count < 3)
+            return null;
+
+        if (AlmostEqual(points[0], points[^1]))
+            points.RemoveAt(points.Count - 1);
+
+        if (points.Count < 3)
+            return null;
+
+        return new Polygon(points);
+    }
+
+    private static bool AlmostEqual(Point2D a, Point2D b, double tolerance = 1e-6)
+    {
+        return Math.Abs(a.X - b.X) <= tolerance && Math.Abs(a.Y - b.Y) <= tolerance;
+    }
+
+    private static double AngleFromCenter(double x, double y, double centerX, double centerY)
+    {
+        double angle = Math.Atan2(y - centerY, x - centerX) * 180.0 / Math.PI;
+        return angle < 0 ? angle + 360.0 : angle;
+    }
+
+    private static double NormalizePositiveAngle(double angle)
+    {
+        angle %= 360.0;
+        if (angle < 0)
+            angle += 360.0;
+        return angle;
     }
 
     private static IsolineColor? MapDxfColor(IxMilia.Dxf.DxfColor dxfColor)
@@ -108,8 +397,18 @@ public sealed class DxfIsolineParser : IIsolineParser
         IxMilia.Dxf.Entities.DxfEntity entity,
         IxMilia.Dxf.DxfFile dxfFile)
     {
-        if (!entity.Color.IsByLayer)
+        if (entity is DxfHatch hatch)
+        {
+            var hatchFillColor = MapDxfColor(hatch.FillColor);
+            if (hatchFillColor is not null)
+                return hatchFillColor;
+        }
+
+        if (!entity.Color.IsByLayer && !entity.Color.IsByBlock)
             return MapDxfColor(entity.Color);
+
+        if (entity.Color.IsByBlock)
+            return null;
 
         // Resolve from layer
         var layer = dxfFile.Layers.FirstOrDefault(l =>

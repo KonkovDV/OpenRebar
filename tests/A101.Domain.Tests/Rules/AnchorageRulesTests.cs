@@ -20,12 +20,13 @@ public class AnchorageRulesTests
     [Fact]
     public void AnchorageLength_A500C_B25_d12_ShouldBeReasonable()
     {
-        // SP 63: l_an = Rs*d / (4*Rbt) = 435*12 / (4*1.05) ≈ 1243mm
-        // With minimum check: max(1243, 15*12=180, 200) = 1243mm
+        // Current domain formula includes the periodic-profile bond coefficient η1 = 2.5
+        // and good-placement η2 = 1.0, so:
+        // l_an = Rs*d / (4*η1*η2*Rbt) = 435*12 / (4*2.5*1.05) ≈ 497mm → rounded to 500mm
         var result = AnchorageRules.CalculateAnchorageLength(12, "A500C", "B25");
 
-        result.Should().BeInRange(1000, 1500,
-            "anchorage for d12 A500C B25 should be ~1243mm per SP 63");
+        result.Should().BeInRange(450, 550,
+            "anchorage for d12 A500C B25 should be about 500mm with the current η1·η2 bond model");
     }
 
     [Theory]

@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\A101.Domain\A101.Domain.csproj" />
     <ProjectReference Include="..\..\src\A101.Application\A101.Application.csproj" />
     <ProjectReference Include="..\..\src\A101.Infrastructure\A101.Infrastructure.csproj" />

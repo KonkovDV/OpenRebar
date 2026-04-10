@@ -58,11 +58,13 @@ public class ColumnGenerationOptimizerTests
         // 10 pieces of 3000mm each. 11700/(3000+3) ≈ 3.89 → 3 per bar
         // 10/3 = ceil(3.33) = 4 bars
         var lengths = Enumerable.Repeat(3000.0, 10).ToList();
+        var baseline = new FirstFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
 
         var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
 
         result.TotalStockBarsNeeded.Should().BeLessThanOrEqualTo(4);
-        result.TotalWastePercent.Should().BeLessThan(25);
+        result.TotalWastePercent.Should().BeApproximately(baseline.TotalWastePercent, 0.01,
+            "with a single available stock length, the column-generation optimizer should match the practical FFD baseline");
     }
 
     [Fact]
@@ -117,12 +119,16 @@ public class ColumnGenerationOptimizerTests
         var lengths = Enumerable.Range(0, 50)
             .Select(_ => 1500.0 + rng.NextDouble() * 8000) // 1500–9500mm
             .ToList();
+        var baseline = new FirstFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
 
         var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
 
         result.TotalStockBarsNeeded.Should().BeGreaterThan(0);
         result.CuttingPlans.Should().NotBeEmpty();
-        result.TotalWastePercent.Should().BeLessThan(30);
+        result.TotalStockBarsNeeded.Should().BeLessThanOrEqualTo(baseline.TotalStockBarsNeeded,
+            "column generation should not use more stock bars than the simpler FFD baseline on a deterministic scenario");
+        result.TotalWastePercent.Should().BeLessThanOrEqualTo(baseline.TotalWastePercent + 0.01,
+            "column generation should not regress versus the simpler FFD baseline on a deterministic scenario");
     }
 
     [Fact]

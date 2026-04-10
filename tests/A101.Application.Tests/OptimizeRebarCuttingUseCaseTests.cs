@@ -15,7 +15,7 @@ public class OptimizeRebarCuttingUseCaseTests
     public async Task ExecuteAsync_ShouldEstimateCostFromPurchasedStock()
     {
         var useCase = new OptimizeRebarCuttingUseCase(_optimizer, _catalogLoader);
-        var zones =
+        IReadOnlyList<ReinforcementZone> zones =
         [
             new ReinforcementZone
             {

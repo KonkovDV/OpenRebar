@@ -78,7 +78,15 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             })
             .ToList();
 
-        return ChooseBestCandidate(candidates, requiredLengths.Count, settings).Result;
+        var bestColumnGeneration = ChooseBestCandidate(candidates, requiredLengths.Count, settings).Result;
+
+        // Guard against pathological CG rounding/pricing behavior by keeping the simpler
+        // best-fit-decreasing baseline as a floor for solution quality.
+        var baseline = new FirstFitDecreasingOptimizer().Optimize(requiredLengths, availableStock, settings);
+        if (IsBaselineBetter(baseline, bestColumnGeneration, requiredLengths.Count, settings))
+            return baseline;
+
+        return bestColumnGeneration;
     }
 
     private static OptimizationResult OptimizeForStockLength(
@@ -449,40 +457,88 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
     #endregion
 
-            private sealed record Candidate(StockLength Stock, OptimizationResult Result, double? CostProxy);
+    private sealed record Candidate(StockLength Stock, OptimizationResult Result, double? CostProxy);
 
-            private static Candidate ChooseBestCandidate(
-                IReadOnlyList<Candidate> candidates,
-                int itemCount,
-                OptimizationSettings settings)
-            {
-                double minCost = candidates.Where(c => c.CostProxy.HasValue).Select(c => c.CostProxy!.Value).DefaultIfEmpty(0).Min();
-                double maxCost = candidates.Where(c => c.CostProxy.HasValue).Select(c => c.CostProxy!.Value).DefaultIfEmpty(0).Max();
+    private static Candidate ChooseBestCandidate(
+        IReadOnlyList<Candidate> candidates,
+        int itemCount,
+        OptimizationSettings settings)
+    {
+        double minCost = candidates
+            .Where(c => c.CostProxy.HasValue)
+            .Select(c => c.CostProxy!.Value)
+            .DefaultIfEmpty(0)
+            .Min();
 
-                return candidates
-                    .OrderBy(c => ScoreCandidate(c, itemCount, settings, minCost, maxCost))
-                    .ThenBy(c => c.Result.TotalWastePercent)
-                    .ThenBy(c => c.Result.TotalStockBarsNeeded)
-                    .First();
-            }
+        double maxCost = candidates
+            .Where(c => c.CostProxy.HasValue)
+            .Select(c => c.CostProxy!.Value)
+            .DefaultIfEmpty(0)
+            .Max();
 
-            private static double ScoreCandidate(
-                Candidate candidate,
-                int itemCount,
-                OptimizationSettings settings,
-                double minCost,
-                double maxCost)
-            {
-                double wasteScore = candidate.Result.TotalWastePercent / 100.0;
-                double installScore = itemCount > 0
-                    ? (double)candidate.Result.TotalStockBarsNeeded / itemCount
-                    : 0;
+        return candidates
+            .OrderBy(c => ScoreCandidate(c, itemCount, settings, minCost, maxCost))
+            .ThenBy(c => c.Result.TotalWastePercent)
+            .ThenBy(c => c.Result.TotalStockBarsNeeded)
+            .First();
+    }
 
-                double costScore = 0;
-                if (candidate.CostProxy.HasValue && maxCost > minCost)
-                    costScore = (candidate.CostProxy.Value - minCost) / (maxCost - minCost);
+    private static double ScoreCandidate(
+        Candidate candidate,
+        int itemCount,
+        OptimizationSettings settings,
+        double minCost,
+        double maxCost)
+    {
+        double wasteScore = candidate.Result.TotalWastePercent / 100.0;
+        double installScore = itemCount > 0
+            ? (double)candidate.Result.TotalStockBarsNeeded / itemCount
+            : 0;
 
-                return settings.WasteWeight * wasteScore
-                     + settings.InstallationWeight * installScore
-                     + settings.CostWeight * costScore;
+        double costScore = 0;
+        if (candidate.CostProxy.HasValue && maxCost > minCost)
+            costScore = (candidate.CostProxy.Value - minCost) / (maxCost - minCost);
+
+        return settings.WasteWeight * wasteScore
+             + settings.InstallationWeight * installScore
+             + settings.CostWeight * costScore;
+    }
+
+    private static bool IsBaselineBetter(
+        OptimizationResult baseline,
+        OptimizationResult candidate,
+        int itemCount,
+        OptimizationSettings settings)
+    {
+        double baselineScore = ScoreResult(baseline, itemCount, settings);
+        double candidateScore = ScoreResult(candidate, itemCount, settings);
+
+        if (baselineScore < candidateScore - 1e-6)
+            return true;
+
+        if (baselineScore > candidateScore + 1e-6)
+            return false;
+
+        if (baseline.TotalWastePercent < candidate.TotalWastePercent - 1e-6)
+            return true;
+
+        if (baseline.TotalWastePercent > candidate.TotalWastePercent + 1e-6)
+            return false;
+
+        return baseline.TotalStockBarsNeeded < candidate.TotalStockBarsNeeded;
+    }
+
+    private static double ScoreResult(
+        OptimizationResult result,
+        int itemCount,
+        OptimizationSettings settings)
+    {
+        double wasteScore = result.TotalWastePercent / 100.0;
+        double installScore = itemCount > 0
+            ? (double)result.TotalStockBarsNeeded / itemCount
+            : 0;
+
+        return settings.WasteWeight * wasteScore
+             + settings.InstallationWeight * installScore;
+    }
 }
