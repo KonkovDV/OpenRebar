@@ -4,6 +4,14 @@
 
 A101-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, optimization algorithms) must be testable without Revit or any I/O**.
 
+This repository is a standalone project in `external/` built from an extraction of proven MicroPhoenix architectural patterns:
+
+- domain-owned ports and business rules
+- application-layer orchestration without framework leakage
+- infrastructure adapters behind stable contracts
+- composition root at the outermost executable boundary
+- external AI/ML runtime kept out of the domain and .NET core
+
 ## Layer Dependency Graph
 
 ```
@@ -41,7 +49,7 @@ This allows:
 
 ### 2. Separate ML Module (Python)
 
-Image segmentation uses PyTorch U-Net which is impractical to host in .NET. The Python service runs as a standalone FastAPI server on port 8101. The C# `PngIsolineParser` can operate in two modes:
+Image segmentation uses PyTorch U-Net which is impractical to host in .NET. The Python service runs as a standalone FastAPI server on port 8101. It now uses FastAPI lifespan-based startup/shutdown wiring, matching current official guidance. The C# `PngIsolineParser` can operate in two modes:
 1. **With ML**: Calls the Python service for neural segmentation
 2. **Without ML**: Falls back to color quantization + connected components (less accurate but works offline)
 
@@ -49,9 +57,14 @@ Image segmentation uses PyTorch U-Net which is impractical to host in .NET. The 
 
 `IRevitPlacer` is defined in Domain as a pure interface. The real Revit implementation (`RevitRebarPlacer`) lives in the plugin project and is only compiled when the Revit SDK NuGet is available. A `StubRevitPlacer` enables full pipeline testing without Revit.
 
-### 4. Optimization as Bin-Packing
+### 4. Optimization as Bin-Packing / Cutting Stock
 
-Rebar cutting is a **1D Cutting Stock Problem** (CSP). We use First Fit Decreasing (FFD) which is a known O(n log n) heuristic achieving ≤ 11/9·OPT + 6/9 bins. Future improvement: column generation LP for exact optimal.
+Rebar cutting is a **1D Cutting Stock Problem** (CSP). The repository now contains two optimizers behind `IRebarOptimizer`:
+
+1. **ColumnGenerationOptimizer** as the default implementation for production-oriented runs
+2. **FirstFitDecreasingOptimizer** as a simple heuristic fallback and baseline
+
+This keeps the domain independent from any specific OR solver while allowing the standalone project to evolve toward exact or branch-and-price implementations later.
 
 ### 5. Supplier Catalogs
 
@@ -122,7 +135,7 @@ These are pure static functions with no I/O — fully testable with unit tests.
 
 ## Future Roadmap
 
-1. **Column generation LP** for exact cutting optimization
+1. **Replace heuristic internals of the current CG implementation** with a true LP master + exact dual pricing or OR-Tools-backed branch-and-price
 2. **Revit view filters** for color-coded zone visualization
 3. **Multi-slab batch processing** across floors
 4. **Export to IFC** for BIM collaboration

@@ -12,6 +12,8 @@ namespace A101.Infrastructure.ImageProcessing;
 /// </summary>
 public sealed class PngIsolineParser : IIsolineParser
 {
+    private const long MaxImagePixels = 25_000_000;
+
     private readonly IImageSegmentationService? _mlService;
 
     public PngIsolineParser(IImageSegmentationService? mlService = null)
@@ -75,6 +77,13 @@ public sealed class PngIsolineParser : IIsolineParser
         int width = image.Width;
         int height = image.Height;
 
+        if ((long)width * height > MaxImagePixels)
+            throw new InvalidDataException(
+                $"Image is too large for in-process parsing: {width}x{height} pixels. " +
+                $"Limit: {MaxImagePixels} pixels.");
+
+        var entries = legend.Entries.ToList();
+
         // Build a label map: each pixel → legend entry index (or -1)
         int[,] labels = new int[width, height];
         for (int y = 0; y < height; y++)
@@ -87,7 +96,7 @@ public sealed class PngIsolineParser : IIsolineParser
                 var entry = legend.FindClosest(isoColor);
 
                 labels[x, y] = entry is not null
-                    ? legend.Entries.ToList().IndexOf(entry)
+                    ? entries.IndexOf(entry)
                     : -1;
             }
         }
@@ -111,7 +120,7 @@ public sealed class PngIsolineParser : IIsolineParser
                 var polygon = ExtractBoundaryPolygon(component);
                 if (polygon is null) continue;
 
-                var entry = legend.Entries[label];
+                var entry = entries[label];
                 zones.Add(new ReinforcementZone
                 {
                     Id = $"PNG-{++zoneIndex:D4}",

@@ -1,10 +1,15 @@
 # A101-Reinforcement
 
-[![CI](https://github.com/user/a101-reinforcement/actions/workflows/ci.yml/badge.svg)](https://github.com/user/a101-reinforcement/actions/workflows/ci.yml)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Automated reinforcement placement for flat RC slabs — **Revit 2025 plugin** with ML-powered isoline parsing.
+
+## Status
+
+- This repository is a **standalone extracted project** in `external/a101-reinforcement`, based on MicroPhoenix architectural patterns.
+- The core domain, application, optimisation, DXF, PNG, and ML service layers are implemented and testable outside Revit.
+- The Revit SDK-dependent command and placer are included as **compile-time scaffolds** and require local Autodesk Revit references to enable the real plugin boundary.
 
 ## Problem
 
@@ -69,10 +74,10 @@ Two optimiser implementations behind the `IRebarOptimizer` port:
 
 | Algorithm | Waste | Speed | Best for |
 |-----------|-------|-------|----------|
-| **Column Generation** (Gilmore–Gomory 1961) | ≤ 5–8% | O(I·S·C) per CG iter | Large jobs, mixed diameters |
-| **First Fit Decreasing** (FFD) | 10–15% | O(n log n) | Quick estimates, small batches |
+| **ColumnGenerationOptimizer** | Lower waste on mixed batches than FFD in current implementation | Higher than FFD | Default production-oriented baseline |
+| **First Fit Decreasing** (FFD) | Simpler heuristic baseline | O(n log n) | Quick estimates, fallback |
 
-Column Generation solves the LP relaxation of the 1D cutting stock problem, then rounds via largest-remainder + greedy repair.
+The current default optimizer uses column-generation-style pattern search and heuristic repair. It is structured so the repository can later swap in a true LP master / branch-and-price backend without changing domain or application contracts.
 
 ### Color Recognition
 
@@ -111,11 +116,14 @@ Column Generation solves the LP relaxation of the 1D cutting stock problem, then
 dotnet build A101.sln
 dotnet test A101.sln
 
-# Python ML setup (optional)
+# Python ML setup / smoke tests
 cd ml
 pip install -r requirements.txt
+pytest tests -q
 uvicorn src.api.server:app --port 8101
 ```
+
+If you publish this repository to GitHub, add the repository-specific CI badge URL after the final owner/repo name is known.
 
 ## Project Structure
 
@@ -141,10 +149,3 @@ A101.sln
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-### Image Segmentation (ML)
-Lightweight U-Net (3→32→64→128→256→512 channels) trained on LIRA-SAPR isoline exports. Outputs per-pixel class mask → contours → simplified polygons via Douglas-Peucker.
-
-## License
-
-Proprietary — А101 Group.

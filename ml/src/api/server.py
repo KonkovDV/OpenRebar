@@ -2,31 +2,51 @@
 FastAPI server exposing the segmentation model as an HTTP service.
 C# infrastructure calls this via HTTP to get polygon zone data from PNG isolines.
 
-Usage:
+Usage from repository root:
     uvicorn ml.src.api.server:app --host 0.0.0.0 --port 8101
+
+Usage from ml/ directory:
+    uvicorn src.api.server:app --host 0.0.0.0 --port 8101
 """
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
+import os
 import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
 
-from ml.src.segmentation.model import IsolineUNet
-from ml.src.segmentation.predict import load_model, segment_isoline_image
+from ..segmentation.model import IsolineUNet
+from ..segmentation.predict import load_model, segment_isoline_image
+
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+BASE_DIR = Path(__file__).resolve().parents[2]
+MODEL_PATH = Path(os.environ.get("A101_MODEL_PATH", str(BASE_DIR / "models" / "isoline_unet.pt")))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _model
+    if MODEL_PATH.exists():
+        _model = load_model(MODEL_PATH, device=_device)
+    try:
+        yield
+    finally:
+        _model = None
 
 app = FastAPI(
     title="A101 Isoline Segmentation API",
     version="0.1.0",
     description="Segmentation service for LIRA-SAPR isoline images",
+    lifespan=lifespan,
 )
 
 # Global model instance (loaded on startup)
 _model: IsolineUNet | None = None
 _device: str = "cpu"
-MODEL_PATH = Path("models/isoline_unet.pt")
 
 
 class PolygonZone(BaseModel):
@@ -39,14 +59,6 @@ class PolygonZone(BaseModel):
 class SegmentationResponse(BaseModel):
     zones: list[PolygonZone]
     total_zones: int
-
-
-@app.on_event("startup")
-async def startup() -> None:
-    global _model
-    if MODEL_PATH.exists():
-        _model = load_model(MODEL_PATH, device=_device)
-    # If model not found, endpoints will return 503
 
 
 @app.get("/health")
@@ -65,8 +77,11 @@ async def segment(
 
     # Save upload to temp file
     suffix = Path(file.filename or "image.png").suffix
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"Uploaded file is too large. Limit: {MAX_UPLOAD_BYTES} bytes")
+
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        content = await file.read()
         tmp.write(content)
         tmp_path = Path(tmp.name)
 

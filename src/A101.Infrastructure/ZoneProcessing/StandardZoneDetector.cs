@@ -33,7 +33,7 @@ public sealed class StandardZoneDetector : IZoneDetector
             if (classified.ZoneType == ZoneType.Complex)
             {
                 var subRects = PolygonDecomposition.DecomposeToRectangles(classified.Boundary);
-                classified = classified with { SubRectangles = subRects };
+                classified = CloneZone(classified, subRects, classified.ZoneType, classified.Direction);
             }
 
             result.Add(classified);
@@ -55,7 +55,7 @@ public sealed class StandardZoneDetector : IZoneDetector
 
         if (isSpecial)
         {
-            return zone with { ZoneType = ZoneType.Special };
+            return CloneZone(zone, zone.SubRectangles, ZoneType.Special, zone.Direction);
         }
 
         // Check rectangularity
@@ -66,10 +66,25 @@ public sealed class StandardZoneDetector : IZoneDetector
             ? RebarDirection.X
             : RebarDirection.Y;
 
-        return zone with
+        return CloneZone(zone, zone.SubRectangles, type, direction);
+    }
+
+    private static ReinforcementZone CloneZone(
+        ReinforcementZone source,
+        IReadOnlyList<BoundingBox>? subRectangles,
+        ZoneType zoneType,
+        RebarDirection direction)
+    {
+        return new ReinforcementZone
         {
-            ZoneType = type,
-            Direction = direction
+            Id = source.Id,
+            Boundary = source.Boundary,
+            Spec = source.Spec,
+            Direction = direction,
+            ZoneType = zoneType,
+            Layer = source.Layer,
+            SubRectangles = subRectangles,
+            Rebars = source.Rebars
         };
     }
 

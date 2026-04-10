@@ -1,21 +1,16 @@
 namespace A101.RevitPlugin;
 
-// ─────────────────────────────────────────────────────────────
-// Revit ExternalCommand entry point.
-// This is the main command registered in the Revit ribbon.
-// Uncomment when building against Revit SDK.
-// ─────────────────────────────────────────────────────────────
-
-/*
+#if REVIT_SDK
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using A101.Application.UseCases;
 using A101.RevitPlugin.Revit;
 using Microsoft.Extensions.DependencyInjection;
 
 [Transaction(TransactionMode.Manual)]
 [Regeneration(RegenerationOption.Manual)]
-public class GenerateReinforcementCommand : IExternalCommand
+public sealed class GenerateReinforcementCommand : IExternalCommand
 {
     public Result Execute(
         ExternalCommandData commandData,
@@ -25,29 +20,15 @@ public class GenerateReinforcementCommand : IExternalCommand
         try
         {
             var uiDoc = commandData.Application.ActiveUIDocument;
-
-            // Bootstrap DI with real Revit placer
             var revitPlacer = new RevitRebarPlacer(uiDoc);
-            var sp = Bootstrap.BuildServiceProvider(revitPlacer);
+            var serviceProvider = Bootstrap.BuildServiceProvider(revitPlacer);
 
-            // Show settings dialog
-            var dialog = new UI.SettingsDialog();
-            if (dialog.ShowDialog() != true)
-                return Result.Cancelled;
+            var pipeline = serviceProvider.GetRequiredService<GenerateReinforcementPipeline>();
 
-            // Execute pipeline
-            var pipeline = sp.GetRequiredService<GenerateReinforcementPipeline>();
-            var result = pipeline.ExecuteAsync(dialog.BuildPipelineInput()).GetAwaiter().GetResult();
-
-            // Show results
-            TaskDialog.Show("A101 Reinforcement",
-                $"Completed!\n" +
-                $"Zones: {result.ParsedZoneCount}\n" +
-                $"Rebars placed: {result.PlacementResult?.TotalRebarsPlaced ?? 0}\n" +
-                $"Average waste: {result.TotalWastePercent:F1}%\n" +
-                $"Total mass: {result.TotalMassKg:F0} kg");
-
-            return Result.Succeeded;
+            // TODO: replace with real UI flow that builds PipelineInput from the current document/view.
+            message = "GenerateReinforcementCommand is wired, but the interactive Revit UI flow is not implemented yet.";
+            _ = pipeline;
+            return Result.Cancelled;
         }
         catch (Exception ex)
         {
@@ -56,4 +37,9 @@ public class GenerateReinforcementCommand : IExternalCommand
         }
     }
 }
-*/
+#else
+internal static class GenerateReinforcementCommandPlaceholder
+{
+    public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real external command.";
+}
+#endif

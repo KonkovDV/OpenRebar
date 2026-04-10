@@ -56,11 +56,22 @@ public sealed class OptimizeRebarCuttingUseCase
             double totalLengthM = result.TotalRebarLengthMm / 1000.0;
             double totalMassKg = totalLengthM * linearMass;
 
+            var enrichedResult = new OptimizationResult
+            {
+                CuttingPlans = result.CuttingPlans,
+                TotalStockBarsNeeded = result.TotalStockBarsNeeded,
+                TotalWasteMm = result.TotalWasteMm,
+                TotalWastePercent = result.TotalWastePercent,
+                TotalRebarLengthMm = result.TotalRebarLengthMm,
+                TotalMassKg = totalMassKg,
+                EstimatedCost = result.EstimatedCost
+            };
+
             report.DiameterReports.Add(new DiameterOptimizationReport
             {
                 DiameterMm = diameter,
                 RebarCount = lengths.Count,
-                OptimizationResult = result with { TotalMassKg = totalMassKg },
+                OptimizationResult = enrichedResult,
                 LinearMassKgPerM = linearMass
             });
         }
