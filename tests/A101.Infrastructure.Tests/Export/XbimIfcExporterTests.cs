@@ -75,6 +75,8 @@ public class XbimIfcExporterTests
             model.Instances.OfType<IIfcProject>().Should().ContainSingle();
             model.Instances.OfType<IIfcSlab>().Should().ContainSingle();
             model.Instances.OfType<IIfcReinforcingBar>().Should().HaveCount(2);
+            model.Instances.OfType<IIfcMaterial>().Should().ContainSingle(
+                "bars that share the same steel class should reuse one IFC material definition instead of duplicating it per bar");
         }
         finally
         {

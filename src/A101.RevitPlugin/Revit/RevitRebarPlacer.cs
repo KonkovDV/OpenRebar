@@ -54,17 +54,31 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         double coverMm = GetHostCoverMm(hostFloor);
         double thicknessMm = GetHostThicknessMm(hostFloor);
         var barTypeIndex = BuildBarTypeIndex(doc);
+        int batchIndex = 0;
+        int rebarsInCurrentTransaction = 0;
 
-        using var txn = new Transaction(doc, "A101: Place Reinforcement");
-        txn.Start();
+        using var transactionGroup = new TransactionGroup(doc, "A101: Place Reinforcement");
+        transactionGroup.Start();
+
+        Transaction? currentTransaction = null;
 
         try
         {
+            currentTransaction = StartPlacementTransaction(doc, ++batchIndex);
+
             foreach (var zone in zones)
             {
                 foreach (var segment in zone.Rebars)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+
+                    if (rebarsInCurrentTransaction >= settings.MaxRebarsPerTransaction)
+                    {
+                        CommitPlacementTransaction(currentTransaction);
+                        currentTransaction.Dispose();
+                        currentTransaction = StartPlacementTransaction(doc, ++batchIndex);
+                        rebarsInCurrentTransaction = 0;
+                    }
 
                     var barType = FindExistingBarType(barTypeIndex, segment.DiameterMm);
                     if (barType is null)
@@ -120,6 +134,7 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                             rebar.LookupParameter(settings.ZoneParameterName)?.Set(zone.Id);
 
                         rebarsPlaced++;
+                        rebarsInCurrentTransaction++;
                     }
                     catch (Exception ex)
                     {
@@ -128,11 +143,21 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                 }
             }
 
-            txn.Commit();
+            CommitPlacementTransaction(currentTransaction);
+            currentTransaction.Dispose();
+            currentTransaction = null;
+            transactionGroup.Assimilate();
         }
         catch (Exception ex)
         {
-            txn.RollBack();
+            if (currentTransaction is not null)
+            {
+                TryRollback(currentTransaction);
+                currentTransaction.Dispose();
+                currentTransaction = null;
+            }
+
+            transactionGroup.RollBack();
             rebarsPlaced = 0;
             tagsCreated = 0;
             bendingDetails = 0;
@@ -147,6 +172,34 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             Warnings = warnings,
             Errors = errors
         });
+    }
+
+    private static Transaction StartPlacementTransaction(Document doc, int batchIndex)
+    {
+        var transaction = new Transaction(doc,
+            batchIndex == 1
+                ? "A101: Place Reinforcement"
+                : $"A101: Place Reinforcement (batch {batchIndex})");
+
+        transaction.Start();
+        return transaction;
+    }
+
+    private static void CommitPlacementTransaction(Transaction transaction)
+    {
+        transaction.Commit();
+    }
+
+    private static void TryRollback(Transaction transaction)
+    {
+        try
+        {
+            transaction.RollBack();
+        }
+        catch
+        {
+            // Prefer preserving the original placement error over rollback noise.
+        }
     }
 
     private static Floor? ResolveHostFloor(Document doc, PlacementSettings settings, List<string> warnings)

@@ -97,6 +97,8 @@ public sealed class XbimIfcExporter : IIfcExporter
             rel.RelatedElements.Add(slabElement);
         });
 
+        var materialCache = new Dictionary<string, IfcMaterial>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var zone in zones)
         {
             ct.ThrowIfCancellationRequested();
@@ -118,7 +120,8 @@ public sealed class XbimIfcExporter : IIfcExporter
                 });
 
                 AttachBarProperties(model, bar, zone, segment);
-                AttachBarQuantities(model, bar, segment, zone);
+                AttachBarQuantities(model, bar, segment);
+                AttachBarMaterial(model, bar, zone.Spec.SteelClass, materialCache);
             }
         }
 
@@ -225,7 +228,7 @@ public sealed class XbimIfcExporter : IIfcExporter
         });
     }
 
-    private static void AttachBarQuantities(IfcStore model, IfcReinforcingBar bar, RebarSegment segment, ReinforcementZone zone)
+    private static void AttachBarQuantities(IfcStore model, IfcReinforcingBar bar, RebarSegment segment)
     {
         var quantitySet = model.Instances.New<IfcElementQuantity>(qty =>
         {
@@ -248,7 +251,20 @@ public sealed class XbimIfcExporter : IIfcExporter
             rel.RelatedObjects.Add(bar);
         });
 
-        var material = model.Instances.New<IfcMaterial>(m => m.Name = zone.Spec.SteelClass);
+    }
+
+    private static void AttachBarMaterial(
+        IfcStore model,
+        IfcReinforcingBar bar,
+        string steelClass,
+        IDictionary<string, IfcMaterial> materialCache)
+    {
+        if (!materialCache.TryGetValue(steelClass, out var material))
+        {
+            material = model.Instances.New<IfcMaterial>(m => m.Name = steelClass);
+            materialCache[steelClass] = material;
+        }
+
         model.Instances.New<IfcRelAssociatesMaterial>(rel =>
         {
             rel.RelatingMaterial = material;

@@ -44,6 +44,19 @@ public sealed record PlacementSettings
 
     /// <summary>Host slab elevation offset in Revit internal feet.</summary>
     public double ElevationOffsetFeet { get; init; }
+
+    /// <summary>Maximum number of rebars committed per Revit transaction batch.</summary>
+    public int MaxRebarsPerTransaction
+    {
+        get => _maxRebarsPerTransaction;
+        init
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(MaxRebarsPerTransaction), value, "Maximum rebars per transaction must be positive.");
+            _maxRebarsPerTransaction = value;
+        }
+    }
+    private readonly int _maxRebarsPerTransaction = 5000;
 }
 
 /// <summary>

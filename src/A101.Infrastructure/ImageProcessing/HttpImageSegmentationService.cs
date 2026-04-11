@@ -12,8 +12,18 @@ namespace A101.Infrastructure.ImageProcessing;
 /// </summary>
 public sealed class HttpImageSegmentationService : IImageSegmentationService, IDisposable
 {
+    private const string CircuitOpenMessagePrefix = "ML segmentation circuit is open";
+
     private readonly HttpClient _httpClient;
     private readonly double _minArea;
+    private readonly int _maxRetryAttempts;
+    private readonly int _failureThreshold;
+    private readonly TimeSpan _circuitBreakDuration;
+    private readonly TimeProvider _timeProvider;
+    private readonly object _stateLock = new();
+    private readonly bool _ownsHttpClient;
+    private int _consecutiveFailures;
+    private DateTimeOffset? _circuitOpenUntilUtc;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -26,14 +36,39 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
     public HttpImageSegmentationService(
         string baseUrl = "http://localhost:8101",
         double minArea = 1000.0,
-        int timeoutSeconds = 120)
+        int timeoutSeconds = 120,
+        int maxRetryAttempts = 2,
+        int failureThreshold = 3,
+        int circuitBreakSeconds = 30,
+        TimeProvider? timeProvider = null,
+        HttpMessageHandler? messageHandler = null)
     {
         _minArea = minArea;
-        _httpClient = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl),
-            Timeout = TimeSpan.FromSeconds(timeoutSeconds)
-        };
+        _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
+        _failureThreshold = Math.Max(1, failureThreshold);
+        _circuitBreakDuration = TimeSpan.FromSeconds(Math.Max(1, circuitBreakSeconds));
+        _timeProvider = timeProvider ?? TimeProvider.System;
+        _httpClient = messageHandler is null ? new HttpClient() : new HttpClient(messageHandler);
+        _httpClient.BaseAddress = new Uri(baseUrl);
+        _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        _ownsHttpClient = true;
+    }
+
+    internal HttpImageSegmentationService(
+        HttpClient httpClient,
+        double minArea = 1000.0,
+        int maxRetryAttempts = 2,
+        int failureThreshold = 3,
+        int circuitBreakSeconds = 30,
+        TimeProvider? timeProvider = null)
+    {
+        _httpClient = httpClient;
+        _minArea = minArea;
+        _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
+        _failureThreshold = Math.Max(1, failureThreshold);
+        _circuitBreakDuration = TimeSpan.FromSeconds(Math.Max(1, circuitBreakSeconds));
+        _timeProvider = timeProvider ?? TimeProvider.System;
+        _ownsHttpClient = false;
     }
 
     public async Task<IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)>> SegmentAsync(
@@ -43,52 +78,150 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
         if (!File.Exists(imagePath))
             throw new FileNotFoundException($"Image file not found: {imagePath}");
 
-        // Check service health first
-        await EnsureServiceHealthyAsync(cancellationToken);
+        ThrowIfCircuitOpen();
 
-        // Upload image as multipart form data
-        using var content = new MultipartFormDataContent();
-        var fileBytes = await File.ReadAllBytesAsync(imagePath, cancellationToken);
-        var fileContent = new ByteArrayContent(fileBytes);
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
-        content.Add(fileContent, "file", Path.GetFileName(imagePath));
+        try
+        {
+            var result = await ExecuteWithRetriesAsync(async ct =>
+            {
+                await EnsureServiceHealthyAsync(ct);
 
-        var response = await _httpClient.PostAsync(
-            $"/segment?min_area={_minArea}",
-            content,
-            cancellationToken);
+                using var content = new MultipartFormDataContent();
+                var fileBytes = await File.ReadAllBytesAsync(imagePath, ct);
+                var fileContent = new ByteArrayContent(fileBytes);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
+                content.Add(fileContent, "file", Path.GetFileName(imagePath));
 
-        response.EnsureSuccessStatusCode();
+                var response = await _httpClient.PostAsync(
+                    $"/segment?min_area={_minArea}",
+                    content,
+                    ct);
 
-        var result = await response.Content.ReadFromJsonAsync<SegmentationResponseDto>(
-            JsonOptions, cancellationToken);
+                response.EnsureSuccessStatusCode();
 
-        if (result?.Zones is null)
-            return [];
+                return await response.Content.ReadFromJsonAsync<SegmentationResponseDto>(
+                    JsonOptions,
+                    ct);
+            }, cancellationToken);
 
-        return ConvertToPolygons(result.Zones);
+            RecordSuccess();
+
+            if (result?.Zones is null)
+                return [];
+
+            return ConvertToPolygons(result.Zones);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
+        {
+            if (!IsCircuitOpenException(ex))
+                RecordFailure();
+
+            throw WrapServiceException(ex);
+        }
     }
 
     private async Task EnsureServiceHealthyAsync(CancellationToken ct)
     {
-        try
-        {
-            var response = await _httpClient.GetAsync("/health", ct);
-            response.EnsureSuccessStatusCode();
+        var response = await _httpClient.GetAsync("/health", ct);
+        response.EnsureSuccessStatusCode();
 
-            var health = await response.Content.ReadFromJsonAsync<HealthDto>(JsonOptions, ct);
-            if (health?.Status != "ok")
-                throw new InvalidOperationException(
-                    $"ML segmentation service is not ready. Status: {health?.Status ?? "unknown"}. " +
-                    "Ensure the model checkpoint is placed at ml/models/isoline_unet.pt");
-        }
-        catch (HttpRequestException ex)
-        {
+        var health = await response.Content.ReadFromJsonAsync<HealthDto>(JsonOptions, ct);
+        if (health?.Status != "ok")
             throw new InvalidOperationException(
+                $"ML segmentation service is not ready. Status: {health?.Status ?? "unknown"}. " +
+                "Ensure the model checkpoint is placed at ml/models/isoline_unet.pt");
+    }
+
+    private async Task<T> ExecuteWithRetriesAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken)
+    {
+        Exception? lastError = null;
+
+        for (int attempt = 1; attempt <= _maxRetryAttempts; attempt++)
+        {
+            try
+            {
+                return await operation(cancellationToken);
+            }
+            catch (Exception ex) when (IsRetryable(ex, cancellationToken) && attempt < _maxRetryAttempts)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw lastError ?? new InvalidOperationException("ML segmentation request failed.");
+    }
+
+    private static bool IsRetryable(Exception ex, CancellationToken cancellationToken)
+    {
+        return ex switch
+        {
+            HttpRequestException => true,
+            TaskCanceledException when !cancellationToken.IsCancellationRequested => true,
+            _ => false
+        };
+    }
+
+    private void ThrowIfCircuitOpen()
+    {
+        lock (_stateLock)
+        {
+            var now = _timeProvider.GetUtcNow();
+            if (_circuitOpenUntilUtc.HasValue && _circuitOpenUntilUtc.Value > now)
+            {
+                throw new InvalidOperationException(
+                    $"{CircuitOpenMessagePrefix} until {_circuitOpenUntilUtc.Value:O}. " +
+                    "The Python segmentation service is in cooldown after repeated failures.");
+            }
+
+            if (_circuitOpenUntilUtc.HasValue && _circuitOpenUntilUtc.Value <= now)
+            {
+                _circuitOpenUntilUtc = null;
+                _consecutiveFailures = 0;
+            }
+        }
+    }
+
+    private void RecordSuccess()
+    {
+        lock (_stateLock)
+        {
+            _consecutiveFailures = 0;
+            _circuitOpenUntilUtc = null;
+        }
+    }
+
+    private void RecordFailure()
+    {
+        lock (_stateLock)
+        {
+            _consecutiveFailures++;
+            if (_consecutiveFailures >= _failureThreshold)
+                _circuitOpenUntilUtc = _timeProvider.GetUtcNow().Add(_circuitBreakDuration);
+        }
+    }
+
+    private InvalidOperationException WrapServiceException(Exception ex)
+    {
+        if (IsCircuitOpenException(ex))
+            return ex as InvalidOperationException ?? new InvalidOperationException(ex.Message, ex);
+
+        if (ex is HttpRequestException or TaskCanceledException)
+        {
+            return new InvalidOperationException(
                 $"Cannot connect to ML segmentation service at {_httpClient.BaseAddress}. " +
                 "Start it with: uvicorn ml.src.api.server:app --host 0.0.0.0 --port 8101",
                 ex);
         }
+
+        return ex as InvalidOperationException ?? new InvalidOperationException(ex.Message, ex);
+    }
+
+    private static bool IsCircuitOpenException(Exception ex)
+    {
+        return ex is InvalidOperationException invalidOperationException
+            && invalidOperationException.Message.StartsWith(CircuitOpenMessagePrefix, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)> ConvertToPolygons(
@@ -133,7 +266,11 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
         _ => new IsolineColor(128, 128, 128),   // Gray — unknown
     };
 
-    public void Dispose() => _httpClient.Dispose();
+    public void Dispose()
+    {
+        if (_ownsHttpClient)
+            _httpClient.Dispose();
+    }
 
     // DTOs for JSON deserialization (matches Python FastAPI response models)
     private sealed record HealthDto
