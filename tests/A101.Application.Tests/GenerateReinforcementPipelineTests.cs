@@ -251,6 +251,65 @@ public class GenerateReinforcementPipelineTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WhenRevitPlacementThrows_ShouldStillPersistReport()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: true) with
+        {
+            PersistReport = true,
+            ReportOutputPath = "reports/plan.result.json"
+        };
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(1000, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 200,
+                AnchorageLengthEnd = 200,
+                Mark = "1"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(CreateOptimizationResult());
+        _placer.PlaceReinforcementAsync(zones, input.PlacementSettings, Arg.Any<CancellationToken>())
+            .Returns<Task<PlacementResult>>(_ => throw new InvalidOperationException("Revit refused transaction"));
+        _reportStore.SaveAsync(Arg.Any<ReinforcementExecutionReport>(), input.ReportOutputPath!, Arg.Any<CancellationToken>())
+            .Returns(new StoredReportReference
+            {
+                OutputPath = input.ReportOutputPath!,
+                MediaType = "application/json",
+                Sha256 = "ABC123",
+                ByteCount = 128
+            });
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.StoredReport.Should().NotBeNull();
+        result.PlacementResult.Should().NotBeNull();
+        result.PlacementResult!.Success.Should().BeFalse();
+        result.PlacementResult.Errors.Should().ContainSingle(error => error.Contains("Revit refused transaction"));
+        await _reportStore.Received(1).SaveAsync(
+            Arg.Any<ReinforcementExecutionReport>(),
+            input.ReportOutputPath!,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenNoEstimatedCostExists_ShouldKeepSummaryEstimatedCostNull()
     {
         var sut = CreateSut();

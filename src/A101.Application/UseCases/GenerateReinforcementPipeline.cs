@@ -104,18 +104,37 @@ public sealed class GenerateReinforcementPipeline
         // 5. Place in Revit (if requested)
         if (input.PlaceInRevit)
         {
-            var placementResult = await _placer.PlaceReinforcementAsync(
-                zonesWithRebars,
-                input.PlacementSettings,
-                cancellationToken);
-            result.PlacementResult = placementResult;
-
-            if (!placementResult.Success)
+            try
             {
-                _logger.Warn(
-                    "Revit placement completed with warnings",
-                    ("errorCount", placementResult.Errors.Count),
-                    ("warningCount", placementResult.Warnings.Count));
+                var placementResult = await _placer.PlaceReinforcementAsync(
+                    zonesWithRebars,
+                    input.PlacementSettings,
+                    cancellationToken);
+                result.PlacementResult = placementResult;
+
+                if (!placementResult.Success)
+                {
+                    _logger.Warn(
+                        "Revit placement completed with warnings",
+                        ("errorCount", placementResult.Errors.Count),
+                        ("warningCount", placementResult.Warnings.Count));
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                result.PlacementResult = new PlacementResult
+                {
+                    TotalRebarsPlaced = 0,
+                    TotalTagsCreated = 0,
+                    TotalBendingDetails = 0,
+                    Errors = [$"Revit placement failed: {ex.Message}"]
+                };
+
+                _logger.Error(
+                    "Revit placement failed; report persistence will continue",
+                    ex,
+                    ("projectCode", input.Metadata.ProjectCode),
+                    ("slabId", input.Metadata.SlabId));
             }
         }
 

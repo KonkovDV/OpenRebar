@@ -207,6 +207,29 @@ public class StandardReinforcementCalculatorTests
     }
 
     [Fact]
+    public void CalculateRebars_SegmentsShorterThanAnchorage_ShouldBeSkipped()
+    {
+        var zone = new ReinforcementZone
+        {
+            Id = "SHORT-SEGMENTS",
+            Boundary = new Polygon([
+                new Point2D(0, 0), new Point2D(80, 0),
+                new Point2D(80, 1000), new Point2D(0, 1000)
+            ]),
+            Spec = new ReinforcementSpec { DiameterMm = 12, SpacingMm = 200, SteelClass = "A500C" },
+            Direction = RebarDirection.X,
+            ZoneType = ZoneType.Simple,
+            Layer = RebarLayer.Bottom
+        };
+
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], TestSlab);
+
+        zone.Rebars.Should().BeEmpty("micro-segments shorter than the required anchorage are not buildable and should be discarded");
+        _logger.Received().Warn("Short rebar segments were skipped", Arg.Any<(string Key, object? Value)[]>());
+    }
+
+    [Fact]
     public void CalculateRebars_EmptyZones_ShouldReturnEmptyList()
     {
         var calculator = CreateCalculator();

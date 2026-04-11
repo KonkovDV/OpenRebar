@@ -53,6 +53,7 @@ public sealed class RevitRebarPlacer : IRevitPlacer
 
         double coverMm = GetHostCoverMm(hostFloor);
         double thicknessMm = GetHostThicknessMm(hostFloor);
+        var barTypeIndex = BuildBarTypeIndex(doc);
 
         using var txn = new Transaction(doc, "A101: Place Reinforcement");
         txn.Start();
@@ -65,7 +66,7 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var barType = FindExistingBarType(doc, segment.DiameterMm);
+                    var barType = FindExistingBarType(barTypeIndex, segment.DiameterMm);
                     if (barType is null)
                     {
                         warnings.Add($"Missing RebarBarType for {segment.DiameterMm}mm in zone {zone.Id}.");
@@ -184,19 +185,40 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         return coverType is not null ? coverType.CoverDistance * 304.8 : 25.0;
     }
 
-    private static RebarBarType? FindExistingBarType(Document doc, int diameterMm)
+    private static IReadOnlyDictionary<int, RebarBarType> BuildBarTypeIndex(Document doc)
     {
-        var collector = new FilteredElementCollector(doc)
-            .OfClass(typeof(RebarBarType));
+        var index = new Dictionary<int, RebarBarType>();
 
-        foreach (RebarBarType barType in collector)
+        foreach (RebarBarType barType in new FilteredElementCollector(doc)
+            .OfClass(typeof(RebarBarType)))
         {
-            var nominalDiameterMm = barType.BarNominalDiameter * 304.8;
-            if (Math.Abs(nominalDiameterMm - diameterMm) < 0.5)
-                return barType;
+            int nominalDiameterMm = (int)Math.Round(
+                barType.BarNominalDiameter * 304.8,
+                MidpointRounding.AwayFromZero);
+
+            index.TryAdd(nominalDiameterMm, barType);
         }
 
-        return null;
+        return index;
+    }
+
+    private static RebarBarType? FindExistingBarType(
+        IReadOnlyDictionary<int, RebarBarType> barTypeIndex,
+        int diameterMm)
+    {
+        if (barTypeIndex.TryGetValue(diameterMm, out var exactMatch))
+            return exactMatch;
+
+        return barTypeIndex.Values
+            .Select(barType => new
+            {
+                BarType = barType,
+                Delta = Math.Abs(barType.BarNominalDiameter * 304.8 - diameterMm)
+            })
+            .Where(candidate => candidate.Delta < 0.5)
+            .OrderBy(candidate => candidate.Delta)
+            .Select(candidate => candidate.BarType)
+            .FirstOrDefault();
     }
 }
 #else

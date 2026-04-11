@@ -60,6 +60,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
         double anchorageLength = AnchorageRules.CalculateAnchorageLength(
             diameter, zone.Spec.SteelClass, slab.ConcreteClass, bondCondition);
+        int skippedShortSegments = 0;
 
         if (zone.Direction == RebarDirection.X)
         {
@@ -71,8 +72,15 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
                 foreach (var (start, end) in intervals)
                 {
-                    if (end - start < 1e-6)
+                    double clearSpan = end - start;
+                    if (clearSpan < 1e-6)
                         continue;
+
+                    if (clearSpan + 1e-6 < anchorageLength)
+                    {
+                        skippedShortSegments++;
+                        continue;
+                    }
 
                     rebars.Add(new RebarSegment
                     {
@@ -96,8 +104,15 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
                 foreach (var (start, end) in intervals)
                 {
-                    if (end - start < 1e-6)
+                    double clearSpan = end - start;
+                    if (clearSpan < 1e-6)
                         continue;
+
+                    if (clearSpan + 1e-6 < anchorageLength)
+                    {
+                        skippedShortSegments++;
+                        continue;
+                    }
 
                     rebars.Add(new RebarSegment
                     {
@@ -124,6 +139,15 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
                 ("maxSpacingMm", Math.Round(maxSpacing, 2)),
                 ("slabThicknessMm", slab.ThicknessMm));
         }
+
+            if (skippedShortSegments > 0)
+            {
+                _logger.Warn(
+                "Short rebar segments were skipped",
+                ("zoneId", zone.Id),
+                ("skippedSegmentCount", skippedShortSegments),
+                ("minimumClearSpanMm", Math.Round(anchorageLength, 2)));
+            }
 
         return rebars;
     }
