@@ -80,8 +80,23 @@ public sealed class BatchResult
     public double TotalMassKg => SlabResults.Sum(r => r.Result.TotalMassKg);
 
     public double AverageWastePercent =>
-        SlabResults.Count == 0 ? 0 : SlabResults.Average(r => r.Result.TotalWastePercent);
+        CalculateWeightedWastePercent(SlabResults);
 
     public int TotalStockBars => SlabResults.Sum(r =>
         r.Result.OptimizationResults.Values.Sum(o => o.TotalStockBarsNeeded));
+
+    private static double CalculateWeightedWastePercent(IReadOnlyList<BatchSlabResult> slabResults)
+    {
+        double totalWaste = slabResults.Sum(result =>
+            result.Result.OptimizationResults.Values.Sum(optimization => optimization.TotalWasteMm));
+
+        double totalPurchasedLength = slabResults.Sum(result =>
+            result.Result.OptimizationResults.Values
+                .SelectMany(optimization => optimization.CuttingPlans)
+                .Sum(plan => plan.StockLengthMm));
+
+        return totalPurchasedLength > 0
+            ? totalWaste / totalPurchasedLength * 100.0
+            : 0;
+    }
 }

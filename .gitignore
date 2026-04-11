@@ -76,3 +76,7 @@ coverage/
 *.tmp
 *.bak
 *.swp
+
+# Local runtime payloads / scratch audit outputs
+.dotnet8-local/
+_a101_*.txt

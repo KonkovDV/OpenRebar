@@ -161,6 +161,10 @@ public sealed class GenerateReinforcementPipeline
     {
         var slabBox = input.Slab.OuterBoundary.GetBoundingBox();
         var placement = result.PlacementResult;
+        var estimatedCosts = result.OptimizationResults.Values
+            .Where(o => o.EstimatedCost.HasValue)
+            .Select(o => o.EstimatedCost!.Value)
+            .ToList();
 
         return new ReinforcementExecutionReport
         {
@@ -236,11 +240,7 @@ public sealed class GenerateReinforcementPipeline
                 TotalWastePercent = result.TotalWastePercent,
                 TotalWasteMm = result.OptimizationResults.Values.Sum(o => o.TotalWasteMm),
                 TotalMassKg = result.TotalMassKg,
-                EstimatedCost = result.OptimizationResults.Values
-                    .Where(o => o.EstimatedCost.HasValue)
-                    .Select(o => o.EstimatedCost!.Value)
-                    .DefaultIfEmpty()
-                    .Sum()
+                EstimatedCost = estimatedCosts.Count > 0 ? estimatedCosts.Sum() : null
             },
             Warnings = placement?.Warnings ?? []
         };

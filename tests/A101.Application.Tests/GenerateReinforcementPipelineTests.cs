@@ -250,6 +250,61 @@ public class GenerateReinforcementPipelineTests
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WhenNoEstimatedCostExists_ShouldKeepSummaryEstimatedCostNull()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false);
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(1000, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 200,
+                AnchorageLengthEnd = 200,
+                Mark = "1"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(new OptimizationResult
+            {
+                CuttingPlans =
+                [
+                    new CuttingPlan
+                    {
+                        StockLengthMm = 11700,
+                        Cuts = [2400, 2400, 2400]
+                    }
+                ],
+                TotalStockBarsNeeded = 1,
+                TotalWasteMm = 4500,
+                TotalWastePercent = 38.46,
+                TotalRebarLengthMm = 7200,
+                TotalMassKg = 6.39,
+                EstimatedCost = null
+            });
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.Report.Should().NotBeNull();
+        result.Report!.Summary.EstimatedCost.Should().BeNull();
+    }
+
     private static PipelineInput CreateInput(string filePath, bool placeInRevit)
     {
         return new PipelineInput

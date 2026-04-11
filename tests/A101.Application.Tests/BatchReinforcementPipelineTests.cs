@@ -75,6 +75,69 @@ public class BatchReinforcementPipelineTests
         result.Failures[0].ErrorMessage.Should().Contain("Broken DXF");
     }
 
+    [Fact]
+    public void AverageWastePercent_ShouldUseWeightedPurchasedLengthInsteadOfPlainMean()
+    {
+        var batch = new BatchResult
+        {
+            SlabResults =
+            [
+                new BatchSlabResult
+                {
+                    SlabId = "SMALL-HIGH-WASTE",
+                    Result = new PipelineResult
+                    {
+                        OptimizationResults = new Dictionary<int, OptimizationResult>
+                        {
+                            [12] = new OptimizationResult
+                            {
+                                CuttingPlans =
+                                [
+                                    new CuttingPlan
+                                    {
+                                        StockLengthMm = 10000,
+                                        Cuts = [1000]
+                                    }
+                                ],
+                                TotalStockBarsNeeded = 1,
+                                TotalWasteMm = 9000,
+                                TotalWastePercent = 90,
+                                TotalRebarLengthMm = 1000
+                            }
+                        }
+                    }
+                },
+                new BatchSlabResult
+                {
+                    SlabId = "LARGE-LOW-WASTE",
+                    Result = new PipelineResult
+                    {
+                        OptimizationResults = new Dictionary<int, OptimizationResult>
+                        {
+                            [12] = new OptimizationResult
+                            {
+                                CuttingPlans = Enumerable.Range(0, 10)
+                                    .Select(_ => new CuttingPlan
+                                    {
+                                        StockLengthMm = 10000,
+                                        Cuts = [10000]
+                                    })
+                                    .ToList(),
+                                TotalStockBarsNeeded = 10,
+                                TotalWasteMm = 0,
+                                TotalWastePercent = 0,
+                                TotalRebarLengthMm = 100000
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+
+        batch.AverageWastePercent.Should().BeApproximately(8.18, 0.01,
+            "batch waste should be weighted by purchased stock length, so a tiny bad slab cannot dominate the aggregate KPI");
+    }
+
     private BatchReinforcementPipeline CreateSut()
     {
         var pipeline = new GenerateReinforcementPipeline(

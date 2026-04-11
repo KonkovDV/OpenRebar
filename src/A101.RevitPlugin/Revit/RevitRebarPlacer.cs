@@ -31,9 +31,16 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         var warnings = new List<string>();
         var errors = new List<string>();
 
+        if (settings.CreateTags)
+            warnings.Add("Rebar tag creation is not implemented yet; tags will be skipped.");
+
+        if (settings.CreateBendingDetails)
+            warnings.Add("Bending detail creation is not implemented yet; bending details will be skipped.");
+
         var hostFloor = ResolveHostFloor(doc, settings, warnings);
         if (hostFloor is null)
         {
+            errors.Add("Host floor could not be resolved for reinforcement placement.");
             return Task.FromResult(new PlacementResult
             {
                 TotalRebarsPlaced = 0,
@@ -118,9 +125,6 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                         errors.Add($"Zone {zone.Id}, mark {segment.Mark}: {ex.Message}");
                     }
                 }
-
-                if (settings.CreateBendingDetails && zone.Rebars.Count > 0)
-                    bendingDetails++;
             }
 
             txn.Commit();
@@ -128,6 +132,9 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         catch (Exception ex)
         {
             txn.RollBack();
+            rebarsPlaced = 0;
+            tagsCreated = 0;
+            bendingDetails = 0;
             errors.Add($"Transaction rolled back: {ex.Message}");
         }
 
