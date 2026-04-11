@@ -1,4 +1,5 @@
 using A101.Domain.Models;
+using A101.Domain.Exceptions;
 using A101.Domain.Ports;
 using A101.Infrastructure.ImageProcessing;
 using FluentAssertions;
@@ -10,6 +11,23 @@ namespace A101.Infrastructure.Tests.ImageProcessing;
 
 public class PngIsolineParserTests
 {
+    [Fact]
+    public async Task ParseAsync_MissingFile_ShouldThrowInvalidIsolineFileException()
+    {
+        var parser = new PngIsolineParser();
+        var legend = new ColorLegend([
+            new LegendEntry(new IsolineColor(255, 0, 0), new ReinforcementSpec
+            {
+                DiameterMm = 12,
+                SpacingMm = 200,
+                SteelClass = "A500C"
+            })
+        ]);
+
+        var act = async () => await parser.ParseAsync("missing-image.png", legend);
+        await act.Should().ThrowAsync<InvalidIsolineFileException>();
+    }
+
     [Fact]
     public async Task ParseAsync_LShapedRegion_ShouldNotCollapseToBoundingBox()
     {

@@ -1,10 +1,35 @@
 using A101.Domain.Models;
+using A101.Domain.Ports;
 using FluentAssertions;
 
 namespace A101.Domain.Tests.Models;
 
 public class ColorLegendTests
 {
+    [Fact]
+    public void Constructor_EmptyLegend_ShouldThrow()
+    {
+        var act = () => new ColorLegend([]);
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Constructor_DuplicateColors_ShouldThrow()
+    {
+        var act = () => new ColorLegend([
+            new LegendEntry(new IsolineColor(255, 0, 0), new ReinforcementSpec
+            {
+                DiameterMm = 12, SpacingMm = 200, SteelClass = "A500C"
+            }),
+            new LegendEntry(new IsolineColor(255, 0, 0), new ReinforcementSpec
+            {
+                DiameterMm = 16, SpacingMm = 150, SteelClass = "A500C"
+            })
+        ]);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void FindClosest_ExactMatch_ShouldReturnEntry()
     {
@@ -150,6 +175,13 @@ public class ReinforcementSpecTests
         spec.BarAreaMm2.Should().BeApproximately(Math.PI * 36, 0.1); // π×6²
         spec.AreaPerMeterMm2.Should().BeApproximately(Math.PI * 36 * 5, 1); // 1000/200 = 5 bars/m
     }
+
+    [Fact]
+    public void BlankSteelClass_ShouldThrow()
+    {
+        var act = () => new ReinforcementSpec { DiameterMm = 12, SpacingMm = 200, SteelClass = "  " };
+        act.Should().Throw<ArgumentException>();
+    }
 }
 
 public class SlabGeometryTests
@@ -194,8 +226,56 @@ public class SlabGeometryTests
         slab.EffectiveDepthMm.Should().Be(175);
     }
 
+    [Fact]
+    public void CoverGreaterThanThickness_ShouldThrow()
+    {
+        var act = () => new SlabGeometry
+        {
+            OuterBoundary = MakeRect(),
+            ThicknessMm = 150,
+            CoverMm = 160,
+            ConcreteClass = "B25"
+        };
+
+        act.Should().Throw<ArgumentException>();
+    }
+
     private static Polygon MakeRect() => new([
         new Point2D(0, 0), new Point2D(1000, 0),
         new Point2D(1000, 1000), new Point2D(0, 1000)
     ]);
+}
+
+public class StockLengthTests
+{
+    [Fact]
+    public void NegativePrice_ShouldThrow()
+    {
+        var act = () => new StockLength { LengthMm = 6000, PricePerTon = -1 };
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void NonPositiveLength_ShouldThrow()
+    {
+        var act = () => new StockLength { LengthMm = 0 };
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+}
+
+public class OptimizationSettingsTests
+{
+    [Fact]
+    public void NegativeSawCut_ShouldThrow()
+    {
+        var act = () => new OptimizationSettings { SawCutWidthMm = -1 };
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
+    public void WeightOutsideUnitInterval_ShouldThrow()
+    {
+        var act = () => new OptimizationSettings { WasteWeight = 1.5 };
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
 }

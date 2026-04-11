@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>A101 Reinforcement</Name>
+    <Assembly>A101.RevitPlugin.dll</Assembly>
+    <AddInId>8F87E0D4-8A6D-4B3E-BF1A-6CE28532FB52</AddInId>
+    <FullClassName>A101.RevitPlugin.A101Application</FullClassName>
+    <VendorId>A101</VendorId>
+    <VendorDescription>A101 Development</VendorDescription>
+  </AddIn>
+  <AddIn Type="Command">
+    <Name>A101 Reinforcement</Name>
+    <Assembly>A101.RevitPlugin.dll</Assembly>
+    <AddInId>9A0BAF8A-EA86-4A70-86D3-CEB7B7D9E435</AddInId>
+    <FullClassName>A101.RevitPlugin.GenerateReinforcementCommand</FullClassName>
+    <VendorId>A101</VendorId>
+    <VendorDescription>A101 Development</VendorDescription>
+    <Text>Армирование плит</Text>
+    <Description>Автоматическое размещение дополнительной арматуры по изолиниям LIRA-SAPR</Description>
+    <VisibilityMode>AlwaysVisible</VisibilityMode>
+  </AddIn>
+</RevitAddIns>

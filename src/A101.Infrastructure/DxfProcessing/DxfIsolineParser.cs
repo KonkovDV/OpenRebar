@@ -1,5 +1,6 @@
 using A101.Domain.Models;
 using A101.Domain.Ports;
+using A101.Domain.Exceptions;
 using IxMilia.Dxf.Entities;
 
 namespace A101.Infrastructure.DxfProcessing;
@@ -18,40 +19,51 @@ public sealed class DxfIsolineParser : IIsolineParser
         CancellationToken cancellationToken = default)
     {
         if (!File.Exists(filePath))
-            throw new FileNotFoundException($"DXF file not found: {filePath}");
+            throw new InvalidIsolineFileException(filePath, "File not found.");
 
-        // Read DXF file
-        using var stream = File.OpenRead(filePath);
-        var dxfFile = IxMilia.Dxf.DxfFile.Load(stream);
-
-        var zones = new List<ReinforcementZone>();
-        int zoneIndex = 0;
-
-        foreach (var entity in dxfFile.Entities)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            // Read DXF file
+            using var stream = File.OpenRead(filePath);
+            var dxfFile = IxMilia.Dxf.DxfFile.Load(stream);
 
-            // Extract polylines and hatches as zone boundaries
-            var (polygon, color) = ExtractPolygonFromEntity(entity, dxfFile);
-            if (polygon is null || color is null)
-                continue;
+            var zones = new List<ReinforcementZone>();
+            int zoneIndex = 0;
 
-            // Match color to legend
-            var legendEntry = legend.FindClosest(color.Value);
-            if (legendEntry is null)
-                continue;
-
-            zones.Add(new ReinforcementZone
+            foreach (var entity in dxfFile.Entities)
             {
-                Id = $"DXF-{++zoneIndex:D4}",
-                Boundary = polygon,
-                Spec = legendEntry.Spec,
-                Direction = RebarDirection.X, // Will be refined by ZoneDetector
-                ZoneType = ZoneType.Simple    // Will be classified by ZoneDetector
-            });
-        }
+                cancellationToken.ThrowIfCancellationRequested();
 
-        return Task.FromResult<IReadOnlyList<ReinforcementZone>>(zones);
+                // Extract polylines and hatches as zone boundaries
+                var (polygon, color) = ExtractPolygonFromEntity(entity, dxfFile);
+                if (polygon is null || color is null)
+                    continue;
+
+                // Match color to legend
+                var legendEntry = legend.FindClosest(color.Value);
+                if (legendEntry is null)
+                    continue;
+
+                zones.Add(new ReinforcementZone
+                {
+                    Id = $"DXF-{++zoneIndex:D4}",
+                    Boundary = polygon,
+                    Spec = legendEntry.Spec,
+                    Direction = RebarDirection.X, // Will be refined by ZoneDetector
+                    ZoneType = ZoneType.Simple    // Will be classified by ZoneDetector
+                });
+            }
+
+            return Task.FromResult<IReadOnlyList<ReinforcementZone>>(zones);
+        }
+        catch (InvalidIsolineFileException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            throw new InvalidIsolineFileException(filePath, ex.Message);
+        }
     }
 
     private static (Polygon? Polygon, IsolineColor? Color) ExtractPolygonFromEntity(

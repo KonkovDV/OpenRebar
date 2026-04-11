@@ -1,5 +1,6 @@
 using A101.Domain.Models;
 using A101.Domain.Ports;
+using A101.Domain.Exceptions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -29,16 +30,27 @@ public sealed class PngIsolineParser : IIsolineParser
         CancellationToken cancellationToken = default)
     {
         if (!File.Exists(filePath))
-            throw new FileNotFoundException($"Image file not found: {filePath}");
+            throw new InvalidIsolineFileException(filePath, "File not found.");
 
-        // If ML service available, delegate to it
-        if (_mlService is not null)
+        try
         {
-            return await ParseWithMlAsync(filePath, legend, cancellationToken);
-        }
+            // If ML service available, delegate to it
+            if (_mlService is not null)
+            {
+                return await ParseWithMlAsync(filePath, legend, cancellationToken);
+            }
 
-        // Otherwise: basic color quantization + connected components
-        return await ParseWithColorQuantizationAsync(filePath, legend, cancellationToken);
+            // Otherwise: basic color quantization + connected components
+            return await ParseWithColorQuantizationAsync(filePath, legend, cancellationToken);
+        }
+        catch (InvalidIsolineFileException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            throw new InvalidIsolineFileException(filePath, ex.Message);
+        }
     }
 
     private async Task<IReadOnlyList<ReinforcementZone>> ParseWithMlAsync(
@@ -78,7 +90,8 @@ public sealed class PngIsolineParser : IIsolineParser
         int height = image.Height;
 
         if ((long)width * height > MaxImagePixels)
-            throw new InvalidDataException(
+            throw new InvalidIsolineFileException(
+                filePath,
                 $"Image is too large for in-process parsing: {width}x{height} pixels. " +
                 $"Limit: {MaxImagePixels} pixels.");
 

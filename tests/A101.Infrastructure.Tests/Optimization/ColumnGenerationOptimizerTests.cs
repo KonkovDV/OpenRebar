@@ -1,4 +1,5 @@
 using A101.Domain.Models;
+using A101.Domain.Exceptions;
 using A101.Domain.Ports;
 using A101.Infrastructure.Optimization;
 using FluentAssertions;
@@ -147,5 +148,17 @@ public class ColumnGenerationOptimizerTests
         result.TotalStockBarsNeeded.Should().Be(3);
         result.CuttingPlans.Should().OnlyContain(plan => plan.StockLengthMm == 6000,
             "three 5.5m pieces fit more economically into 6m stock than into 11.7m stock");
+    }
+
+    [Fact]
+    public void NoInStockLengths_ShouldThrowOptimizationException()
+    {
+        var stock = new List<StockLength>
+        {
+            new() { LengthMm = 11700, InStock = false }
+        };
+
+        var act = () => _optimizer.Optimize([5000], stock, DefaultSettings);
+        act.Should().Throw<OptimizationException>();
     }
 }

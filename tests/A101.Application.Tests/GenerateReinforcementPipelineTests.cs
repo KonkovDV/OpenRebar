@@ -15,6 +15,8 @@ public class GenerateReinforcementPipelineTests
     private readonly IRebarOptimizer _optimizer = Substitute.For<IRebarOptimizer>();
     private readonly ISupplierCatalogLoader _catalogLoader = Substitute.For<ISupplierCatalogLoader>();
     private readonly IRevitPlacer _placer = Substitute.For<IRevitPlacer>();
+    private readonly IReportStore _reportStore = Substitute.For<IReportStore>();
+    private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
 
     private GenerateReinforcementPipeline CreateSut() => new(
         _dxfParser,
@@ -23,7 +25,9 @@ public class GenerateReinforcementPipelineTests
         _calculator,
         _optimizer,
         _catalogLoader,
-        _placer);
+        _placer,
+        _reportStore,
+        _logger);
 
     [Fact]
     public async Task ExecuteAsync_DxfInput_ShouldUseDxfParser()
@@ -51,8 +55,11 @@ public class GenerateReinforcementPipelineTests
         var result = await sut.ExecuteAsync(input);
 
         result.ParsedZoneCount.Should().Be(1);
+        result.Report.Should().NotBeNull();
         await _dxfParser.Received(1).ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>());
         await _pngParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
+        await _reportStore.DidNotReceive().SaveAsync(Arg.Any<ReinforcementExecutionReport>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        _logger.Received().Info("Starting reinforcement pipeline", Arg.Any<(string Key, object? Value)[]>());
     }
 
     [Fact]
@@ -122,6 +129,73 @@ public class GenerateReinforcementPipelineTests
         await _placer.DidNotReceive().PlaceReinforcementAsync(
             Arg.Any<IReadOnlyList<ReinforcementZone>>(),
             Arg.Any<PlacementSettings>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenReportPersistenceEnabled_ShouldPersistCanonicalReport()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false) with
+        {
+            PersistReport = true,
+            ReportOutputPath = "reports/plan.result.json",
+            Metadata = new PipelineExecutionMetadata
+            {
+                ProjectCode = "A101-TST",
+                SlabId = "SLAB-42",
+                LevelName = "Level 12"
+            }
+        };
+
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(1000, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 200,
+                AnchorageLengthEnd = 200,
+                Mark = "1"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(CreateOptimizationResult());
+        _reportStore.SaveAsync(Arg.Any<ReinforcementExecutionReport>(), input.ReportOutputPath!, Arg.Any<CancellationToken>())
+            .Returns(new StoredReportReference
+            {
+                OutputPath = input.ReportOutputPath!,
+                MediaType = "application/json",
+                Sha256 = "ABC123",
+                ByteCount = 128
+            });
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.StoredReport.Should().NotBeNull();
+        result.StoredReport!.OutputPath.Should().Be(input.ReportOutputPath);
+        result.Report!.Metadata.ProjectCode.Should().Be("A101-TST");
+
+        await _reportStore.Received(1).SaveAsync(
+            Arg.Is<ReinforcementExecutionReport>(report =>
+                report.Metadata.SlabId == "SLAB-42" &&
+                report.Zones.Count == 1 &&
+                report.Summary.TotalRebarSegments == 1),
+            input.ReportOutputPath!,
             Arg.Any<CancellationToken>());
     }
 

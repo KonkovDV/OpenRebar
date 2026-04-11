@@ -12,13 +12,16 @@ public sealed class OptimizeRebarCuttingUseCase
 {
     private readonly IRebarOptimizer _optimizer;
     private readonly ISupplierCatalogLoader _catalogLoader;
+    private readonly IStructuredLogger _logger;
 
     public OptimizeRebarCuttingUseCase(
         IRebarOptimizer optimizer,
-        ISupplierCatalogLoader catalogLoader)
+        ISupplierCatalogLoader catalogLoader,
+        IStructuredLogger logger)
     {
         _optimizer = optimizer;
         _catalogLoader = catalogLoader;
+        _logger = logger;
     }
 
     /// <summary>
@@ -39,6 +42,8 @@ public sealed class OptimizeRebarCuttingUseCase
         {
             SupplierName = catalog.SupplierName
         };
+
+        _logger.Info("Starting cutting optimization", ("supplierName", catalog.SupplierName));
 
         var rebarsByDiameter = zones
             .SelectMany(z => z.Rebars)
@@ -75,6 +80,12 @@ public sealed class OptimizeRebarCuttingUseCase
                 OptimizationResult = enrichedResult,
                 LinearMassKgPerM = linearMass
             });
+
+            _logger.Info(
+                "Optimized diameter batch",
+                ("diameterMm", diameter),
+                ("stockBarsNeeded", enrichedResult.TotalStockBarsNeeded),
+                ("wastePercent", Math.Round(enrichedResult.TotalWastePercent, 2)));
         }
 
         return report;
@@ -113,8 +124,11 @@ public sealed class CuttingOptimizationReport
 
     public double TotalMassKg => DiameterReports.Sum(r => r.OptimizationResult.TotalMassKg ?? 0);
     public int TotalStockBars => DiameterReports.Sum(r => r.OptimizationResult.TotalStockBarsNeeded);
+    public double TotalWasteMm => DiameterReports.Sum(r => r.OptimizationResult.TotalWasteMm);
     public double AverageWastePercent =>
-        DiameterReports.Any() ? DiameterReports.Average(r => r.OptimizationResult.TotalWastePercent) : 0;
+        DiameterReports.Any()
+            ? TotalWasteMm / DiameterReports.Sum(r => r.OptimizationResult.CuttingPlans.Sum(p => p.StockLengthMm)) * 100.0
+            : 0;
 }
 
 /// <summary>

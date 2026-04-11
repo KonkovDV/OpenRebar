@@ -1,6 +1,7 @@
 namespace A101.RevitPlugin.Revit;
 
 #if REVIT_SDK
+using System.Globalization;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
@@ -21,12 +22,30 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         PlacementSettings settings,
         CancellationToken cancellationToken = default)
     {
+        const double MillimetersToFeet = 1.0 / 304.8;
+
         var doc = _uiDoc.Document;
         int rebarsPlaced = 0;
         int tagsCreated = 0;
         int bendingDetails = 0;
         var warnings = new List<string>();
         var errors = new List<string>();
+
+        var hostFloor = ResolveHostFloor(doc, settings, warnings);
+        if (hostFloor is null)
+        {
+            return Task.FromResult(new PlacementResult
+            {
+                TotalRebarsPlaced = 0,
+                TotalTagsCreated = 0,
+                TotalBendingDetails = 0,
+                Warnings = warnings,
+                Errors = errors
+            });
+        }
+
+        double coverMm = GetHostCoverMm(hostFloor);
+        double thicknessMm = GetHostThicknessMm(hostFloor);
 
         using var txn = new Transaction(doc, "A101: Place Reinforcement");
         txn.Start();
@@ -46,13 +65,58 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                         continue;
                     }
 
-                    // TODO: replace this placeholder with AreaReinforcement.Create or Rebar.CreateFromCurves
-                    // once the project wires host selection, view context, and cover/type mapping.
-                    _ = barType;
-                    rebarsPlaced++;
+                    try
+                    {
+                        var startPoint = new XYZ(
+                            segment.Start.X * MillimetersToFeet,
+                            segment.Start.Y * MillimetersToFeet,
+                            0);
+                        var endPoint = new XYZ(
+                            segment.End.X * MillimetersToFeet,
+                            segment.End.Y * MillimetersToFeet,
+                            0);
 
-                    if (settings.CreateTags)
-                        tagsCreated++;
+                        double zFeet = zone.Layer == RebarLayer.Bottom
+                            ? settings.ElevationOffsetFeet + coverMm * MillimetersToFeet
+                            : settings.ElevationOffsetFeet + (thicknessMm - coverMm) * MillimetersToFeet;
+
+                        startPoint = new XYZ(startPoint.X, startPoint.Y, zFeet);
+                        endPoint = new XYZ(endPoint.X, endPoint.Y, zFeet);
+
+                        var curves = new List<Curve>
+                        {
+                            Line.CreateBound(startPoint, endPoint)
+                        };
+
+                        var rebar = Rebar.CreateFromCurves(
+                            doc,
+                            RebarStyle.Standard,
+                            barType,
+                            startHook: null,
+                            endHook: null,
+                            host: hostFloor,
+                            norm: XYZ.BasisZ,
+                            curves,
+                            RebarHookOrientation.Left,
+                            RebarHookOrientation.Left,
+                            useExistingShapeIfPossible: true,
+                            createNewShape: true);
+
+                        if (rebar is null)
+                        {
+                            errors.Add($"Failed to create rebar for zone {zone.Id}, mark {segment.Mark}.");
+                            continue;
+                        }
+
+                        if (settings.GroupByZone)
+                            rebar.LookupParameter(settings.ZoneParameterName)?.Set(zone.Id);
+
+                        rebarsPlaced++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errors.Add($"Zone {zone.Id}, mark {segment.Mark}: {ex.Message}");
+                    }
                 }
 
                 if (settings.CreateBendingDetails && zone.Rebars.Count > 0)
@@ -75,6 +139,42 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             Warnings = warnings,
             Errors = errors
         });
+    }
+
+    private static Floor? ResolveHostFloor(Document doc, PlacementSettings settings, List<string> warnings)
+    {
+        if (string.IsNullOrWhiteSpace(settings.HostElementId))
+        {
+            warnings.Add("HostElementId is not provided. Rebar placement skipped.");
+            return null;
+        }
+
+        if (!int.TryParse(settings.HostElementId, NumberStyles.Integer, CultureInfo.InvariantCulture, out int hostId))
+        {
+            warnings.Add($"HostElementId '{settings.HostElementId}' is invalid. Rebar placement skipped.");
+            return null;
+        }
+
+        var floor = doc.GetElement(new ElementId(hostId)) as Floor;
+        if (floor is null)
+            warnings.Add($"Host element {settings.HostElementId} is not a valid Floor. Rebar placement skipped.");
+
+        return floor;
+    }
+
+    private static double GetHostThicknessMm(Floor floor)
+    {
+        return floor.FloorType.GetCompoundStructure()?.GetLayers().Sum(layer => layer.Width) * 304.8 ?? 200.0;
+    }
+
+    private static double GetHostCoverMm(Floor floor)
+    {
+        var coverTypeId = floor.get_Parameter(BuiltInParameter.CLEAR_COVER_BOTTOM)?.AsElementId();
+        var coverType = coverTypeId is not null && coverTypeId != ElementId.InvalidElementId
+            ? floor.Document.GetElement(coverTypeId) as RebarCoverType
+            : null;
+
+        return coverType is not null ? coverType.CoverDistance * 304.8 : 25.0;
     }
 
     private static RebarBarType? FindExistingBarType(Document doc, int diameterMm)

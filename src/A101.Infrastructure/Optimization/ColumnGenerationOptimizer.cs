@@ -1,5 +1,7 @@
 using A101.Domain.Models;
 using A101.Domain.Ports;
+using A101.Domain.Exceptions;
+using Highs;
 
 namespace A101.Infrastructure.Optimization;
 
@@ -57,7 +59,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             .ToList();
 
         if (availableStock.Count == 0)
-            throw new InvalidOperationException("No in-stock bar lengths are available for optimization.");
+            throw new OptimizationException("No in-stock bar lengths are available for optimization.");
 
         // Aggregate demand: distinct lengths → counts
         var demand = AggregrateDemand(requiredLengths, settings.SawCutWidthMm);
@@ -176,18 +178,98 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLP(
         List<int[]> patterns, int[] demand, int m)
     {
+        return TrySolveRestrictedMasterLpWithHighs(patterns, demand, m)
+            ?? SolveRestrictedMasterLpFallback(patterns, demand, m);
+    }
+
+    private static (double[]? Solution, double[] Duals)? TrySolveRestrictedMasterLpWithHighs(
+        List<int[]> patterns,
+        int[] demand,
+        int m)
+    {
+        try
+        {
+            int n = patterns.Count;
+            if (n == 0)
+                return (null, new double[m]);
+
+            double infinity = double.PositiveInfinity;
+            var colCost = Enumerable.Repeat(1.0, n).ToArray();
+            var colLower = new double[n];
+            var colUpper = Enumerable.Repeat(infinity, n).ToArray();
+            var rowLower = demand.Select(value => (double)value).ToArray();
+            var rowUpper = Enumerable.Repeat(infinity, m).ToArray();
+
+            var starts = new int[m + 1];
+            var indices = new List<int>();
+            var values = new List<double>();
+
+            for (int i = 0; i < m; i++)
+            {
+                starts[i] = indices.Count;
+                for (int j = 0; j < n; j++)
+                {
+                    int coefficient = patterns[j][i];
+                    if (coefficient == 0)
+                        continue;
+
+                    indices.Add(j);
+                    values.Add(coefficient);
+                }
+            }
+
+            starts[m] = indices.Count;
+
+            var model = new HighsModel(
+                colCost,
+                colLower,
+                colUpper,
+                rowLower,
+                rowUpper,
+                starts,
+                indices.ToArray(),
+                values.ToArray(),
+                null,
+                0,
+                HighsMatrixFormat.kRowwise,
+                HighsObjectiveSense.kMinimize);
+
+            using var solver = new HighsLpSolver();
+            solver.setOptionValue("output_flag", "false");
+            var passStatus = solver.passLp(model);
+            if (passStatus != HighsStatus.kOk)
+                return null;
+
+            var runStatus = solver.run();
+            if (runStatus != HighsStatus.kOk)
+                return null;
+
+            var modelStatus = solver.GetModelStatus();
+            if (modelStatus != HighsModelStatus.kOptimal && modelStatus != HighsModelStatus.kModelEmpty)
+                return null;
+
+            var solution = solver.getSolution();
+            return (solution.colvalue, solution.rowdual.Select(Math.Abs).ToArray());
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLpFallback(
+        List<int[]> patterns,
+        int[] demand,
+        int m)
+    {
         int n = patterns.Count;
         if (n == 0) return (null, new double[m]);
 
-        // Simple LP: iteratively adjust x_j to satisfy demand constraints
-        // Using Dantzig's column method adapted for small problems
         double[] x = new double[n];
         double[] duals = new double[m];
 
-        // Initialize: cover each item's demand with any covering pattern
         for (int i = 0; i < m; i++)
         {
-            // Find the pattern that covers item i the most
             int bestJ = -1;
             int bestCover = 0;
             for (int j = 0; j < n; j++)
@@ -202,7 +284,6 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             if (bestJ >= 0 && bestCover > 0)
             {
                 double need = demand[i];
-                // How much of the current total coverage is already there
                 double currentCoverage = 0;
                 for (int j = 0; j < n; j++)
                     currentCoverage += patterns[j][i] * x[j];
@@ -213,30 +294,24 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             }
         }
 
-        // Iterative refinement (coordinate descent on the LP)
         for (int iter = 0; iter < 200; iter++)
         {
             bool changed = false;
 
             for (int j = 0; j < n; j++)
             {
-                // Compute the minimum x[j] needed to help satisfy all constraints
                 double minNeeded = 0;
                 for (int i = 0; i < m; i++)
                 {
                     if (patterns[j][i] == 0) continue;
 
-                    // Current coverage of item i without pattern j
                     double coverWithout = -patterns[j][i] * x[j];
                     for (int k = 0; k < n; k++)
                         coverWithout += patterns[k][i] * x[k];
 
                     double deficit = demand[i] - coverWithout;
                     if (deficit > 0)
-                    {
-                        double required = deficit / patterns[j][i];
-                        minNeeded = Math.Max(minNeeded, required);
-                    }
+                        minNeeded = Math.Max(minNeeded, deficit / patterns[j][i]);
                 }
 
                 if (Math.Abs(x[j] - minNeeded) > 1e-8)
@@ -249,11 +324,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             if (!changed) break;
         }
 
-        // Compute dual prices (shadow prices) via constraint sensitivity
         for (int i = 0; i < m; i++)
         {
-            // Dual price ≈ marginal cost of one more unit of demand i
-            // For unit-cost objective: π_i ≈ 1 / (max a_ij for patterns with x_j > 0)
             double maxCover = 0;
             for (int j = 0; j < n; j++)
             {

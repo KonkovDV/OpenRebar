@@ -19,6 +19,8 @@ public sealed class SlabGeometry
         {
             if (value is <= 0 or > 2000)
                 throw new ArgumentOutOfRangeException(nameof(ThicknessMm), value, "Slab thickness must be between 0 and 2000mm.");
+            if (_coverMm > 0 && value <= _coverMm)
+                throw new ArgumentException("Slab thickness must be greater than cover.", nameof(ThicknessMm));
             _thicknessMm = value;
         }
     }
@@ -32,6 +34,8 @@ public sealed class SlabGeometry
         {
             if (value is < 0 or > 200)
                 throw new ArgumentOutOfRangeException(nameof(CoverMm), value, "Concrete cover must be between 0 and 200mm.");
+            if (_thicknessMm > 0 && value >= _thicknessMm)
+                throw new ArgumentException("Concrete cover must be smaller than slab thickness.", nameof(CoverMm));
             _coverMm = value;
         }
     }

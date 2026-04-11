@@ -1,12 +1,17 @@
 using A101.Domain.Models;
+using A101.Domain.Ports;
 using A101.Infrastructure.ReinforcementEngine;
 using FluentAssertions;
+using System.Reflection;
+using NSubstitute;
 
 namespace A101.Infrastructure.Tests.ReinforcementEngine;
 
 public class StandardReinforcementCalculatorTests
 {
-    private readonly StandardReinforcementCalculator _calculator = new();
+    private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
+
+    private StandardReinforcementCalculator CreateCalculator() => new(_logger);
 
     private static readonly SlabGeometry TestSlab = new()
     {
@@ -25,7 +30,8 @@ public class StandardReinforcementCalculatorTests
         var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
             new BoundingBox(new Point2D(0, 0), new Point2D(3000, 2000)));
 
-        var result = _calculator.CalculateRebars([zone], TestSlab);
+        var calculator = CreateCalculator();
+        var result = calculator.CalculateRebars([zone], TestSlab);
 
         result.Should().HaveCount(1);
         var rebars = result[0].Rebars;
@@ -45,7 +51,8 @@ public class StandardReinforcementCalculatorTests
         var zone = MakeZone(RebarDirection.Y, RebarLayer.Bottom,
             new BoundingBox(new Point2D(0, 0), new Point2D(2000, 3000)));
 
-        var result = _calculator.CalculateRebars([zone], TestSlab);
+        var calculator = CreateCalculator();
+        var result = calculator.CalculateRebars([zone], TestSlab);
 
         var rebars = result[0].Rebars;
         rebars.Should().NotBeEmpty();
@@ -66,10 +73,11 @@ public class StandardReinforcementCalculatorTests
         var zoneTop = MakeZone(RebarDirection.X, RebarLayer.Top,
             new BoundingBox(new Point2D(0, 0), new Point2D(3000, 2000)));
 
-        _calculator.CalculateRebars([zoneBottom], TestSlab);
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zoneBottom], TestSlab);
         var bottomAnch = zoneBottom.Rebars[0].AnchorageLengthStart;
 
-        var calc2 = new StandardReinforcementCalculator();
+        var calc2 = new StandardReinforcementCalculator(_logger);
         calc2.CalculateRebars([zoneTop], TestSlab);
         var topAnch = zoneTop.Rebars[0].AnchorageLengthStart;
 
@@ -83,7 +91,8 @@ public class StandardReinforcementCalculatorTests
         var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
             new BoundingBox(new Point2D(0, 0), new Point2D(3000, 2000)));
 
-        _calculator.CalculateRebars([zone], TestSlab);
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], TestSlab);
 
         zone.Rebars.Should().AllSatisfy(r => r.Mark.Should().NotBeNullOrEmpty());
     }
@@ -94,7 +103,8 @@ public class StandardReinforcementCalculatorTests
         var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
             new BoundingBox(new Point2D(0, 0), new Point2D(3000, 2000)));
 
-        _calculator.CalculateRebars([zone], TestSlab);
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], TestSlab);
 
         var rebars = zone.Rebars;
         if (rebars.Count >= 2)
@@ -110,7 +120,8 @@ public class StandardReinforcementCalculatorTests
         var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
             new BoundingBox(new Point2D(0, 0), new Point2D(5000, 3000)));
 
-        _calculator.CalculateRebars([zone], TestSlab);
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], TestSlab);
 
         zone.Rebars.Should().AllSatisfy(r =>
         {
@@ -140,7 +151,8 @@ public class StandardReinforcementCalculatorTests
             Layer = RebarLayer.Bottom
         };
 
-        _calculator.CalculateRebars([zone], TestSlab);
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], TestSlab);
 
         zone.Rebars.Should().NotBeEmpty();
 
@@ -177,7 +189,8 @@ public class StandardReinforcementCalculatorTests
         var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
             new BoundingBox(new Point2D(0, 0), new Point2D(4000, 4000)));
 
-        _calculator.CalculateRebars([zone], slabWithOpening);
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], slabWithOpening);
 
         var openingBandBars = zone.Rebars
             .Where(r => r.Start.Y > 1500 && r.Start.Y < 2500)
@@ -196,8 +209,43 @@ public class StandardReinforcementCalculatorTests
     [Fact]
     public void CalculateRebars_EmptyZones_ShouldReturnEmptyList()
     {
-        var result = _calculator.CalculateRebars([], TestSlab);
+        var calculator = CreateCalculator();
+        var result = calculator.CalculateRebars([], TestSlab);
         result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void CalculateRebars_SpacingViolation_ShouldLogWarning()
+    {
+        var zone = new ReinforcementZone
+        {
+            Id = "SPACING-001",
+            Boundary = new Polygon([
+                new Point2D(0, 0), new Point2D(3000, 0),
+                new Point2D(3000, 3000), new Point2D(0, 3000)
+            ]),
+            Spec = new ReinforcementSpec { DiameterMm = 12, SpacingMm = 400, SteelClass = "A500C" },
+            Direction = RebarDirection.X,
+            ZoneType = ZoneType.Simple,
+            Layer = RebarLayer.Bottom
+        };
+
+        var calculator = CreateCalculator();
+        calculator.CalculateRebars([zone], TestSlab);
+
+        _logger.Received().Warn("Spacing exceeds normative maximum", Arg.Any<(string Key, object? Value)[]>());
+    }
+
+    [Fact]
+    public void Calculator_ShouldNotKeepMutableInstanceState()
+    {
+        var mutableFields = typeof(StandardReinforcementCalculator)
+            .GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
+            .Where(field => !field.IsInitOnly)
+            .Select(field => field.Name)
+            .ToList();
+
+        mutableFields.Should().BeEmpty("calculator is registered as a singleton and must remain stateless");
     }
 
     private static ReinforcementZone MakeZone(

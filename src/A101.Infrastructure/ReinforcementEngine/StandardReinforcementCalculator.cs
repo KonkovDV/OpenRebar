@@ -12,17 +12,22 @@ namespace A101.Infrastructure.ReinforcementEngine;
 /// </summary>
 public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 {
-    private int _markCounter;
+    private readonly IStructuredLogger _logger;
+
+    public StandardReinforcementCalculator(IStructuredLogger logger)
+    {
+        _logger = logger;
+    }
 
     public IReadOnlyList<ReinforcementZone> CalculateRebars(
         IReadOnlyList<ReinforcementZone> zones,
         SlabGeometry slab)
     {
-        _markCounter = 0;
+        int markCounter = 0;
 
         foreach (var zone in zones)
         {
-            var rebars = GenerateRebarsForZone(zone, slab);
+            var rebars = GenerateRebarsForZone(zone, slab, ref markCounter);
             zone.Rebars = rebars;
         }
 
@@ -31,15 +36,17 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
     private List<RebarSegment> GenerateRebarsForZone(
         ReinforcementZone zone,
-        SlabGeometry slab)
+        SlabGeometry slab,
+        ref int markCounter)
     {
-        return GenerateRebarsInPolygon(zone.Boundary, zone, slab);
+        return GenerateRebarsInPolygon(zone.Boundary, zone, slab, ref markCounter);
     }
 
     private List<RebarSegment> GenerateRebarsInPolygon(
         Polygon polygon,
         ReinforcementZone zone,
-        SlabGeometry slab)
+        SlabGeometry slab,
+        ref int markCounter)
     {
         var rebars = new List<RebarSegment>();
         int spacing = zone.Spec.SpacingMm;
@@ -74,7 +81,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
                         DiameterMm = diameter,
                         AnchorageLengthStart = anchorageLength,
                         AnchorageLengthEnd = anchorageLength,
-                        Mark = $"{++_markCounter}"
+                        Mark = $"{++markCounter}"
                     });
                 }
             }
@@ -99,7 +106,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
                         DiameterMm = diameter,
                         AnchorageLengthStart = anchorageLength,
                         AnchorageLengthEnd = anchorageLength,
-                        Mark = $"{++_markCounter}"
+                        Mark = $"{++markCounter}"
                     });
                 }
             }
@@ -110,8 +117,12 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         double maxSpacing = ReinforcementLimits.MaxSpacing(slab.ThicknessMm, isPrimary);
         if (spacing > maxSpacing)
         {
-            // Log warning: spacing exceeds code maximum
-            // In production this should go through IStructuredLogger
+            _logger.Warn(
+                "Spacing exceeds normative maximum",
+                ("zoneId", zone.Id),
+                ("spacingMm", spacing),
+                ("maxSpacingMm", Math.Round(maxSpacing, 2)),
+                ("slabThicknessMm", slab.ThicknessMm));
         }
 
         return rebars;

@@ -4,25 +4,16 @@ using A101.Domain.Ports;
 namespace A101.RevitPlugin.Revit;
 
 /// <summary>
-/// Stub Revit placer for development/testing without Revit runtime.
-/// In production, this is replaced by the real RevitRebarPlacer
-/// that uses the Revit API (Rebar, RebarInSystem, RebarTag, BendingDetail).
+/// Re-export of Infrastructure stub for backward compatibility.
+/// Prefer <see cref="A101.Infrastructure.Stubs.StubRevitPlacer"/> for new code.
 /// </summary>
 public sealed class StubRevitPlacer : IRevitPlacer
 {
+    private readonly Infrastructure.Stubs.StubRevitPlacer _inner = new();
+
     public Task<PlacementResult> PlaceReinforcementAsync(
         IReadOnlyList<ReinforcementZone> zones,
         PlacementSettings settings,
         CancellationToken cancellationToken = default)
-    {
-        int totalRebars = zones.Sum(z => z.Rebars.Count);
-
-        return Task.FromResult(new PlacementResult
-        {
-            TotalRebarsPlaced = totalRebars,
-            TotalTagsCreated = settings.CreateTags ? totalRebars : 0,
-            TotalBendingDetails = settings.CreateBendingDetails ? zones.Count : 0,
-            Warnings = ["StubRevitPlacer: elements logged but not placed in Revit model."]
-        });
-    }
+        => _inner.PlaceReinforcementAsync(zones, settings, cancellationToken);
 }

@@ -6,10 +6,30 @@ namespace A101.Domain.Models;
 public sealed record StockLength
 {
     /// <summary>Standard bar length in mm (e.g. 11700, 12000).</summary>
-    public required double LengthMm { get; init; }
+    public required double LengthMm
+    {
+        get => _lengthMm;
+        init
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(LengthMm), value, "Stock length must be positive.");
+            _lengthMm = value;
+        }
+    }
+    private readonly double _lengthMm;
 
     /// <summary>Price per ton in currency units.</summary>
-    public double? PricePerTon { get; init; }
+    public double? PricePerTon
+    {
+        get => _pricePerTon;
+        init
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException(nameof(PricePerTon), value, "Price per ton cannot be negative.");
+            _pricePerTon = value;
+        }
+    }
+    private readonly double? _pricePerTon;
 
     /// <summary>Whether currently available from the supplier.</summary>
     public bool InStock { get; init; } = true;

@@ -96,7 +96,17 @@ public sealed record ReinforcementSpec
     private readonly int _spacingMm;
 
     /// <summary>Steel class designation (e.g. "A500C", "A400").</summary>
-    public required string SteelClass { get; init; }
+    public required string SteelClass
+    {
+        get => _steelClass;
+        init
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Steel class is required.", nameof(SteelClass));
+            _steelClass = value.Trim();
+        }
+    }
+    private readonly string _steelClass = string.Empty;
 
     /// <summary>Cross-sectional area of one bar (mm²).</summary>
     public double BarAreaMm2 => Math.PI * DiameterMm * DiameterMm / 4.0;
@@ -119,6 +129,12 @@ public sealed class ColorLegend
 
     public ColorLegend(IReadOnlyList<LegendEntry> entries)
     {
+        if (entries.Count == 0)
+            throw new ArgumentException("Color legend must contain at least one entry.", nameof(entries));
+
+        if (entries.GroupBy(e => e.Color).Any(g => g.Count() > 1))
+            throw new ArgumentException("Color legend cannot contain duplicate colors.", nameof(entries));
+
         Entries = entries;
     }
 

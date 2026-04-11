@@ -38,6 +38,12 @@ public sealed record PlacementSettings
 
     /// <summary>Custom parameter name for zone origin ID.</summary>
     public string ZoneParameterName { get; init; } = "A101_ZoneId";
+
+    /// <summary>Revit host element id serialized as string to keep domain isolation.</summary>
+    public string? HostElementId { get; init; }
+
+    /// <summary>Host slab elevation offset in Revit internal feet.</summary>
+    public double ElevationOffsetFeet { get; init; }
 }
 
 /// <summary>

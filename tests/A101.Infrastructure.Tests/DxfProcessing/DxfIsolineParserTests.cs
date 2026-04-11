@@ -1,4 +1,5 @@
 using A101.Domain.Models;
+using A101.Domain.Exceptions;
 using A101.Infrastructure.DxfProcessing;
 using FluentAssertions;
 using IxMilia.Dxf;
@@ -9,6 +10,16 @@ namespace A101.Infrastructure.Tests.DxfProcessing;
 
 public class DxfIsolineParserTests
 {
+    [Fact]
+    public async Task ParseAsync_MissingFile_ShouldThrowInvalidIsolineFileException()
+    {
+        var parser = new DxfIsolineParser();
+        var legend = CreateLegend(new IsolineColor(255, 0, 0));
+
+        var act = async () => await parser.ParseAsync("missing-file.dxf", legend);
+        await act.Should().ThrowAsync<InvalidIsolineFileException>();
+    }
+
     [Fact]
     public async Task ParseAsync_LwPolylineWithBulge_ShouldApproximateArcSegments()
     {
