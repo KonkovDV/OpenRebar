@@ -78,4 +78,25 @@ public sealed class OptimizationResult
 
     /// <summary>Estimated cost based on supplier prices.</summary>
     public double? EstimatedCost { get; init; }
+
+    /// <summary>
+    /// Execution provenance for the optimizer that produced this result.
+    /// Used in the canonical report and verification-oriented tests.
+    /// </summary>
+    public OptimizationProvenance? Provenance { get; init; }
+}
+
+/// <summary>
+/// Provenance for a cutting optimization run.
+/// Makes algorithmic tradeoffs explicit in persisted reports.
+/// </summary>
+public sealed record OptimizationProvenance
+{
+    public required string OptimizerId { get; init; }
+    public required string MasterProblemStrategy { get; init; }
+    public required string PricingStrategy { get; init; }
+    public required string IntegerizationStrategy { get; init; }
+    public required double DemandAggregationPrecisionMm { get; init; }
+    public required string QualityFloor { get; init; }
+    public required bool UsedFallbackMasterSolver { get; init; }
 }

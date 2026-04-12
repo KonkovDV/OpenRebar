@@ -49,6 +49,36 @@ public class AeroBimReportExporterTests
                 SlabId = "Плита_Этаж_03",
                 LevelName = "03"
             },
+            NormativeProfile = new NormativeProfileExecutionReport
+            {
+                ProfileId = "ru.sp63.2018",
+                Jurisdiction = "RU",
+                DesignCode = "SP 63.13330.2018",
+                TablesVersion = "embedded.sp63.v1"
+            },
+            AnalysisProvenance = new AnalysisProvenanceExecutionReport
+            {
+                Geometry = new GeometryProcessingExecutionReport
+                {
+                    DecompositionAlgorithm = "adaptive-orthogonal-strip-or-grid/v3",
+                    RectangularShortcutFillRatio = 0.85,
+                    MinRectangleAreaMm2 = 10_000,
+                    SamplingResolutionPerAxis = 4,
+                    CellCoverageInclusionThreshold = 0.35,
+                    MinCoverageRatioAcrossComplexZones = null,
+                    MaxOverCoverageRatioAcrossComplexZones = null
+                },
+                Optimization = new OptimizationProcessingExecutionReport
+                {
+                    OptimizerId = "column-generation-relaxation-v1",
+                    MasterProblemStrategy = "restricted-master-lp-highs",
+                    PricingStrategy = "bounded-knapsack-dp",
+                    IntegerizationStrategy = "largest-remainder-plus-repair",
+                    DemandAggregationPrecisionMm = 0.1,
+                    QualityFloor = "ffd-non-regression-floor",
+                    AnyFallbackMasterSolverUsed = false
+                }
+            },
             IsolineFileName = "floor_03.dxf",
             IsolineFileFormat = "dxf",
             Slab = new SlabExecutionReport
@@ -136,9 +166,11 @@ public class AeroBimReportExporterTests
             document.RootElement.GetProperty("$schema").GetString().Should().Be("aerobim-OpenRebar-reinforcement-report/v1");
             document.RootElement.GetProperty("project_id").GetString().Should().Be("рк-25-0042");
             document.RootElement.GetProperty("slab_id").GetString().Should().Be("Плита_Этаж_03");
+            document.RootElement.GetProperty("normative_profile_id").GetString().Should().Be("ru.sp63.2018");
             document.RootElement.GetProperty("zones").GetArrayLength().Should().Be(1);
             document.RootElement.GetProperty("zones")[0].GetProperty("steel_class").GetString().Should().Be("A500C");
             document.RootElement.GetProperty("optimization").GetProperty("total_stock_bars").GetInt32().Should().Be(1);
+            document.RootElement.GetProperty("analysis_provenance").GetProperty("optimizer_id").GetString().Should().Be("column-generation-relaxation-v1");
         }
         finally
         {

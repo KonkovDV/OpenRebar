@@ -32,8 +32,13 @@ public sealed class StandardZoneDetector : IZoneDetector
             // Decompose complex zones
             if (classified.ZoneType == ZoneType.Complex)
             {
-                var subRects = PolygonDecomposition.DecomposeToRectangles(classified.Boundary);
-                classified = CloneZone(classified, subRects, classified.ZoneType, classified.Direction);
+                var decomposition = PolygonDecomposition.DecomposeWithMetrics(classified.Boundary);
+                classified = CloneZone(
+                    classified,
+                    decomposition.Rectangles,
+                    classified.ZoneType,
+                    classified.Direction,
+                    decomposition.Metrics);
             }
 
             result.Add(classified);
@@ -73,7 +78,8 @@ public sealed class StandardZoneDetector : IZoneDetector
         ReinforcementZone source,
         IReadOnlyList<BoundingBox>? subRectangles,
         ZoneType zoneType,
-        RebarDirection direction)
+        RebarDirection direction,
+        PolygonDecompositionMetrics? decompositionMetrics = null)
     {
         return new ReinforcementZone
         {
@@ -84,6 +90,7 @@ public sealed class StandardZoneDetector : IZoneDetector
             ZoneType = zoneType,
             Layer = source.Layer,
             SubRectangles = subRectangles,
+            DecompositionMetrics = decompositionMetrics,
             Rebars = source.Rebars
         };
     }

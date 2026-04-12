@@ -145,9 +145,11 @@ public class ColumnGenerationOptimizerTests
 
         var result = _optimizer.Optimize(lengths, stock, DefaultSettings);
 
-        result.TotalStockBarsNeeded.Should().Be(3);
-        result.CuttingPlans.Should().OnlyContain(plan => plan.StockLengthMm == 6000,
-            "three 5.5m pieces fit more economically into 6m stock than into 11.7m stock");
+        result.TotalStockBarsNeeded.Should().Be(2);
+        result.CuttingPlans.Should().Contain(plan => plan.StockLengthMm == 11700,
+            "the exact optimum packs two 5.5m pieces into one 11.7m bar");
+        result.CuttingPlans.Should().Contain(plan => plan.StockLengthMm == 6000,
+            "the remaining 5.5m piece is then served by one 6m bar");
     }
 
     [Fact]
@@ -160,5 +162,80 @@ public class ColumnGenerationOptimizerTests
 
         var act = () => _optimizer.Optimize([5000], stock, DefaultSettings);
         act.Should().Throw<OptimizationException>();
+    }
+
+    [Fact]
+    public void SmallExactInstance_ShouldMatchExactMinimumBarCount()
+    {
+        var lengths = new List<double> { 5800, 5800, 3500, 3500, 2200, 2200 };
+
+        var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
+        int exact = SolveExactMinimumBars(lengths, DefaultStock[0].LengthMm, DefaultSettings.SawCutWidthMm);
+
+        result.TotalStockBarsNeeded.Should().Be(exact);
+    }
+
+    [Fact]
+    public void SmallExactInstance_ShouldExposeExactSearchProvenance()
+    {
+        var lengths = new List<double> { 3000, 3000, 3000, 3000, 1500, 1500 };
+
+        var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
+
+        result.Provenance.Should().NotBeNull();
+        result.Provenance!.OptimizerId.Should().Be("exact-small-instance-search-v1");
+        result.Provenance.PricingStrategy.Should().Be("not-applicable");
+        result.Provenance.IntegerizationStrategy.Should().Be("exact-discrete-search");
+        result.Provenance.QualityFloor.Should().Be("exact-small-instance-optimum");
+    }
+
+    private static int SolveExactMinimumBars(
+        IReadOnlyList<double> lengths,
+        double stockLength,
+        double sawCutWidthMm)
+    {
+        var effective = lengths
+            .Select(length => length + sawCutWidthMm)
+            .OrderByDescending(length => length)
+            .ToArray();
+
+        int best = effective.Length;
+        var bins = new List<double>();
+
+        void Search(int index)
+        {
+            if (bins.Count >= best)
+                return;
+
+            if (index == effective.Length)
+            {
+                best = Math.Min(best, bins.Count);
+                return;
+            }
+
+            double piece = effective[index];
+            var seen = new HashSet<int>();
+
+            for (int i = 0; i < bins.Count; i++)
+            {
+                int rounded = (int)Math.Round(bins[i], MidpointRounding.AwayFromZero);
+                if (!seen.Add(rounded))
+                    continue;
+
+                if (bins[i] + piece <= stockLength + 1e-6)
+                {
+                    bins[i] += piece;
+                    Search(index + 1);
+                    bins[i] -= piece;
+                }
+            }
+
+            bins.Add(piece);
+            Search(index + 1);
+            bins.RemoveAt(bins.Count - 1);
+        }
+
+        Search(0);
+        return best;
     }
 }

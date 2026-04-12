@@ -13,6 +13,8 @@ public sealed record PipelineExecutionMetadata
     public string TargetSystem { get; init; } = "AeroBIM";
     public string CountryCode { get; init; } = "RU";
     public string DesignCode { get; init; } = "SP 63.13330.2018";
+    public string NormativeProfileId { get; init; } = "ru.sp63.2018";
+    public string NormativeTablesVersion { get; init; } = "embedded.sp63.v1";
 }
 
 /// <summary>
@@ -24,6 +26,8 @@ public sealed record ReinforcementExecutionReport
     public string SchemaVersion { get; init; } = "1.0.0";
     public required DateTimeOffset GeneratedAtUtc { get; init; }
     public required PipelineExecutionMetadata Metadata { get; init; }
+    public required NormativeProfileExecutionReport NormativeProfile { get; init; }
+    public required AnalysisProvenanceExecutionReport AnalysisProvenance { get; init; }
     public required string IsolineFileName { get; init; }
     public required string IsolineFileFormat { get; init; }
     public required SlabExecutionReport Slab { get; init; }
@@ -32,6 +36,42 @@ public sealed record ReinforcementExecutionReport
     public required PlacementExecutionReport Placement { get; init; }
     public required ExecutionSummaryReport Summary { get; init; }
     public IReadOnlyList<string> Warnings { get; init; } = [];
+}
+
+public sealed record NormativeProfileExecutionReport
+{
+    public required string ProfileId { get; init; }
+    public required string Jurisdiction { get; init; }
+    public required string DesignCode { get; init; }
+    public required string TablesVersion { get; init; }
+}
+
+public sealed record AnalysisProvenanceExecutionReport
+{
+    public required GeometryProcessingExecutionReport Geometry { get; init; }
+    public required OptimizationProcessingExecutionReport Optimization { get; init; }
+}
+
+public sealed record GeometryProcessingExecutionReport
+{
+    public required string DecompositionAlgorithm { get; init; }
+    public required double RectangularShortcutFillRatio { get; init; }
+    public required double MinRectangleAreaMm2 { get; init; }
+    public required int SamplingResolutionPerAxis { get; init; }
+    public required double CellCoverageInclusionThreshold { get; init; }
+    public double? MinCoverageRatioAcrossComplexZones { get; init; }
+    public double? MaxOverCoverageRatioAcrossComplexZones { get; init; }
+}
+
+public sealed record OptimizationProcessingExecutionReport
+{
+    public required string OptimizerId { get; init; }
+    public required string MasterProblemStrategy { get; init; }
+    public required string PricingStrategy { get; init; }
+    public required string IntegerizationStrategy { get; init; }
+    public required double DemandAggregationPrecisionMm { get; init; }
+    public required string QualityFloor { get; init; }
+    public required bool AnyFallbackMasterSolverUsed { get; init; }
 }
 
 public sealed record SlabExecutionReport
@@ -57,6 +97,9 @@ public sealed record ZoneExecutionReport
     public required double TotalClearSpanMm { get; init; }
     public required double TotalLengthMm { get; init; }
     public required BoundingBoxExecutionReport BoundingBox { get; init; }
+    public int? SubRectangleCount { get; init; }
+    public double? DecompositionCoverageRatio { get; init; }
+    public double? DecompositionOverCoverageRatio { get; init; }
 }
 
 public sealed record BoundingBoxExecutionReport

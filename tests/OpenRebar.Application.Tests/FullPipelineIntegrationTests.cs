@@ -78,6 +78,9 @@ public class FullPipelineIntegrationTests
 
             result.Report.Should().NotBeNull();
             result.Report!.ContractId.Should().Be("OpenRebar.reinforcement.report.v1");
+            result.Report.NormativeProfile.ProfileId.Should().Be("ru.sp63.2018");
+            result.Report.AnalysisProvenance.Geometry.DecompositionAlgorithm.Should().Be("adaptive-orthogonal-strip-or-grid/v3");
+            result.Report.AnalysisProvenance.Optimization.OptimizerId.Should().Be("column-generation-relaxation-v1");
             result.Report.Summary.TotalRebarSegments.Should().Be(result.TotalRebarSegments);
 
             result.StoredReport.Should().NotBeNull();

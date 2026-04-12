@@ -1,6 +1,7 @@
 using OpenRebar.Domain.Exceptions;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Application.UseCases;
 
@@ -179,6 +180,14 @@ public sealed class GenerateReinforcementPipeline
         {
             GeneratedAtUtc = DateTimeOffset.UtcNow,
             Metadata = input.Metadata,
+            NormativeProfile = new NormativeProfileExecutionReport
+            {
+                ProfileId = input.Metadata.NormativeProfileId,
+                Jurisdiction = input.Metadata.CountryCode,
+                DesignCode = input.Metadata.DesignCode,
+                TablesVersion = input.Metadata.NormativeTablesVersion
+            },
+            AnalysisProvenance = BuildAnalysisProvenance(zonesWithRebars, result),
             IsolineFileName = Path.GetFileName(input.IsolineFilePath),
             IsolineFileFormat = Path.GetExtension(input.IsolineFilePath).TrimStart('.').ToLowerInvariant(),
             Slab = new SlabExecutionReport
@@ -205,7 +214,10 @@ public sealed class GenerateReinforcementPipeline
                     RebarCount = zone.Rebars.Count,
                     TotalClearSpanMm = zone.Rebars.Sum(r => r.ClearSpan),
                     TotalLengthMm = zone.Rebars.Sum(r => r.TotalLength),
-                    BoundingBox = ToBoundingBoxReport(zoneBox)
+                    BoundingBox = ToBoundingBoxReport(zoneBox),
+                    SubRectangleCount = zone.SubRectangles?.Count,
+                    DecompositionCoverageRatio = zone.DecompositionMetrics?.CoverageRatio,
+                    DecompositionOverCoverageRatio = zone.DecompositionMetrics?.OverCoverageRatio
                 };
             }).ToList(),
             OptimizationByDiameter = result.OptimizationResults
@@ -264,6 +276,68 @@ public sealed class GenerateReinforcementPipeline
         Width = bbox.Width,
         Height = bbox.Height
     };
+
+    private static AnalysisProvenanceExecutionReport BuildAnalysisProvenance(
+        IReadOnlyList<ReinforcementZone> zonesWithRebars,
+        PipelineResult result)
+    {
+        var decompositionMetrics = zonesWithRebars
+            .Select(zone => zone.DecompositionMetrics)
+            .Where(metrics => metrics is not null)
+            .Cast<PolygonDecompositionMetrics>()
+            .ToList();
+
+        var optimizationProvenances = result.OptimizationResults.Values
+            .Select(o => o.Provenance)
+            .Where(p => p is not null)
+            .Cast<OptimizationProvenance>()
+            .ToList();
+
+        return new AnalysisProvenanceExecutionReport
+        {
+            Geometry = new GeometryProcessingExecutionReport
+            {
+                DecompositionAlgorithm = "adaptive-orthogonal-strip-or-grid/v3",
+                RectangularShortcutFillRatio = PolygonDecomposition.RectangularFillRatioThreshold,
+                MinRectangleAreaMm2 = PolygonDecomposition.DefaultMinRectangleAreaMm2,
+                SamplingResolutionPerAxis = PolygonDecomposition.CoverageSamplingResolutionPerAxis,
+                CellCoverageInclusionThreshold = PolygonDecomposition.CellCoverageInclusionThreshold,
+                MinCoverageRatioAcrossComplexZones = decompositionMetrics.Count > 0
+                    ? decompositionMetrics.Min(m => m.CoverageRatio)
+                    : null,
+                MaxOverCoverageRatioAcrossComplexZones = decompositionMetrics.Count > 0
+                    ? decompositionMetrics.Max(m => m.OverCoverageRatio)
+                    : null
+            },
+            Optimization = new OptimizationProcessingExecutionReport
+            {
+                OptimizerId = ResolveProvenanceString(optimizationProvenances.Select(p => p.OptimizerId), fallback: "none"),
+                MasterProblemStrategy = ResolveProvenanceString(optimizationProvenances.Select(p => p.MasterProblemStrategy), fallback: "none"),
+                PricingStrategy = ResolveProvenanceString(optimizationProvenances.Select(p => p.PricingStrategy), fallback: "none"),
+                IntegerizationStrategy = ResolveProvenanceString(optimizationProvenances.Select(p => p.IntegerizationStrategy), fallback: "none"),
+                DemandAggregationPrecisionMm = optimizationProvenances.Count > 0
+                    ? optimizationProvenances.Max(p => p.DemandAggregationPrecisionMm)
+                    : 0,
+                QualityFloor = ResolveProvenanceString(optimizationProvenances.Select(p => p.QualityFloor), fallback: "none"),
+                AnyFallbackMasterSolverUsed = optimizationProvenances.Any(p => p.UsedFallbackMasterSolver)
+            }
+        };
+    }
+
+    private static string ResolveProvenanceString(IEnumerable<string> values, string fallback)
+    {
+        var distinct = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        return distinct.Count switch
+        {
+            0 => fallback,
+            1 => distinct[0],
+            _ => "mixed"
+        };
+    }
 
     private IIsolineParser GetParser(string filePath)
     {

@@ -33,6 +33,8 @@ public class ReportSchemaComplianceTests
             root.TryGetProperty("schemaVersion", out _).Should().BeTrue();
             root.TryGetProperty("generatedAtUtc", out _).Should().BeTrue();
             root.TryGetProperty("metadata", out _).Should().BeTrue();
+            root.TryGetProperty("normativeProfile", out _).Should().BeTrue();
+            root.TryGetProperty("analysisProvenance", out _).Should().BeTrue();
             root.TryGetProperty("isolineFileName", out _).Should().BeTrue();
             root.TryGetProperty("isolineFileFormat", out _).Should().BeTrue();
             root.TryGetProperty("slab", out _).Should().BeTrue();
@@ -69,6 +71,8 @@ public class ReportSchemaComplianceTests
             metadata.TryGetProperty("targetSystem", out _).Should().BeTrue();
             metadata.TryGetProperty("countryCode", out _).Should().BeTrue();
             metadata.TryGetProperty("designCode", out _).Should().BeTrue();
+            metadata.TryGetProperty("normativeProfileId", out _).Should().BeTrue();
+            metadata.TryGetProperty("normativeTablesVersion", out _).Should().BeTrue();
         }
         finally
         {
@@ -167,6 +171,71 @@ public class ReportSchemaComplianceTests
         }
     }
 
+    [Fact]
+    public async Task SaveAsync_NormativeProfileShouldContainAllRequiredFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-normative-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var normative = doc.RootElement.GetProperty("normativeProfile");
+
+            normative.TryGetProperty("profileId", out _).Should().BeTrue();
+            normative.TryGetProperty("jurisdiction", out _).Should().BeTrue();
+            normative.TryGetProperty("designCode", out _).Should().BeTrue();
+            normative.TryGetProperty("tablesVersion", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_AnalysisProvenanceShouldContainAllRequiredFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-provenance-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var provenance = doc.RootElement.GetProperty("analysisProvenance");
+            var geometry = provenance.GetProperty("geometry");
+            var optimization = provenance.GetProperty("optimization");
+
+            geometry.TryGetProperty("decompositionAlgorithm", out _).Should().BeTrue();
+            geometry.TryGetProperty("rectangularShortcutFillRatio", out _).Should().BeTrue();
+            geometry.TryGetProperty("minRectangleAreaMm2", out _).Should().BeTrue();
+            geometry.TryGetProperty("samplingResolutionPerAxis", out _).Should().BeTrue();
+            geometry.TryGetProperty("cellCoverageInclusionThreshold", out _).Should().BeTrue();
+
+            optimization.TryGetProperty("optimizerId", out _).Should().BeTrue();
+            optimization.TryGetProperty("masterProblemStrategy", out _).Should().BeTrue();
+            optimization.TryGetProperty("pricingStrategy", out _).Should().BeTrue();
+            optimization.TryGetProperty("integerizationStrategy", out _).Should().BeTrue();
+            optimization.TryGetProperty("demandAggregationPrecisionMm", out _).Should().BeTrue();
+            optimization.TryGetProperty("qualityFloor", out _).Should().BeTrue();
+            optimization.TryGetProperty("anyFallbackMasterSolverUsed", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
     private static ReinforcementExecutionReport BuildSampleReport() => new()
     {
         GeneratedAtUtc = DateTimeOffset.UtcNow,
@@ -175,6 +244,36 @@ public class ReportSchemaComplianceTests
             ProjectCode = "test-schema",
             SlabId = "SLAB-01",
             LevelName = "01"
+        },
+        NormativeProfile = new NormativeProfileExecutionReport
+        {
+            ProfileId = "ru.sp63.2018",
+            Jurisdiction = "RU",
+            DesignCode = "SP 63.13330.2018",
+            TablesVersion = "embedded.sp63.v1"
+        },
+        AnalysisProvenance = new AnalysisProvenanceExecutionReport
+        {
+            Geometry = new GeometryProcessingExecutionReport
+            {
+                DecompositionAlgorithm = "adaptive-orthogonal-strip-or-grid/v3",
+                RectangularShortcutFillRatio = 0.85,
+                MinRectangleAreaMm2 = 10_000,
+                SamplingResolutionPerAxis = 4,
+                CellCoverageInclusionThreshold = 0.35,
+                MinCoverageRatioAcrossComplexZones = 0.97,
+                MaxOverCoverageRatioAcrossComplexZones = 0.08
+            },
+            Optimization = new OptimizationProcessingExecutionReport
+            {
+                OptimizerId = "column-generation-relaxation-v1",
+                MasterProblemStrategy = "restricted-master-lp-highs",
+                PricingStrategy = "bounded-knapsack-dp",
+                IntegerizationStrategy = "largest-remainder-plus-repair",
+                DemandAggregationPrecisionMm = 0.1,
+                QualityFloor = "ffd-non-regression-floor",
+                AnyFallbackMasterSolverUsed = false
+            }
         },
         IsolineFileName = "test.dxf",
         IsolineFileFormat = "dxf",
@@ -205,6 +304,9 @@ public class ReportSchemaComplianceTests
                 RebarCount = 5,
                 TotalClearSpanMm = 5000,
                 TotalLengthMm = 30000,
+                SubRectangleCount = 2,
+                DecompositionCoverageRatio = 0.98,
+                DecompositionOverCoverageRatio = 0.05,
                 BoundingBox = new BoundingBoxExecutionReport
                 {
                     MinX = 0, MinY = 0, MaxX = 5000, MaxY = 3000,

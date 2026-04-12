@@ -2,9 +2,9 @@
 
 ## Overview
 
-OpenRebar-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, optimization algorithms) must be testable without Revit or any I/O**.
+OpenRebar-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, geometry processing, optimization algorithms) must be testable without Revit or any I/O**.
 
-This repository is a standalone project in `external/` built from an extraction of proven MicroPhoenix architectural patterns:
+This repository is a standalone project built from an extraction of proven MicroPhoenix architectural patterns:
 
 - domain-owned ports and business rules
 - application-layer orchestration without framework leakage
@@ -66,7 +66,9 @@ Rebar cutting is a **1D Cutting Stock Problem** (CSP). The repository now contai
 
 This keeps the domain independent from any specific OR solver while allowing the standalone project to evolve toward exact or branch-and-price implementations later.
 
-Important implementation note: the current `ColumnGenerationOptimizer` is an LP-relaxation / pricing / rounding pipeline with an FFD non-regression floor. It should be presented as a strong production-oriented optimizer, not as a mathematically complete branch-and-price solver.
+Important implementation note: the current `ColumnGenerationOptimizer` is an LP-relaxation / pricing / rounding pipeline with an FFD non-regression floor. It should be presented as a strong production-oriented optimizer, not as a mathematically complete branch-and-price solver. The canonical report now persists optimizer provenance (LP strategy, pricing strategy, integerization, fallback usage) so that this distinction is machine-readable.
+
+For tiny instances, the optimizer now uses an exact discrete search path instead of forcing every case through the CG approximation stack. This keeps the production baseline honest while improving correctness on small mixed-stock batches.
 
 ### 5. Supplier Catalogs
 
@@ -83,9 +85,11 @@ All SP 63 / GOST calculations are in `OpenRebar.Domain.Rules/`:
 |--------|---------------|
 | `AnchorageRules` | Anchorage length (l_an), lap splices, bond stress lookup |
 | `ReinforcementLimits` | Min/max reinforcement ratio, spacing limits per SP 63 |
-| `PolygonDecomposition` | Zone geometry → axis-aligned rectangles |
+| `PolygonDecomposition` | Zone geometry → axis-aligned rectangles + auditable coverage metrics |
 
 These are pure static functions with no I/O — fully testable with unit tests.
+
+The polygon decomposition remains heuristic for arbitrary shapes, but it is no longer silent. Orthogonal thin and strongly concave zones now use an exact strip-based rectangle cover before the grid fallback is considered. Complex zones carry decomposition metrics (coverage ratio, over-coverage ratio, rectangle count, cell size, shortcut usage), and the canonical report aggregates those metrics into analysis provenance.
 
 ## Data Flow
 
@@ -135,6 +139,11 @@ The standalone project now exposes a canonical report artifact for external syst
 
 This gives AeroBIM or other downstream consumers a stable machine-readable interface even before a fully validated IFC exporter exists.
 
+The contract now carries two additional audit-oriented surfaces:
+
+- `normativeProfile`: explicit normative profile id, jurisdiction, design code, and table-set version
+- `analysisProvenance`: geometry and optimization provenance used for reproducibility and review
+
 ## Logging Boundary
 
 For this standalone .NET extraction, structured logging uses the official `ILogger<T>` abstraction from DI rather than a custom logger port. This follows current Microsoft guidance for DI-based .NET applications while keeping Domain models free of framework dependencies.
@@ -150,10 +159,13 @@ For this standalone .NET extraction, structured logging uses the official `ILogg
 | RevitPlugin | Manual (requires Revit) | — |
 | ML | Unit + integration | pytest |
 
+The infrastructure suite now includes an exact benchmark pack for CSP that checks bar-count gap, score gap, and waste-gap distribution against an exact small-instance reference.
+
 ## Future Roadmap
 
 1. **Replace heuristic internals of the current CG implementation** with a true LP master + exact dual pricing or OR-Tools-backed branch-and-price
-2. **Revit view filters** for color-coded zone visualization
-3. **Multi-slab batch processing** across floors
-4. **Export to IFC** for BIM collaboration
-5. **Training pipeline** for U-Net on customer-specific isoline styles
+2. **Strengthen polygon decomposition further** toward exact clipping / coverage proofs for thin or highly concave zones
+3. **Revit view filters** for color-coded zone visualization
+4. **Multi-slab batch processing** across floors
+5. **Export to IFC** for BIM collaboration
+6. **Training pipeline** for U-Net on customer-specific isoline styles

@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **P3 ML evaluation**: per-class IoU, mean IoU, pixel accuracy, confusion matrix
 - **P3 ONNX export**: `export_onnx.py` for CPU-only C# inference via OnnxRuntime
 - **P3 Benchmarks**: inference latency, parameter count, batch throughput, ONNX exportability tests
+- **Academic geometry hardening**: complex-zone decomposition now persists coverage and over-coverage metrics
+- **Academic optimization TEVV**: exact small-instance bar-count cross-checks for the column-generation optimizer
+- **Academic optimization TEVV**: benchmark pack for score-gap and waste-gap distribution on small CSP instances
+- **Optimization hardening**: exact discrete search path for tiny mixed-stock instances
+- **Canonical report provenance**: normative profile + geometry/optimization provenance in `*.result.json`
 - CLI arguments `--slab-width` and `--slab-height` for configurable slab footprint
 - CLI boundary validation for numeric arguments (thickness, cover, slab dimensions)
 - CLI integration tests verifying exported artifacts and custom geometry

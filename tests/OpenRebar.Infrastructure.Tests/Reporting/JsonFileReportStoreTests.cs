@@ -25,6 +25,36 @@ public class JsonFileReportStoreTests
                     SlabId = "SLAB-7",
                     LevelName = "Level 07"
                 },
+                NormativeProfile = new NormativeProfileExecutionReport
+                {
+                    ProfileId = "ru.sp63.2018",
+                    Jurisdiction = "RU",
+                    DesignCode = "SP 63.13330.2018",
+                    TablesVersion = "embedded.sp63.v1"
+                },
+                AnalysisProvenance = new AnalysisProvenanceExecutionReport
+                {
+                    Geometry = new GeometryProcessingExecutionReport
+                    {
+                        DecompositionAlgorithm = "adaptive-orthogonal-strip-or-grid/v3",
+                        RectangularShortcutFillRatio = 0.85,
+                        MinRectangleAreaMm2 = 10_000,
+                        SamplingResolutionPerAxis = 4,
+                        CellCoverageInclusionThreshold = 0.35,
+                        MinCoverageRatioAcrossComplexZones = null,
+                        MaxOverCoverageRatioAcrossComplexZones = null
+                    },
+                    Optimization = new OptimizationProcessingExecutionReport
+                    {
+                        OptimizerId = "column-generation-relaxation-v1",
+                        MasterProblemStrategy = "restricted-master-lp-highs",
+                        PricingStrategy = "bounded-knapsack-dp",
+                        IntegerizationStrategy = "largest-remainder-plus-repair",
+                        DemandAggregationPrecisionMm = 0.1,
+                        QualityFloor = "ffd-non-regression-floor",
+                        AnyFallbackMasterSolverUsed = false
+                    }
+                },
                 IsolineFileName = "floor07.dxf",
                 IsolineFileFormat = "dxf",
                 Slab = new SlabExecutionReport

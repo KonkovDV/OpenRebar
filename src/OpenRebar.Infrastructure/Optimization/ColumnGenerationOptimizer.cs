@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Domain.Exceptions;
@@ -6,8 +7,9 @@ using Highs;
 namespace OpenRebar.Infrastructure.Optimization;
 
 /// <summary>
-/// Column Generation optimizer for the 1D cutting stock problem.
-/// Produces near-optimal solutions (within 1-2 bars of LP bound).
+/// Production-oriented column-generation-style optimizer for the 1D cutting stock problem.
+/// Uses restricted-master LP, bounded-knapsack pricing, heuristic integerization,
+/// and an FFD non-regression floor instead of claiming exact branch-and-price optimality.
 ///
 /// Algorithm:
 ///   1. Build initial patterns via FFD (one pattern per distinct length)
@@ -30,6 +32,10 @@ namespace OpenRebar.Infrastructure.Optimization;
 /// </summary>
 public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 {
+    public const double DemandAggregationPrecisionMm = 0.1;
+    private const int ExactSearchMaxItemCount = 8;
+    private const int ExactSearchMaxStockVariants = 3;
+
     /// <summary>Reduced-cost tolerance for column generation convergence.</summary>
     private const double Epsilon = 1e-6;
 
@@ -49,7 +55,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
                 TotalStockBarsNeeded = 0,
                 TotalWasteMm = 0,
                 TotalWastePercent = 0,
-                TotalRebarLengthMm = 0
+                TotalRebarLengthMm = 0,
+                Provenance = BuildColumnGenerationProvenance(usedFallbackMasterSolver: false)
             };
         }
 
@@ -60,6 +67,10 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
         if (availableStock.Count == 0)
             throw new OptimizationException("No in-stock bar lengths are available for optimization.");
+
+        var exactSmallInstance = TryOptimizeExactSmallInstance(requiredLengths, availableStock, settings);
+        if (exactSmallInstance is not null)
+            return exactSmallInstance;
 
         // Aggregate demand: distinct lengths → counts
         var demand = AggregrateDemand(requiredLengths, settings.SawCutWidthMm);
@@ -99,6 +110,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         double stockLength)
     {
         int m = demand.Count;
+        bool usedFallbackMasterSolver = false;
 
         // Build initial feasible patterns (one item type per pattern, max fit)
         var patterns = BuildInitialPatterns(itemLengths, stockLength, m);
@@ -107,24 +119,184 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         for (int iter = 0; iter < MaxIterations; iter++)
         {
             // Solve LP relaxation: min Σ x_j  s.t. A·x ≥ demand, x ≥ 0
-            var (lpSolution, dualPrices) = SolveRestrictedMasterLP(patterns, itemDemand, m);
-            if (lpSolution is null) break;
+            var master = SolveRestrictedMasterLP(patterns, itemDemand, m);
+            usedFallbackMasterSolver |= master.UsedFallbackMasterSolver;
+            if (master.Solution is null) break;
 
             // Pricing subproblem: find pattern with maximum Σ π_i · a_i - 1
-            var newPattern = SolvePricingKnapsack(dualPrices, itemLengths, itemDemand, stockLength);
-            double reducedCost = 1.0 - dualPrices.Zip(newPattern).Sum(p => p.First * p.Second);
+            var newPattern = SolvePricingKnapsack(master.Duals, itemLengths, itemDemand, stockLength);
+            double reducedCost = 1.0 - master.Duals.Zip(newPattern).Sum(p => p.First * p.Second);
 
-            if (reducedCost > -Epsilon) break; // Optimal — no improving column
+            if (reducedCost > -Epsilon) break; // No improving column in the LP relaxation
 
             patterns.Add(newPattern);
         }
 
         // Final LP solve + integer rounding
-        var (finalLp, _) = SolveRestrictedMasterLP(patterns, itemDemand, m);
-        var integerSolution = RoundSolution(finalLp ?? [], patterns, itemDemand, m);
+        var finalMaster = SolveRestrictedMasterLP(patterns, itemDemand, m);
+        usedFallbackMasterSolver |= finalMaster.UsedFallbackMasterSolver;
+        var integerSolution = RoundSolution(finalMaster.Solution ?? [], patterns, itemDemand, m);
 
         // Build cutting plans from the integer solution
-        return BuildResult(integerSolution, patterns, demand, stockLength, requiredLengths);
+        return BuildResult(integerSolution, patterns, demand, stockLength, requiredLengths, usedFallbackMasterSolver);
+    }
+
+    private static OptimizationResult? TryOptimizeExactSmallInstance(
+        IReadOnlyList<double> requiredLengths,
+        IReadOnlyList<StockLength> availableStock,
+        OptimizationSettings settings)
+    {
+        if (requiredLengths.Count > ExactSearchMaxItemCount ||
+            availableStock.Count > ExactSearchMaxStockVariants ||
+            availableStock.Any(stock => stock.PricePerTon.HasValue))
+        {
+            return null;
+        }
+
+        var sortedLengths = requiredLengths
+            .OrderByDescending(length => length)
+            .ToArray();
+
+        var stockOptions = availableStock
+            .Select(stock => stock.LengthMm)
+            .Distinct()
+            .OrderBy(length => length)
+            .ToArray();
+
+        double totalRequired = requiredLengths.Sum();
+        var bins = new List<ExactBinState>();
+        ExactSearchSolution? best = null;
+        bool timedOut = false;
+        var stopwatch = Stopwatch.StartNew();
+
+        void Search(int index)
+        {
+            if (timedOut)
+                return;
+
+            if (stopwatch.Elapsed > settings.MaxComputationTime)
+            {
+                timedOut = true;
+                return;
+            }
+
+            if (best is not null)
+            {
+                double optimisticInstallOnlyScore = settings.InstallationWeight * ((double)bins.Count / sortedLengths.Length);
+                if (optimisticInstallOnlyScore > best.Score + 1e-9)
+                    return;
+            }
+
+            if (index == sortedLengths.Length)
+            {
+                double totalStockLength = bins.Sum(bin => bin.StockLengthMm);
+                double totalWasteMm = totalStockLength - totalRequired;
+                double totalWastePercent = totalStockLength > 0
+                    ? totalWasteMm / totalStockLength * 100.0
+                    : 0;
+                double score = settings.WasteWeight * (totalWastePercent / 100.0)
+                    + settings.InstallationWeight * ((double)bins.Count / sortedLengths.Length);
+
+                if (IsBetterExactSolution(score, totalStockLength, bins.Count, best))
+                {
+                    best = new ExactSearchSolution(
+                        score,
+                        totalStockLength,
+                        bins.Count,
+                        bins.Select(bin => new ExactBinSnapshot(bin.StockLengthMm, bin.Cuts.ToList())).ToList());
+                }
+
+                return;
+            }
+
+            double rawPieceLength = sortedLengths[index];
+            double effectivePieceLength = rawPieceLength + settings.SawCutWidthMm;
+            var seenStates = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < bins.Count; i++)
+            {
+                if (bins[i].UsedEffectiveLengthMm + effectivePieceLength > bins[i].StockLengthMm + 1e-6)
+                    continue;
+
+                string stateKey = string.Create(
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    $"{bins[i].StockLengthMm:F3}:{bins[i].UsedEffectiveLengthMm:F3}");
+                if (!seenStates.Add(stateKey))
+                    continue;
+
+                bins[i].UsedEffectiveLengthMm += effectivePieceLength;
+                bins[i].Cuts.Add(rawPieceLength);
+                Search(index + 1);
+                bins[i].Cuts.RemoveAt(bins[i].Cuts.Count - 1);
+                bins[i].UsedEffectiveLengthMm -= effectivePieceLength;
+            }
+
+            foreach (double stockLength in stockOptions)
+            {
+                if (effectivePieceLength > stockLength + 1e-6)
+                    continue;
+
+                bins.Add(new ExactBinState
+                {
+                    StockLengthMm = stockLength,
+                    UsedEffectiveLengthMm = effectivePieceLength,
+                    Cuts = [rawPieceLength]
+                });
+
+                Search(index + 1);
+                bins.RemoveAt(bins.Count - 1);
+            }
+        }
+
+        Search(0);
+
+        if (timedOut || best is null)
+            return null;
+
+        var plans = best.Bins
+            .Select(bin => new CuttingPlan
+            {
+                StockLengthMm = bin.StockLengthMm,
+                Cuts = bin.Cuts
+            })
+            .ToList();
+
+        double totalStock = plans.Sum(plan => plan.StockLengthMm);
+        double totalWaste = totalStock - totalRequired;
+
+        return new OptimizationResult
+        {
+            CuttingPlans = plans,
+            TotalStockBarsNeeded = plans.Count,
+            TotalWasteMm = totalWaste,
+            TotalWastePercent = totalStock > 0 ? totalWaste / totalStock * 100 : 0,
+            TotalRebarLengthMm = totalRequired,
+            Provenance = BuildExactSmallInstanceProvenance()
+        };
+    }
+
+    private static bool IsBetterExactSolution(
+        double score,
+        double totalStockLength,
+        int barCount,
+        ExactSearchSolution? best)
+    {
+        if (best is null)
+            return true;
+
+        if (score < best.Score - 1e-9)
+            return true;
+
+        if (score > best.Score + 1e-9)
+            return false;
+
+        if (totalStockLength < best.TotalStockLengthMm - 1e-6)
+            return true;
+
+        if (totalStockLength > best.TotalStockLengthMm + 1e-6)
+            return false;
+
+        return barCount < best.BarCount;
     }
 
     #region Demand Aggregation
@@ -175,12 +347,18 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     /// Returns (primal solution x[], dual prices π[]).
     /// Uses simple iterative proportional fitting for the LP relaxation.
     /// </summary>
-    private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLP(
+    private static MasterSolveResult SolveRestrictedMasterLP(
         List<int[]> patterns, int[] demand, int m)
     {
-        return TrySolveRestrictedMasterLpWithHighs(patterns, demand, m)
-            ?? SolveRestrictedMasterLpFallback(patterns, demand, m);
+        var highs = TrySolveRestrictedMasterLpWithHighs(patterns, demand, m);
+        if (highs is not null)
+            return new MasterSolveResult(highs.Value.Solution, highs.Value.Duals, false);
+
+        var fallback = SolveRestrictedMasterLpFallback(patterns, demand, m);
+        return new MasterSolveResult(fallback.Solution, fallback.Duals, true);
     }
+
+    private sealed record MasterSolveResult(double[]? Solution, double[] Duals, bool UsedFallbackMasterSolver);
 
     private static (double[]? Solution, double[] Duals)? TrySolveRestrictedMasterLpWithHighs(
         List<int[]> patterns,
@@ -487,7 +665,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         List<int[]> patterns,
         List<DemandItem> demand,
         double stockLength,
-        IReadOnlyList<double> originalLengths)
+        IReadOnlyList<double> originalLengths,
+        bool usedFallbackMasterSolver)
     {
         var plans = new List<CuttingPlan>();
 
@@ -523,7 +702,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             TotalStockBarsNeeded = plans.Count,
             TotalWasteMm = totalWaste,
             TotalWastePercent = totalStock > 0 ? totalWaste / totalStock * 100 : 0,
-            TotalRebarLengthMm = totalRequired
+            TotalRebarLengthMm = totalRequired,
+            Provenance = BuildColumnGenerationProvenance(usedFallbackMasterSolver)
         };
     }
 
@@ -613,4 +793,44 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         return settings.WasteWeight * wasteScore
              + settings.InstallationWeight * installScore;
     }
+
+    private static OptimizationProvenance BuildColumnGenerationProvenance(bool usedFallbackMasterSolver)
+    {
+        return new OptimizationProvenance
+        {
+            OptimizerId = "column-generation-relaxation-v1",
+            MasterProblemStrategy = usedFallbackMasterSolver
+                ? "restricted-master-lp-highs-with-fallback"
+                : "restricted-master-lp-highs",
+            PricingStrategy = "bounded-knapsack-dp",
+            IntegerizationStrategy = "largest-remainder-plus-repair",
+            DemandAggregationPrecisionMm = DemandAggregationPrecisionMm,
+            QualityFloor = "ffd-non-regression-floor",
+            UsedFallbackMasterSolver = usedFallbackMasterSolver
+        };
+    }
+
+    private static OptimizationProvenance BuildExactSmallInstanceProvenance()
+    {
+        return new OptimizationProvenance
+        {
+            OptimizerId = "exact-small-instance-search-v1",
+            MasterProblemStrategy = "complete-enumeration",
+            PricingStrategy = "not-applicable",
+            IntegerizationStrategy = "exact-discrete-search",
+            DemandAggregationPrecisionMm = 0,
+            QualityFloor = "exact-small-instance-optimum",
+            UsedFallbackMasterSolver = false
+        };
+    }
+
+    private sealed class ExactBinState
+    {
+        public required double StockLengthMm { get; init; }
+        public required List<double> Cuts { get; init; }
+        public required double UsedEffectiveLengthMm { get; set; }
+    }
+
+    private sealed record ExactBinSnapshot(double StockLengthMm, IReadOnlyList<double> Cuts);
+    private sealed record ExactSearchSolution(double Score, double TotalStockLengthMm, int BarCount, IReadOnlyList<ExactBinSnapshot> Bins);
 }

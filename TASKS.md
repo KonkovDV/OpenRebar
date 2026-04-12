@@ -2,7 +2,7 @@
 
 > **Для:** ИИ-программист
 > **Дата:** 2026-04-12
-> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены, 127/127 .NET тестов проходят. Дальше: Revit SDK live validation, ML training на реальных данных.
+> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, optimizer TEVV, canonical provenance, exact small-instance CSP path. 136/136 .NET тестов проходят. Дальше: Revit SDK live validation, ML training на реальных данных.
 
 ## Update 2026-04-12 — OpenRebar Rebrand + P1/P3 Preparation
 
@@ -12,6 +12,9 @@
 - **P1 Revit boundary**: host floor structural validation, tag creation pass, bending detail tracking
 - **P3 ML training pipeline**: dataset loader, augmentation, training loop, evaluation, ONNX export
 - **P3 ML benchmarks**: inference latency, model size, batch throughput, ONNX exportability
+- **Academic geometry hardening**: decomposition metrics and coverage evidence for complex zones
+- **Academic optimization TEVV**: exact small-instance path + benchmark pack for score-gap and waste distribution
+- **Canonical report provenance**: normative profile and analysis provenance persisted in JSON Schema contract
 - CLI parameterized slab geometry: `--slab-width`, `--slab-height`
 - CLI boundary validation for all numeric args with clear error messages
 - 8 new CLI integration tests covering happy path, edge cases, and validation
@@ -20,7 +23,7 @@
 - Release workflow (`.github/workflows/release.yml`) with SBOM + attestation
 - SBOM generation in CI (anchore/sbom-action)
 - Artifact attestation (actions/attest-build-provenance)
-- Full regression green: 127/127 .NET tests
+- Full regression green: 136/136 .NET tests
 
 ### Осталось
 

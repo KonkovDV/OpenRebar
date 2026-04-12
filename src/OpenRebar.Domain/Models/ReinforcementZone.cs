@@ -53,9 +53,30 @@ public sealed class ReinforcementZone
     public IReadOnlyList<BoundingBox>? SubRectangles { get; init; }
 
     /// <summary>
+    /// Approximate coverage and over-coverage metrics for complex zone decomposition.
+    /// Present only when the boundary was decomposed into sub-rectangles.
+    /// </summary>
+    public PolygonDecompositionMetrics? DecompositionMetrics { get; init; }
+
+    /// <summary>
     /// Computed individual rebar segments for this zone.
     /// </summary>
     public IReadOnlyList<RebarSegment> Rebars { get; set; } = [];
+}
+
+/// <summary>
+/// Coverage metrics for a polygon-to-rectangle decomposition.
+/// Used to make heuristic geometry processing auditable in execution reports.
+/// </summary>
+public sealed record PolygonDecompositionMetrics
+{
+    public required double PolygonAreaMm2 { get; init; }
+    public required double RectangleCoverAreaMm2 { get; init; }
+    public required double CoverageRatio { get; init; }
+    public required double OverCoverageRatio { get; init; }
+    public required double CellSizeMm { get; init; }
+    public required int RectangleCount { get; init; }
+    public required bool UsedRectangularShortcut { get; init; }
 }
 
 /// <summary>

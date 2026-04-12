@@ -35,6 +35,7 @@ public sealed class AeroBimReportExporter : IReportExporter
             ["$schema"] = "aerobim-OpenRebar-reinforcement-report/v1",
             ["project_id"] = report.Metadata.ProjectCode,
             ["slab_id"] = report.Metadata.SlabId,
+            ["normative_profile_id"] = report.NormativeProfile.ProfileId,
             ["concrete_class"] = report.Slab.ConcreteClass,
             ["zones"] = zones.Select(zone => new
             {
@@ -58,7 +59,7 @@ public sealed class AeroBimReportExporter : IReportExporter
             }).ToList(),
             ["optimization"] = new
             {
-                optimizer = "ColumnGeneration",
+                optimizer = report.AnalysisProvenance.Optimization.OptimizerId,
                 cutting_plans = report.OptimizationByDiameter.SelectMany(group =>
                     group.CuttingPlans.Select(plan => new
                     {
@@ -71,7 +72,13 @@ public sealed class AeroBimReportExporter : IReportExporter
                 total_mass_kg = report.Summary.TotalMassKg,
                 total_stock_bars = report.OptimizationByDiameter.Sum(group => group.StockBarsNeeded)
             },
-            ["normative_basis"] = report.Metadata.DesignCode
+            ["normative_basis"] = report.Metadata.DesignCode,
+            ["analysis_provenance"] = new
+            {
+                decomposition_algorithm = report.AnalysisProvenance.Geometry.DecompositionAlgorithm,
+                demand_aggregation_precision_mm = report.AnalysisProvenance.Optimization.DemandAggregationPrecisionMm,
+                optimizer_id = report.AnalysisProvenance.Optimization.OptimizerId
+            }
         };
 
         var json = JsonSerializer.Serialize(payload, SerializerOptions);

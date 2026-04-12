@@ -9,6 +9,8 @@
     "schemaVersion",
     "generatedAtUtc",
     "metadata",
+    "normativeProfile",
+    "analysisProvenance",
     "isolineFileName",
     "isolineFileFormat",
     "slab",
@@ -31,7 +33,7 @@
     },
     "metadata": {
       "type": "object",
-      "required": ["projectCode", "slabId", "sourceSystem", "targetSystem", "countryCode", "designCode"],
+      "required": ["projectCode", "slabId", "sourceSystem", "targetSystem", "countryCode", "designCode", "normativeProfileId", "normativeTablesVersion"],
       "properties": {
         "projectCode": { "type": "string", "minLength": 1 },
         "slabId": { "type": "string", "minLength": 1 },
@@ -39,9 +41,17 @@
         "sourceSystem": { "type": "string", "minLength": 1 },
         "targetSystem": { "type": "string", "minLength": 1 },
         "countryCode": { "type": "string", "minLength": 2, "maxLength": 2 },
-        "designCode": { "type": "string", "minLength": 1 }
+        "designCode": { "type": "string", "minLength": 1 },
+        "normativeProfileId": { "type": "string", "minLength": 1 },
+        "normativeTablesVersion": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
+    },
+    "normativeProfile": {
+      "$ref": "#/$defs/normativeProfileExecutionReport"
+    },
+    "analysisProvenance": {
+      "$ref": "#/$defs/analysisProvenanceExecutionReport"
     },
     "isolineFileName": { "type": "string", "minLength": 1 },
     "isolineFileFormat": {
@@ -84,6 +94,54 @@
       },
       "additionalProperties": false
     },
+    "normativeProfileExecutionReport": {
+      "type": "object",
+      "required": ["profileId", "jurisdiction", "designCode", "tablesVersion"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1 },
+        "jurisdiction": { "type": "string", "minLength": 2 },
+        "designCode": { "type": "string", "minLength": 1 },
+        "tablesVersion": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "geometryProcessingExecutionReport": {
+      "type": "object",
+      "required": ["decompositionAlgorithm", "rectangularShortcutFillRatio", "minRectangleAreaMm2", "samplingResolutionPerAxis", "cellCoverageInclusionThreshold"],
+      "properties": {
+        "decompositionAlgorithm": { "type": "string", "minLength": 1 },
+        "rectangularShortcutFillRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "minRectangleAreaMm2": { "type": "number", "exclusiveMinimum": 0 },
+        "samplingResolutionPerAxis": { "type": "integer", "minimum": 1 },
+        "cellCoverageInclusionThreshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "minCoverageRatioAcrossComplexZones": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "maxOverCoverageRatioAcrossComplexZones": { "type": ["number", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "optimizationProcessingExecutionReport": {
+      "type": "object",
+      "required": ["optimizerId", "masterProblemStrategy", "pricingStrategy", "integerizationStrategy", "demandAggregationPrecisionMm", "qualityFloor", "anyFallbackMasterSolverUsed"],
+      "properties": {
+        "optimizerId": { "type": "string", "minLength": 1 },
+        "masterProblemStrategy": { "type": "string", "minLength": 1 },
+        "pricingStrategy": { "type": "string", "minLength": 1 },
+        "integerizationStrategy": { "type": "string", "minLength": 1 },
+        "demandAggregationPrecisionMm": { "type": "number", "minimum": 0 },
+        "qualityFloor": { "type": "string", "minLength": 1 },
+        "anyFallbackMasterSolverUsed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "analysisProvenanceExecutionReport": {
+      "type": "object",
+      "required": ["geometry", "optimization"],
+      "properties": {
+        "geometry": { "$ref": "#/$defs/geometryProcessingExecutionReport" },
+        "optimization": { "$ref": "#/$defs/optimizationProcessingExecutionReport" }
+      },
+      "additionalProperties": false
+    },
     "slabExecutionReport": {
       "type": "object",
       "required": ["concreteClass", "thicknessMm", "coverMm", "effectiveDepthMm", "areaMm2", "openingCount", "boundingBox"],
@@ -111,7 +169,10 @@
         "rebarCount": { "type": "integer", "minimum": 0 },
         "totalClearSpanMm": { "type": "number", "minimum": 0 },
         "totalLengthMm": { "type": "number", "minimum": 0 },
-        "boundingBox": { "$ref": "#/$defs/boundingBoxExecutionReport" }
+        "boundingBox": { "$ref": "#/$defs/boundingBoxExecutionReport" },
+        "subRectangleCount": { "type": ["integer", "null"], "minimum": 0 },
+        "decompositionCoverageRatio": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "decompositionOverCoverageRatio": { "type": ["number", "null"], "minimum": 0 }
       },
       "additionalProperties": false
     },

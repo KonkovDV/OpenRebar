@@ -23,7 +23,8 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
                 TotalStockBarsNeeded = 0,
                 TotalWasteMm = 0,
                 TotalWastePercent = 0,
-                TotalRebarLengthMm = 0
+                TotalRebarLengthMm = 0,
+                Provenance = BuildFfdProvenance()
             };
         }
 
@@ -93,7 +94,22 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
             TotalStockBarsNeeded = bins.Count,
             TotalWasteMm = totalWaste,
             TotalWastePercent = totalStock > 0 ? totalWaste / totalStock * 100 : 0,
-            TotalRebarLengthMm = totalRequired
+            TotalRebarLengthMm = totalRequired,
+            Provenance = BuildFfdProvenance()
+        };
+    }
+
+    private static OptimizationProvenance BuildFfdProvenance()
+    {
+        return new OptimizationProvenance
+        {
+            OptimizerId = "first-fit-decreasing-v1",
+            MasterProblemStrategy = "heuristic-bin-packing",
+            PricingStrategy = "not-applicable",
+            IntegerizationStrategy = "direct-constructive-heuristic",
+            DemandAggregationPrecisionMm = 0,
+            QualityFloor = "none",
+            UsedFallbackMasterSolver = false
         };
     }
 }

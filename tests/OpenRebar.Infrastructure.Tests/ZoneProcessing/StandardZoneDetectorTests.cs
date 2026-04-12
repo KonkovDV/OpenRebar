@@ -132,6 +132,9 @@ public class StandardZoneDetectorTests
         result.Should().HaveCount(1);
         result[0].ZoneType.Should().Be(ZoneType.Complex,
             "the opening sits inside the L-shape notch, so bbox overlap alone must not trigger special classification");
+        result[0].SubRectangles.Should().NotBeNullOrEmpty();
+        result[0].DecompositionMetrics.Should().NotBeNull();
+        result[0].DecompositionMetrics!.CoverageRatio.Should().BeGreaterThan(0.94);
     }
 
     [Fact]

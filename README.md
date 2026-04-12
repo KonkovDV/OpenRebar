@@ -7,7 +7,7 @@ Automated reinforcement placement for flat RC slabs — **Revit 2025 plugin** wi
 
 ## Status
 
-- This repository is a **standalone extracted project** in `external/OpenRebar-reinforcement`, based on MicroPhoenix architectural patterns.
+- This repository is a **standalone GitHub project**, extracted from MicroPhoenix architectural patterns and now maintained independently.
 - The core domain, application, optimisation, DXF, PNG, and ML service layers are implemented and testable outside Revit.
 - The Revit SDK-dependent command and placer are included as **compile-time scaffolds** and require local Autodesk Revit references to enable the real plugin boundary.
 
@@ -20,8 +20,8 @@ This plugin automates the full pipeline:
 1. **Parse** isoline file (DXF / PNG) → extract color-coded reinforcement zones
 2. **Classify** zones and decompose complex polygons into rectangles
 3. **Calculate** rebar layout per zone (spacing, diameter, anchorage per SP 63.13330)
-4. **Optimize** cutting to minimise waste (Column Generation / bin-packing)
-5. **Persist** a canonical machine-readable reinforcement report for downstream BIM systems
+4. **Optimize** cutting to minimise waste (column-generation-style CSP with exact small-instance search for tiny batches and benchmark-pack TEVV)
+5. **Persist** a canonical machine-readable reinforcement report for downstream BIM systems, including normative profile and analysis provenance
 6. **Place** `RebarInSystem` elements in Revit with tags and bending details
 
 **Target:** reduce reinforcement placement from **2–3 weeks → 2–3 hours** per floor.
@@ -32,7 +32,7 @@ This plugin automates the full pipeline:
 - Canonical report artifact: `*.result.json`
 - Primary downstream target: AeroBIM and adjacent BIM/data consumers that need stable slab, zone, cutting, and placement summaries
 
-The standalone project now emits a formal JSON contract instead of relying only on an ad-hoc CLI export shape. This makes the extracted project materially more useful for batch workflows, investor demos, and downstream BIM integration.
+The standalone project now emits a formal JSON contract instead of relying only on an ad-hoc CLI export shape. The canonical report now carries a first-class normative profile (`ru.sp63.2018`) and analysis provenance for geometry decomposition and optimization, which makes downstream review and audit materially easier.
 
 ## Architecture
 
@@ -83,12 +83,12 @@ Two optimiser implementations behind the `IRebarOptimizer` port:
 
 | Algorithm | Waste | Speed | Best for |
 |-----------|-------|-------|----------|
-| **ColumnGenerationOptimizer** | Lower waste on mixed batches than FFD in current implementation | Higher than FFD | Default production-oriented baseline |
+| **ColumnGenerationOptimizer** | Lower waste on mixed batches than FFD in current implementation | Higher than FFD | Default production-oriented baseline with exact small-instance path and persisted LP/pricing provenance |
 | **First Fit Decreasing** (FFD) | Simpler heuristic baseline | O(n log n) | Quick estimates, fallback |
 
 The current default optimizer uses column-generation-style pattern search and heuristic repair. It is structured so the repository can later swap in a true LP master / branch-and-price backend without changing domain or application contracts.
 
-This matters for technical due diligence: the current implementation is stronger than a simple heuristic baseline, but it should still be presented honestly as a production-oriented optimizer rather than a mathematically complete branch-and-price engine.
+This matters for technical due diligence: the current implementation is stronger than a simple heuristic baseline, but it should still be presented honestly as a production-oriented optimizer rather than a mathematically complete branch-and-price engine. The repository now makes that distinction explicit in both code comments and persisted optimizer provenance. For tiny instances, the optimizer now falls back to an exact discrete search instead of pretending heuristic quality is enough.
 
 ### Color Recognition
 
@@ -101,7 +101,7 @@ This matters for technical due diligence: the current implementation is stronger
 - Top / Bottom rebar layers with correct bond condition (η₂)
 - X + Y direction detection from zone aspect ratio
 - Per-zone mark numbering for rebar schedules
-- Polygon decomposition for L-shaped / around-opening zones
+- Polygon decomposition for L-shaped / around-opening zones with an exact orthogonal-strip path where possible and persisted coverage/over-coverage metrics
 
 ### Observability
 
@@ -121,6 +121,17 @@ This matters for technical due diligence: the current implementation is stronger
 | `IReportStore` | Persist canonical reinforcement execution reports |
 | `IRevitPlacer` | Place rebars in Revit model |
 | `IImageSegmentationService` | ML-based image segmentation (Python) |
+
+## Verification-Oriented Reporting
+
+The canonical report (`*.result.json`) now persists:
+
+- normative profile identity and table-set version
+- geometry decomposition provenance (algorithm, thresholds, sampling resolution)
+- optimization provenance (optimizer id, LP/pricing strategy, integerization, fallback usage)
+- per-zone decomposition coverage and over-coverage metrics for complex zones
+
+Current validation rails include exact small-instance CSP checks and a benchmark pack covering score-gap and waste-gap distribution.
 
 ## Prerequisites
 
