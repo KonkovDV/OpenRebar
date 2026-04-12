@@ -29,7 +29,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        uses: github/codeql-action/init@5c8a8a642e79153f5d047b10ec1cba1d1cc65699
         with:
           languages: csharp
           build-mode: manual
@@ -41,7 +41,7 @@ jobs:
         run: dotnet build OpenRebar.sln --no-restore --configuration Release
 
       - name: Analyze
-        uses: github/codeql-action/analyze@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        uses: github/codeql-action/analyze@5c8a8a642e79153f5d047b10ec1cba1d1cc65699
         with:
           category: "/language:csharp"
 
@@ -55,11 +55,11 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        uses: github/codeql-action/init@5c8a8a642e79153f5d047b10ec1cba1d1cc65699
         with:
           languages: python
 
       - name: Analyze
-        uses: github/codeql-action/analyze@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        uses: github/codeql-action/analyze@5c8a8a642e79153f5d047b10ec1cba1d1cc65699
         with:
           category: "/language:python"
