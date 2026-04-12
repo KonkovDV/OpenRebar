@@ -1,0 +1,258 @@
+using System.Text.Json;
+using FluentAssertions;
+using OpenRebar.Domain.Models;
+using OpenRebar.Infrastructure.Reporting;
+
+namespace OpenRebar.Infrastructure.Tests.Reporting;
+
+/// <summary>
+/// Validates that the canonical report output satisfies the structural
+/// constraints defined in contracts/aerobim-reinforcement-report.schema.json.
+/// This is not a full JSON Schema validator — it checks the key required
+/// fields and shape constraints that matter for downstream consumers.
+/// </summary>
+public class ReportSchemaComplianceTests
+{
+    [Fact]
+    public async Task SaveAsync_OutputShouldContainAllRequiredTopLevelFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var root = doc.RootElement;
+
+            // All required top-level fields per contract
+            root.TryGetProperty("contractId", out _).Should().BeTrue();
+            root.TryGetProperty("schemaVersion", out _).Should().BeTrue();
+            root.TryGetProperty("generatedAtUtc", out _).Should().BeTrue();
+            root.TryGetProperty("metadata", out _).Should().BeTrue();
+            root.TryGetProperty("isolineFileName", out _).Should().BeTrue();
+            root.TryGetProperty("isolineFileFormat", out _).Should().BeTrue();
+            root.TryGetProperty("slab", out _).Should().BeTrue();
+            root.TryGetProperty("zones", out _).Should().BeTrue();
+            root.TryGetProperty("optimizationByDiameter", out _).Should().BeTrue();
+            root.TryGetProperty("placement", out _).Should().BeTrue();
+            root.TryGetProperty("summary", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_MetadataShouldContainAllRequiredFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-meta-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var metadata = doc.RootElement.GetProperty("metadata");
+
+            metadata.TryGetProperty("projectCode", out _).Should().BeTrue();
+            metadata.TryGetProperty("slabId", out _).Should().BeTrue();
+            metadata.TryGetProperty("sourceSystem", out _).Should().BeTrue();
+            metadata.TryGetProperty("targetSystem", out _).Should().BeTrue();
+            metadata.TryGetProperty("countryCode", out _).Should().BeTrue();
+            metadata.TryGetProperty("designCode", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_SlabShouldContainAllRequiredFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-slab-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var slab = doc.RootElement.GetProperty("slab");
+
+            slab.TryGetProperty("concreteClass", out _).Should().BeTrue();
+            slab.TryGetProperty("thicknessMm", out _).Should().BeTrue();
+            slab.TryGetProperty("coverMm", out _).Should().BeTrue();
+            slab.TryGetProperty("effectiveDepthMm", out _).Should().BeTrue();
+            slab.TryGetProperty("areaMm2", out _).Should().BeTrue();
+            slab.TryGetProperty("openingCount", out _).Should().BeTrue();
+            slab.TryGetProperty("boundingBox", out _).Should().BeTrue();
+
+            var bbox = slab.GetProperty("boundingBox");
+            bbox.TryGetProperty("minX", out _).Should().BeTrue();
+            bbox.TryGetProperty("minY", out _).Should().BeTrue();
+            bbox.TryGetProperty("maxX", out _).Should().BeTrue();
+            bbox.TryGetProperty("maxY", out _).Should().BeTrue();
+            bbox.TryGetProperty("width", out _).Should().BeTrue();
+            bbox.TryGetProperty("height", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_SummaryShouldContainAllRequiredFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-summary-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var summary = doc.RootElement.GetProperty("summary");
+
+            summary.TryGetProperty("parsedZoneCount", out _).Should().BeTrue();
+            summary.TryGetProperty("classifiedZoneCount", out _).Should().BeTrue();
+            summary.TryGetProperty("totalRebarSegments", out _).Should().BeTrue();
+            summary.TryGetProperty("totalWastePercent", out _).Should().BeTrue();
+            summary.TryGetProperty("totalWasteMm", out _).Should().BeTrue();
+            summary.TryGetProperty("totalMassKg", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_ContractIdShouldMatchSchemaConstant()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-cid-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            doc.RootElement.GetProperty("contractId").GetString()
+                .Should().Be("OpenRebar.reinforcement.report.v1");
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    private static ReinforcementExecutionReport BuildSampleReport() => new()
+    {
+        GeneratedAtUtc = DateTimeOffset.UtcNow,
+        Metadata = new PipelineExecutionMetadata
+        {
+            ProjectCode = "test-schema",
+            SlabId = "SLAB-01",
+            LevelName = "01"
+        },
+        IsolineFileName = "test.dxf",
+        IsolineFileFormat = "dxf",
+        Slab = new SlabExecutionReport
+        {
+            ConcreteClass = "B25",
+            ThicknessMm = 200,
+            CoverMm = 25,
+            EffectiveDepthMm = 175,
+            AreaMm2 = 600_000_000,
+            OpeningCount = 0,
+            BoundingBox = new BoundingBoxExecutionReport
+            {
+                MinX = 0, MinY = 0, MaxX = 30000, MaxY = 20000,
+                Width = 30000, Height = 20000
+            }
+        },
+        Zones =
+        [
+            new ZoneExecutionReport
+            {
+                ZoneId = "Z-001",
+                ZoneType = "Simple",
+                Direction = "X",
+                Layer = "Bottom",
+                DiameterMm = 12,
+                SpacingMm = 200,
+                RebarCount = 5,
+                TotalClearSpanMm = 5000,
+                TotalLengthMm = 30000,
+                BoundingBox = new BoundingBoxExecutionReport
+                {
+                    MinX = 0, MinY = 0, MaxX = 5000, MaxY = 3000,
+                    Width = 5000, Height = 3000
+                }
+            }
+        ],
+        OptimizationByDiameter =
+        [
+            new DiameterOptimizationExecutionReport
+            {
+                DiameterMm = 12,
+                SupplierName = "Default",
+                RebarCount = 5,
+                StockBarsNeeded = 2,
+                TotalWasteMm = 3400,
+                TotalWastePercent = 14.5,
+                TotalRebarLengthMm = 30000,
+                TotalMassKg = 26.6,
+                CuttingPlans =
+                [
+                    new CuttingPlanExecutionReport
+                    {
+                        StockLengthMm = 11700,
+                        CutsMm = [5000, 5000],
+                        WasteMm = 1700,
+                        WastePercent = 14.5
+                    }
+                ]
+            }
+        ],
+        Placement = new PlacementExecutionReport
+        {
+            Requested = false,
+            Executed = false,
+            Success = true,
+            TotalRebarsPlaced = 0,
+            TotalTagsCreated = 0,
+            TotalBendingDetails = 0
+        },
+        Summary = new ExecutionSummaryReport
+        {
+            ParsedZoneCount = 1,
+            ClassifiedZoneCount = 1,
+            TotalRebarSegments = 5,
+            TotalWastePercent = 14.5,
+            TotalWasteMm = 3400,
+            TotalMassKg = 26.6
+        }
+    };
+}

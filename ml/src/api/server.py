@@ -24,7 +24,7 @@ from ..segmentation.predict import load_model, segment_isoline_image
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 BASE_DIR = Path(__file__).resolve().parents[2]
-MODEL_PATH = Path(os.environ.get("A101_MODEL_PATH", str(BASE_DIR / "models" / "isoline_unet.pt")))
+MODEL_PATH = Path(os.environ.get("OpenRebar_MODEL_PATH", str(BASE_DIR / "models" / "isoline_unet.pt")))
 
 
 @asynccontextmanager
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
         _model = None
 
 app = FastAPI(
-    title="A101 Isoline Segmentation API",
+    title="OpenRebar Isoline Segmentation API",
     version="0.1.0",
     description="Segmentation service for LIRA-SAPR isoline images",
     lifespan=lifespan,

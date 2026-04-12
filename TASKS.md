@@ -1,19 +1,28 @@
-# A101-Reinforcement: Детальный План Задач
+# OpenRebar-Reinforcement: Детальный План Задач
 
 > **Для:** ИИ-программист
-> **Дата:** 2026-04-11
+> **Дата:** 2026-04-12
 > **Текущий статус:** ~100% roadmap-задач выполнено. Domain, Application, Infrastructure, Revit-интеграция, hardening, export, persistence и E2E-покрытие — готовы. Дальше остаётся только evolution backlog Phase 3: ML fine-tuning и richer auto-detailing.
 
-## Update 2026-04-12 — Следующий Рабочий План
+## Update 2026-04-12 — Phase 1+3 Execution Complete
 
-### Что уже закрыто в этом wave
+### Что закрыто в этом wave
 
-- Полный `dotnet test A101.sln --no-restore` зелёный: 114/114
-- Ошибки runtime-путей выровнены через domain exceptions для ML segmentation,
-  catalog loading и unsupported isoline formats
-- Добавлены public GitHub readiness surfaces: `SECURITY.md`, `CONTRIBUTING.md`,
-  `CODE_OF_CONDUCT.md`, `CODEOWNERS`, issue / PR templates, Dependabot,
-  dependency review workflow, CodeQL workflow, SHA-pinned CI
+- CLI parameterized slab geometry: `--slab-width`, `--slab-height`
+- CLI boundary validation for all numeric args with clear error messages
+- 8 new CLI integration tests covering happy path, edge cases, and validation
+- 5 new report schema compliance tests (`ReportSchemaComplianceTests`)
+- CHANGELOG.md (Keep a Changelog 1.1.0 format)
+- Release workflow (`.github/workflows/release.yml`) with SBOM + attestation
+- SBOM generation in CI (anchore/sbom-action)
+- Artifact attestation (actions/attest-build-provenance)
+- Full regression green: 127/127 .NET tests
+
+### Осталось
+
+- P0: Manual GitHub enablement (remote + admin)
+- P1: Revit production boundary (requires Revit SDK + live model)
+- P3: Optimization / ML evolution (requires datasets, training infra)
 
 ### P0 — Manual GitHub Enablement After First Push
 
@@ -32,11 +41,11 @@
 2. Добавить live validation на host element / slab selection boundary
 3. Протестировать end-to-end на реальной Revit 2025 среде, а не только через `StubRevitPlacer`
 
-### P2 — Interop And Delivery Hardening
+### P2 — Interop And Delivery Hardening — ✅ CLOSED
 
-1. Добавить IFC export path как официальный downstream contract
-2. Закрыть AeroBIM integration loop на каноническом JSON / IFC boundary
-3. Укрепить release lane: SBOM, artifact attestations, release notes discipline
+1. ~~Добавить IFC export path как официальный downstream contract~~ → Done (XbimIfcExporter)
+2. ~~Закрыть AeroBIM integration loop на каноническом JSON / IFC boundary~~ → Done (AeroBimReportExporter + schema tests)
+3. ~~Укрепить release lane: SBOM, artifact attestations, release notes discipline~~ → Done (release.yml + CHANGELOG.md)
 
 ### P3 — Optimization And ML Evolution
 
@@ -49,10 +58,10 @@
 ## Архитектурные Правила (ОБЯЗАТЕЛЬНО СОБЛЮДАТЬ)
 
 1. **Dependency Rule:** Domain → ничего. Application → Domain. Infrastructure → Domain + Application. RevitPlugin → все.
-2. **Ports:** Всё I/O определяется интерфейсом в `src/A101.Domain/Ports/`. Adapter — в `src/A101.Infrastructure/`.
-3. **DI:** Всё через `Microsoft.Extensions.DependencyInjection` в `src/A101.RevitPlugin/Bootstrap.cs`. Никаких `new Service()` вне composition root.
+2. **Ports:** Всё I/O определяется интерфейсом в `src/OpenRebar.Domain/Ports/`. Adapter — в `src/OpenRebar.Infrastructure/`.
+3. **DI:** Всё через `Microsoft.Extensions.DependencyInjection` в `src/OpenRebar.RevitPlugin/Bootstrap.cs`. Никаких `new Service()` вне composition root.
 4. **Constructor injection only.** Никаких service locator, static service, ambient context.
-5. **Revit SDK code:** Только в `src/A101.RevitPlugin/` и только внутри `#if REVIT_SDK` guard.
+5. **Revit SDK code:** Только в `src/OpenRebar.RevitPlugin/` и только внутри `#if REVIT_SDK` guard.
 6. **Тесты:** xUnit + FluentAssertions + NSubstitute. Каждая задача включает acceptance-тесты.
 7. **Naming:** Русские комментарии в UI. English в коде, XML-doc, тестах.
 8. **Все числа** — в миллиметрах (внутренняя система). Перевод feet ↔ mm только на boundary Revit.
@@ -88,7 +97,7 @@ T-15 ◄─────────── T-09 + T-10         │               
 
 **Приоритет:** 🔴 КРИТИЧЕСКИЙ
 **Зависимости:** нет
-**Файл:** `src/A101.RevitPlugin/Revit/RevitRebarPlacer.cs`
+**Файл:** `src/OpenRebar.RevitPlugin/Revit/RevitRebarPlacer.cs`
 **Текущее состояние:** Scaffold с `#if REVIT_SDK`. Есть `FindExistingBarType()`. Тело размещения — TODO-placeholder.
 
 #### Контекст
@@ -97,7 +106,7 @@ Revit API для арматуры предоставляет два подход
 - `Rebar.CreateFromCurves()` — одиночные стержни (точный контроль)
 - `AreaReinforcement.Create()` — площадное армирование (проще, но меньше контроля)
 
-Для A101 нужен **`Rebar.CreateFromCurves()`**, потому что мы уже вычислили точные `RebarSegment` с координатами start/end.
+Для OpenRebar нужен **`Rebar.CreateFromCurves()`**, потому что мы уже вычислили точные `RebarSegment` с координатами start/end.
 
 #### Что сделать
 
@@ -145,7 +154,7 @@ if (settings.GroupByZone)
 
 #### Доработки к PlacementSettings
 
-Добавить в `src/A101.Domain/Ports/IRevitPlacer.cs`:
+Добавить в `src/OpenRebar.Domain/Ports/IRevitPlacer.cs`:
 
 ```csharp
 public sealed record PlacementSettings
@@ -181,7 +190,7 @@ public sealed record PlacementSettings
 
 **Приоритет:** 🔴 КРИТИЧЕСКИЙ
 **Зависимости:** нет
-**Новый файл:** `src/A101.RevitPlugin/Revit/RevitSlabExtractor.cs`
+**Новый файл:** `src/OpenRebar.RevitPlugin/Revit/RevitSlabExtractor.cs`
 
 #### Контекст
 
@@ -190,11 +199,11 @@ public sealed record PlacementSettings
 #### Что сделать
 
 ```csharp
-namespace A101.RevitPlugin.Revit;
+namespace OpenRebar.RevitPlugin.Revit;
 
 #if REVIT_SDK
 using Autodesk.Revit.DB;
-using A101.Domain.Models;
+using OpenRebar.Domain.Models;
 
 public static class RevitSlabExtractor
 {
@@ -290,8 +299,8 @@ public static class RevitSlabExtractor
 **Приоритет:** 🔴 КРИТИЧЕСКИЙ
 **Зависимости:** нет
 **Файлы:**
-- `src/A101.RevitPlugin/Commands/GenerateReinforcementCommand.cs` (существует, scaffold)
-- `src/A101.RevitPlugin/A101.addin` (НОВЫЙ)
+- `src/OpenRebar.RevitPlugin/Commands/GenerateReinforcementCommand.cs` (существует, scaffold)
+- `src/OpenRebar.RevitPlugin/OpenRebar.addin` (НОВЫЙ)
 
 #### Что сделать
 
@@ -323,7 +332,7 @@ public Result Execute(...)
 
 ##### 3.2. Создать SelectionFilter
 
-Новый файл: `src/A101.RevitPlugin/Revit/FloorSelectionFilter.cs`
+Новый файл: `src/OpenRebar.RevitPlugin/Revit/FloorSelectionFilter.cs`
 
 ```csharp
 public class FloorSelectionFilter : ISelectionFilter
@@ -335,18 +344,18 @@ public class FloorSelectionFilter : ISelectionFilter
 
 ##### 3.3. Создать .addin manifest
 
-Новый файл: `src/A101.RevitPlugin/A101.addin`
+Новый файл: `src/OpenRebar.RevitPlugin/OpenRebar.addin`
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <RevitAddIns>
   <AddIn Type="Command">
-    <Name>A101 Reinforcement</Name>
-    <FullClassName>A101.RevitPlugin.GenerateReinforcementCommand</FullClassName>
-    <Assembly>A101.RevitPlugin.dll</Assembly>
-    <AddInId>A101-GUID-HERE</AddInId>
-    <VendorId>A101</VendorId>
-    <VendorDescription>A101 Development</VendorDescription>
+    <Name>OpenRebar Reinforcement</Name>
+    <FullClassName>OpenRebar.RevitPlugin.GenerateReinforcementCommand</FullClassName>
+    <Assembly>OpenRebar.RevitPlugin.dll</Assembly>
+    <AddInId>OpenRebar-GUID-HERE</AddInId>
+    <VendorId>OpenRebar</VendorId>
+    <VendorDescription>OpenRebar Development</VendorDescription>
     <Text>Армирование плит</Text>
     <Description>Автоматическое размещение дополнительной арматуры по изолиниям LIRA-SAPR</Description>
     <VisibilityMode>AlwaysVisible</VisibilityMode>
@@ -369,8 +378,8 @@ public class FloorSelectionFilter : ISelectionFilter
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** T-03
 **Новые файлы:**
-- `src/A101.RevitPlugin/A101Application.cs`
-- `src/A101.RevitPlugin/Resources/icon-32.png`
+- `src/OpenRebar.RevitPlugin/OpenRebarApplication.cs`
+- `src/OpenRebar.RevitPlugin/Resources/icon-32.png`
 
 #### Что сделать
 
@@ -379,16 +388,16 @@ public class FloorSelectionFilter : ISelectionFilter
 ```csharp
 #if REVIT_SDK
 [Transaction(TransactionMode.Manual)]
-public class A101Application : IExternalApplication
+public class OpenRebarApplication : IExternalApplication
 {
     public Result OnStartup(UIControlledApplication application)
     {
-        var panel = application.CreateRibbonPanel("A101");
+        var panel = application.CreateRibbonPanel("OpenRebar");
 
         var pushButton = panel.AddItem(new PushButtonData(
-            "A101_Reinforcement",
+            "OpenRebar_Reinforcement",
             "Армирование\nплит",
-            typeof(A101Application).Assembly.Location,
+            typeof(OpenRebarApplication).Assembly.Location,
             typeof(GenerateReinforcementCommand).FullName))
             as PushButton;
 
@@ -406,14 +415,14 @@ public class A101Application : IExternalApplication
 Обновить `.addin`:
 ```xml
 <AddIn Type="Application">
-  <FullClassName>A101.RevitPlugin.A101Application</FullClassName>
+  <FullClassName>OpenRebar.RevitPlugin.OpenRebarApplication</FullClassName>
   ...
 </AddIn>
 ```
 
 #### Acceptance Criteria
 
-- [ ] При загрузке Revit появляется вкладка "A101" с кнопкой "Армирование плит"
+- [ ] При загрузке Revit появляется вкладка "OpenRebar" с кнопкой "Армирование плит"
 - [ ] Клик по кнопке открывает `ReinforcementDialog`
 
 ---
@@ -422,7 +431,7 @@ public class A101Application : IExternalApplication
 
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** T-03
-**Новый файл:** `src/A101.Infrastructure/DxfProcessing/DxfLegendExtractor.cs`
+**Новый файл:** `src/OpenRebar.Infrastructure/DxfProcessing/DxfLegendExtractor.cs`
 
 #### Контекст
 
@@ -447,7 +456,7 @@ public class A101Application : IExternalApplication
 #### Новый порт
 
 ```csharp
-// src/A101.Domain/Ports/ILegendLoader.cs
+// src/OpenRebar.Domain/Ports/ILegendLoader.cs
 public interface ILegendLoader
 {
     Task<ColorLegend> LoadAsync(string path, CancellationToken ct = default);
@@ -471,14 +480,14 @@ public interface ILegendLoader
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** нет
 **Новые файлы:**
-- `src/A101.Domain/Ports/IStructuredLogger.cs`
-- `src/A101.Infrastructure/Logging/ConsoleStructuredLogger.cs`
+- `src/OpenRebar.Domain/Ports/IStructuredLogger.cs`
+- `src/OpenRebar.Infrastructure/Logging/ConsoleStructuredLogger.cs`
 
 #### Что сделать
 
 ```csharp
-// src/A101.Domain/Ports/IStructuredLogger.cs
-namespace A101.Domain.Ports;
+// src/OpenRebar.Domain/Ports/IStructuredLogger.cs
+namespace OpenRebar.Domain.Ports;
 
 public interface IStructuredLogger
 {
@@ -490,7 +499,7 @@ public interface IStructuredLogger
 
 Adapter (для standalone/CLI):
 ```csharp
-// src/A101.Infrastructure/Logging/ConsoleStructuredLogger.cs
+// src/OpenRebar.Infrastructure/Logging/ConsoleStructuredLogger.cs
 public sealed class ConsoleStructuredLogger : IStructuredLogger
 {
     public void Info(string message, params (string Key, object Value)[] context)
@@ -520,7 +529,7 @@ public sealed class ConsoleStructuredLogger : IStructuredLogger
 
 **Приоритет:** 🟢 ПРОСТАЯ
 **Зависимости:** нет
-**Файл:** `src/A101.Infrastructure/ReinforcementEngine/StandardReinforcementCalculator.cs`
+**Файл:** `src/OpenRebar.Infrastructure/ReinforcementEngine/StandardReinforcementCalculator.cs`
 
 #### Проблема
 
@@ -565,32 +574,32 @@ public IReadOnlyList<ReinforcementZone> CalculateRebars(
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** нет
 **Новые файлы:**
-- `src/A101.Domain/Exceptions/A101DomainException.cs`
-- `src/A101.Domain/Exceptions/InvalidIsolineFileException.cs`
-- `src/A101.Domain/Exceptions/OptimizationException.cs`
-- `src/A101.Domain/Exceptions/NormativeViolationException.cs`
+- `src/OpenRebar.Domain/Exceptions/OpenRebarDomainException.cs`
+- `src/OpenRebar.Domain/Exceptions/InvalidIsolineFileException.cs`
+- `src/OpenRebar.Domain/Exceptions/OptimizationException.cs`
+- `src/OpenRebar.Domain/Exceptions/NormativeViolationException.cs`
 
 #### Что сделать
 
 ```csharp
-namespace A101.Domain.Exceptions;
+namespace OpenRebar.Domain.Exceptions;
 
-public abstract class A101DomainException : Exception
+public abstract class OpenRebarDomainException : Exception
 {
     public string ErrorCode { get; }
-    protected A101DomainException(string errorCode, string message) : base(message)
+    protected OpenRebarDomainException(string errorCode, string message) : base(message)
     {
         ErrorCode = errorCode;
     }
 }
 
-public class InvalidIsolineFileException : A101DomainException
+public class InvalidIsolineFileException : OpenRebarDomainException
 {
     public InvalidIsolineFileException(string filePath, string reason)
         : base("ISOLINE_INVALID", $"Invalid isoline file '{filePath}': {reason}") { }
 }
 
-public class NormativeViolationException : A101DomainException
+public class NormativeViolationException : OpenRebarDomainException
 {
     public string Clause { get; }
     public NormativeViolationException(string clause, string message)
@@ -600,7 +609,7 @@ public class NormativeViolationException : A101DomainException
     }
 }
 
-public class OptimizationException : A101DomainException
+public class OptimizationException : OpenRebarDomainException
 {
     public OptimizationException(string message)
         : base("OPTIMIZATION_FAILED", message) { }
@@ -617,7 +626,7 @@ public class OptimizationException : A101DomainException
 
 - [ ] Exception hierarchy с `ErrorCode` для программного анализа
 - [ ] Каждый adapter бросает domain exception (не raw ArgumentException)
-- [ ] UI (`ReinforcementDialog`) ловит `A101DomainException` и показывает `ErrorCode` + `Message`
+- [ ] UI (`ReinforcementDialog`) ловит `OpenRebarDomainException` и показывает `ErrorCode` + `Message`
 - [ ] Тесты: verify exception types thrown on invalid input
 
 ---
@@ -626,7 +635,7 @@ public class OptimizationException : A101DomainException
 
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** T-01, T-02
-**Новый файл:** `tests/A101.Application.Tests/FullPipelineIntegrationTests.cs`
+**Новый файл:** `tests/OpenRebar.Application.Tests/FullPipelineIntegrationTests.cs`
 
 #### Что сделать
 
@@ -687,13 +696,13 @@ public class FullPipelineIntegrationTests
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** T-08
 **Новые файлы:**
-- `src/A101.Domain/Ports/IReportExporter.cs`
-- `src/A101.Infrastructure/Reporting/JsonReportExporter.cs`
+- `src/OpenRebar.Domain/Ports/IReportExporter.cs`
+- `src/OpenRebar.Infrastructure/Reporting/JsonReportExporter.cs`
 
 #### Что сделать
 
 ```csharp
-// src/A101.Domain/Ports/IReportExporter.cs
+// src/OpenRebar.Domain/Ports/IReportExporter.cs
 public interface IReportExporter
 {
     Task ExportAsync(PipelineResult result, PipelineInput input,
@@ -739,8 +748,8 @@ public interface IReportExporter
 **Приоритет:** 🟢 ПРОСТАЯ
 **Зависимости:** T-09
 **Новые файлы:**
-- `src/A101.Domain/Ports/IScheduleExporter.cs`
-- `src/A101.Infrastructure/Reporting/CsvScheduleExporter.cs`
+- `src/OpenRebar.Domain/Ports/IScheduleExporter.cs`
+- `src/OpenRebar.Infrastructure/Reporting/CsvScheduleExporter.cs`
 
 #### Формат CSV
 
@@ -763,7 +772,7 @@ public interface IReportExporter
 
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** нет (можно делать параллельно)
-**Файл:** `src/A101.Infrastructure/Optimization/ColumnGenerationOptimizer.cs`
+**Файл:** `src/OpenRebar.Infrastructure/Optimization/ColumnGenerationOptimizer.cs`
 **NuGet:** `Highs.Native` (MIT license)
 
 #### Контекст
@@ -825,15 +834,15 @@ private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLP(
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** T-09
 **Новые файлы:**
-- `src/A101.Domain/Ports/IIfcExporter.cs`
-- `src/A101.Infrastructure/Export/XbimIfcExporter.cs`
+- `src/OpenRebar.Domain/Ports/IIfcExporter.cs`
+- `src/OpenRebar.Infrastructure/Export/XbimIfcExporter.cs`
 **NuGet:** `Xbim.Essentials`, `Xbim.Geometry`
 
 #### Что сделать
 
 ```csharp
-// src/A101.Domain/Ports/IIfcExporter.cs
-namespace A101.Domain.Ports;
+// src/OpenRebar.Domain/Ports/IIfcExporter.cs
+namespace OpenRebar.Domain.Ports;
 
 public interface IIfcExporter
 {
@@ -866,7 +875,7 @@ IFC entities:
 
 **Приоритет:** 🟢 ПРОСТАЯ
 **Зависимости:** T-01
-**Новый файл:** `src/A101.Application/UseCases/BatchReinforcementPipeline.cs`
+**Новый файл:** `src/OpenRebar.Application/UseCases/BatchReinforcementPipeline.cs`
 
 #### Что сделать
 
@@ -912,17 +921,17 @@ public sealed class BatchReinforcementPipeline
 
 **Приоритет:** 🟢 ПРОСТАЯ
 **Зависимости:** T-09, T-10
-**Новый файл:** `src/A101.Infrastructure/Export/AeroBimReportExporter.cs`
+**Новый файл:** `src/OpenRebar.Infrastructure/Export/AeroBimReportExporter.cs`
 
 #### Контекст
 
-Генерирует JSON в формате, который AeroBIM может принять через `A101ReportRequirementExtractor` (будущий адаптер на стороне AeroBIM).
+Генерирует JSON в формате, который AeroBIM может принять через `OpenRebarReportRequirementExtractor` (будущий адаптер на стороне AeroBIM).
 
 #### Формат
 
 ```json
 {
-  "$schema": "aerobim-a101-reinforcement-report/v1",
+  "$schema": "aerobim-OpenRebar-reinforcement-report/v1",
   "project_id": "рк-25-0042",
   "slab_id": "Плита_Этаж_03",
   "concrete_class": "B25",
@@ -970,8 +979,8 @@ public sealed class BatchReinforcementPipeline
 - [ ] Написать код в правильном слое (Domain/Application/Infrastructure/Plugin)
 - [ ] Зарегистрировать в DI (`Bootstrap.cs`) если это новый service
 - [ ] Написать unit/integration тесты
-- [ ] Убедиться что `dotnet build A101.sln` проходит без errors/warnings
-- [ ] Убедиться что `dotnet test A101.sln` проходит (все тесты зелёные)
+- [ ] Убедиться что `dotnet build OpenRebar.sln` проходит без errors/warnings
+- [ ] Убедиться что `dotnet test OpenRebar.sln` проходит (все тесты зелёные)
 - [ ] Добавить XML-doc комментарии к public API
 - [ ] Не нарушать dependency rule (проверить: Domain не импортирует Infrastructure)
 

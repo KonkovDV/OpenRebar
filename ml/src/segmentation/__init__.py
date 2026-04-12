@@ -1,3 +1,3 @@
 """
-A101 segmentation package.
+OpenRebar segmentation package.
 """

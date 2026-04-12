@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://a101-reinforcement.local/contracts/aerobim-reinforcement-report.schema.json",
-  "title": "A101 Reinforcement Execution Report",
-  "description": "Canonical machine-readable reinforcement report exchanged between A101-Reinforcement and downstream BIM systems such as AeroBIM.",
+  "$id": "https://OpenRebar-reinforcement.local/contracts/aerobim-reinforcement-report.schema.json",
+  "title": "OpenRebar Reinforcement Execution Report",
+  "description": "Canonical machine-readable reinforcement report exchanged between OpenRebar-Reinforcement and downstream BIM systems such as AeroBIM.",
   "type": "object",
   "required": [
     "contractId",
@@ -19,7 +19,7 @@
   ],
   "properties": {
     "contractId": {
-      "const": "a101.reinforcement.report.v1"
+      "const": "OpenRebar.reinforcement.report.v1"
     },
     "schemaVersion": {
       "type": "string",

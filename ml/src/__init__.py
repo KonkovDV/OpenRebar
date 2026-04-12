@@ -1,3 +1,3 @@
 """
-A101 ML source package.
+OpenRebar ML source package.
 """

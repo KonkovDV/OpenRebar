@@ -1,0 +1,75 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Domain", "src\OpenRebar.Domain\OpenRebar.Domain.csproj", "{OpenRebar0001-0001-0001-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Application", "src\OpenRebar.Application\OpenRebar.Application.csproj", "{OpenRebar0001-0002-0001-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Infrastructure", "src\OpenRebar.Infrastructure\OpenRebar.Infrastructure.csproj", "{OpenRebar0001-0003-0001-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.RevitPlugin", "src\OpenRebar.RevitPlugin\OpenRebar.RevitPlugin.csproj", "{OpenRebar0001-0004-0001-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Cli", "src\OpenRebar.Cli\OpenRebar.Cli.csproj", "{OpenRebar0001-0005-0001-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Domain.Tests", "tests\OpenRebar.Domain.Tests\OpenRebar.Domain.Tests.csproj", "{OpenRebar0001-0001-0002-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Application.Tests", "tests\OpenRebar.Application.Tests\OpenRebar.Application.Tests.csproj", "{OpenRebar0001-0002-0002-0001-000000000001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenRebar.Infrastructure.Tests", "tests\OpenRebar.Infrastructure.Tests\OpenRebar.Infrastructure.Tests.csproj", "{OpenRebar0001-0003-0002-0001-000000000001}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B0000001-0001-0001-0001-000000000001}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B0000001-0002-0001-0001-000000000001}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{OpenRebar0001-0001-0001-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0001-0001-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0001-0001-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0001-0001-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0002-0001-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0002-0001-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0002-0001-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0002-0001-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0003-0001-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0003-0001-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0003-0001-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0003-0001-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0004-0001-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0004-0001-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0004-0001-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0004-0001-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0001-0002-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0001-0002-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0001-0002-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0001-0002-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0002-0002-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0002-0002-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0002-0002-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0002-0002-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0003-0002-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0003-0002-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0003-0002-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0003-0002-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{OpenRebar0001-0005-0001-0001-000000000001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{OpenRebar0001-0005-0001-0001-000000000001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{OpenRebar0001-0005-0001-0001-000000000001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{OpenRebar0001-0005-0001-0001-000000000001}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{OpenRebar0001-0001-0001-0001-000000000001} = {B0000001-0001-0001-0001-000000000001}
+		{OpenRebar0001-0002-0001-0001-000000000001} = {B0000001-0001-0001-0001-000000000001}
+		{OpenRebar0001-0003-0001-0001-000000000001} = {B0000001-0001-0001-0001-000000000001}
+		{OpenRebar0001-0004-0001-0001-000000000001} = {B0000001-0001-0001-0001-000000000001}
+		{OpenRebar0001-0005-0001-0001-000000000001} = {B0000001-0001-0001-0001-000000000001}
+		{OpenRebar0001-0001-0002-0001-000000000001} = {B0000001-0002-0001-0001-000000000001}
+		{OpenRebar0001-0002-0002-0001-000000000001} = {B0000001-0002-0001-0001-000000000001}
+		{OpenRebar0001-0003-0002-0001-000000000001} = {B0000001-0002-0001-0001-000000000001}
+	EndGlobalSection
+EndGlobal

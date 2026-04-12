@@ -1,37 +1,37 @@
 version: 2
 updates:
   - package-ecosystem: "nuget"
-    directory: "/src/A101.Application"
+    directory: "/src/OpenRebar.Application"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
-    directory: "/src/A101.Domain"
+    directory: "/src/OpenRebar.Domain"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
-    directory: "/src/A101.Infrastructure"
+    directory: "/src/OpenRebar.Infrastructure"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
-    directory: "/src/A101.RevitPlugin"
+    directory: "/src/OpenRebar.RevitPlugin"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
-    directory: "/tests/A101.Application.Tests"
+    directory: "/tests/OpenRebar.Application.Tests"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
-    directory: "/tests/A101.Domain.Tests"
+    directory: "/tests/OpenRebar.Domain.Tests"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
-    directory: "/tests/A101.Infrastructure.Tests"
+    directory: "/tests/OpenRebar.Infrastructure.Tests"
     schedule:
       interval: "weekly"
 

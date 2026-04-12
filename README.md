@@ -1,4 +1,4 @@
-# A101-Reinforcement
+# OpenRebar-Reinforcement
 
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -7,13 +7,13 @@ Automated reinforcement placement for flat RC slabs — **Revit 2025 plugin** wi
 
 ## Status
 
-- This repository is a **standalone extracted project** in `external/a101-reinforcement`, based on MicroPhoenix architectural patterns.
+- This repository is a **standalone extracted project** in `external/OpenRebar-reinforcement`, based on MicroPhoenix architectural patterns.
 - The core domain, application, optimisation, DXF, PNG, and ML service layers are implemented and testable outside Revit.
 - The Revit SDK-dependent command and placer are included as **compile-time scaffolds** and require local Autodesk Revit references to enable the real plugin boundary.
 
 ## Problem
 
-Structural engineers at A101 manually place reinforcement in Revit based on isoline maps exported from LIRA-SAPR / Stark-ES. For a typical 25-floor residential building this takes **2–3 weeks per floor** and is error-prone.
+Structural engineers at OpenRebar manually place reinforcement in Revit based on isoline maps exported from LIRA-SAPR / Stark-ES. For a typical 25-floor residential building this takes **2–3 weeks per floor** and is error-prone.
 
 This plugin automates the full pipeline:
 
@@ -40,18 +40,18 @@ Clean Architecture with 4 layers:
 
 ```
 ┌──────────────────────────────────────────────┐
-│            A101.RevitPlugin                   │  Revit ExternalCommand + WPF UI
+│            OpenRebar.RevitPlugin                   │  Revit ExternalCommand + WPF UI
 │  Bootstrap (DI), Commands/, Revit/           │
 ├──────────────────────────────────────────────┤
-│           A101.Application                    │  Use cases / orchestration
+│           OpenRebar.Application                    │  Use cases / orchestration
 │  GenerateReinforcementPipeline               │
 │  OptimizeRebarCuttingUseCase                 │
 ├──────────────────────────────────────────────┤
-│            A101.Domain                        │  Models, Ports, Rules (zero deps)
+│            OpenRebar.Domain                        │  Models, Ports, Rules (zero deps)
 │  Geometry  Isoline  ReinforcementZone        │
 │  AnchorageRules  ReinforcementLimits         │
 ├──────────────────────────────────────────────┤
-│         A101.Infrastructure                   │  Adapters
+│         OpenRebar.Infrastructure                   │  Adapters
 │  DxfIsolineParser  PngIsolineParser          │
 │  ColumnGeneration / FFD Optimizers           │
 │  StandardReinforcementCalculator             │
@@ -131,8 +131,8 @@ This matters for technical due diligence: the current implementation is stronger
 ## Build & Test
 
 ```bash
-dotnet build A101.sln
-dotnet test A101.sln
+dotnet build OpenRebar.sln
+dotnet test OpenRebar.sln
 
 # Python ML setup / smoke tests
 cd ml
@@ -149,6 +149,7 @@ If you publish this repository to GitHub, add the repository-specific CI badge U
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Audit and roadmap: [HYPER_DEEP_AUDIT_REPORT.md](HYPER_DEEP_AUDIT_REPORT.md), [TASKS.md](TASKS.md)
 
 For a public GitHub launch, this repository now includes a baseline CI workflow,
@@ -160,21 +161,27 @@ repository settings after the first remote push.
 ## Project Structure
 
 ```
-A101.sln
+OpenRebar.sln
 ├── src/
-│   ├── A101.Domain/           # Models, Ports, Rules (pure C#, zero deps)
-│   ├── A101.Application/      # Use cases (depends on Domain)
-│   ├── A101.Infrastructure/   # Adapters: DXF, PNG, optimisers, calculator
-│   └── A101.RevitPlugin/      # Revit entry point, DI bootstrap, WPF UI
+│   ├── OpenRebar.Domain/           # Models, Ports, Rules (pure C#, zero deps)
+│   ├── OpenRebar.Application/      # Use cases (depends on Domain)
+│   ├── OpenRebar.Infrastructure/   # Adapters: DXF, PNG, optimisers, calculator
+│   └── OpenRebar.RevitPlugin/      # Revit entry point, DI bootstrap, WPF UI
 ├── tests/
-│   ├── A101.Domain.Tests/     # Anchorage, polygon, colour, validation
-│   ├── A101.Application.Tests/
-│   └── A101.Infrastructure.Tests/  # Optimisers, calc engine, zone detector
+│   ├── OpenRebar.Domain.Tests/     # Anchorage, polygon, colour, validation
+│   ├── OpenRebar.Application.Tests/
+│   └── OpenRebar.Infrastructure.Tests/  # Optimisers, calc engine, zone detector
 ├── ml/
 │   ├── src/segmentation/      # U-Net model + inference
 │   ├── src/api/               # FastAPI server
 │   └── requirements.txt
-├── .github/workflows/ci.yml   # GitHub Actions CI
+├── contracts/                 # JSON Schema for canonical report
+├── .github/workflows/
+│   ├── ci.yml                 # CI with SBOM generation
+│   ├── codeql.yml             # CodeQL security scanning
+│   ├── dependency-review.yml  # PR dependency review
+│   └── release.yml            # Tag-triggered release with attestation
+├── CHANGELOG.md               # Keep a Changelog format
 └── LICENSE
 ```
 

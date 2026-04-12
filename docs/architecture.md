@@ -2,7 +2,7 @@
 
 ## Overview
 
-A101-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, optimization algorithms) must be testable without Revit or any I/O**.
+OpenRebar-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, optimization algorithms) must be testable without Revit or any I/O**.
 
 This repository is a standalone project in `external/` built from an extraction of proven MicroPhoenix architectural patterns:
 
@@ -77,7 +77,7 @@ Stock lengths vary by supplier and market. The `ISupplierCatalogLoader` port ena
 
 ## Normative Rules Engine
 
-All SP 63 / GOST calculations are in `A101.Domain.Rules/`:
+All SP 63 / GOST calculations are in `OpenRebar.Domain.Rules/`:
 
 | Module | Responsibility |
 |--------|---------------|

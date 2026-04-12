@@ -1,4 +1,4 @@
-# A101 Reinforcement — Python ML Module
+# OpenRebar Reinforcement — Python ML Module
 # Isoline image segmentation service for PNG processing.
 
 # Core

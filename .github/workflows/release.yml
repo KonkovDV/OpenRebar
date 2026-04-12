@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  packages: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore OpenRebar.sln
+
+      - name: Build (Release)
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test OpenRebar.sln --no-build --configuration Release --verbosity normal
+
+  python-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.11"
+
+      - name: Install ML dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ml/requirements.txt
+
+      - name: Run Python smoke tests
+        working-directory: ml
+        run: pytest tests -q
+
+  publish:
+    needs: [build-and-test, python-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore OpenRebar.sln
+
+      - name: Build (Release)
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release
+
+      - name: Pack CLI tool
+        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --configuration Release --output ./publish/cli
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58571
+        with:
+          path: ./publish/cli
+          artifact-name: OpenRebar-sbom.spdx.json
+          output-file: ./publish/OpenRebar-sbom.spdx.json
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1
+        with:
+          subject-path: ./publish/cli/*
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+        with:
+          generate_release_notes: true
+          files: |
+            ./publish/OpenRebar-sbom.spdx.json
+
+      - name: Upload CLI artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: OpenRebar-cli-${{ github.ref_name }}
+          path: ./publish/cli/

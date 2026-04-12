@@ -1,5 +1,5 @@
 """
-A101 Reinforcement — Isoline segmentation model.
+OpenRebar Reinforcement — Isoline segmentation model.
 
 U-Net based semantic segmentation for parsing color-coded isoline maps
 exported from LIRA-SAPR into discrete reinforcement zones.

@@ -1,3 +1,3 @@
 """
-A101 API package.
+OpenRebar API package.
 """

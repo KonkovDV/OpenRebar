@@ -35,10 +35,10 @@ jobs:
           build-mode: manual
 
       - name: Restore
-        run: dotnet restore A101.sln
+        run: dotnet restore OpenRebar.sln
 
       - name: Build
-        run: dotnet build A101.sln --no-restore --configuration Release
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release
 
       - name: Analyze
         uses: github/codeql-action/analyze@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c

@@ -6,8 +6,8 @@
 
 ## Validation
 
-- [ ] `dotnet build A101.sln`
-- [ ] `dotnet test A101.sln`
+- [ ] `dotnet build OpenRebar.sln`
+- [ ] `dotnet test OpenRebar.sln`
 - [ ] `pytest tests -q` (if `ml/` changed)
 - [ ] docs updated when public behavior, contracts, or governance changed
 
