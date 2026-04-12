@@ -1,8 +1,11 @@
+using A101.Domain.Exceptions;
 using A101.Infrastructure.ImageProcessing;
 using A101.Domain.Models;
 using FluentAssertions;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 
 namespace A101.Infrastructure.Tests.ImageProcessing;
 
@@ -37,7 +40,7 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
         try
         {
             var act = () => _sut.SegmentAsync(tmpFile);
-            await act.Should().ThrowAsync<InvalidOperationException>()
+            await act.Should().ThrowAsync<ImageSegmentationServiceException>()
                 .WithMessage("*Cannot connect to ML segmentation service*");
         }
         finally
@@ -74,19 +77,72 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
 
         try
         {
-            await service.Invoking(sut => sut.SegmentAsync(tmpFile)).Should().ThrowAsync<InvalidOperationException>()
+            await service.Invoking(sut => sut.SegmentAsync(tmpFile)).Should().ThrowAsync<ImageSegmentationServiceException>()
                 .WithMessage("*Cannot connect to ML segmentation service*");
 
-            await service.Invoking(sut => sut.SegmentAsync(tmpFile)).Should().ThrowAsync<InvalidOperationException>()
+            await service.Invoking(sut => sut.SegmentAsync(tmpFile)).Should().ThrowAsync<ImageSegmentationServiceException>()
                 .WithMessage("*Cannot connect to ML segmentation service*");
 
-            await service.Invoking(sut => sut.SegmentAsync(tmpFile)).Should().ThrowAsync<InvalidOperationException>()
+            await service.Invoking(sut => sut.SegmentAsync(tmpFile)).Should().ThrowAsync<ImageSegmentationServiceException>()
                 .WithMessage("*circuit is open*");
 
             handler.RequestCount.Should().Be(2, "the third call should be short-circuited without another HTTP attempt");
         }
         finally
         {
+            File.Delete(tmpFile);
+        }
+    }
+
+    [Fact]
+    public async Task SegmentAsync_ShouldUseInvariantCultureForMinAreaQueryParameter()
+    {
+        var previousCulture = CultureInfo.CurrentCulture;
+        var previousUiCulture = CultureInfo.CurrentUICulture;
+
+        CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
+        CultureInfo.CurrentUICulture = CultureInfo.CurrentCulture;
+
+        var handler = new CountingHttpMessageHandler(request =>
+        {
+            if (request.RequestUri!.AbsolutePath == "/health")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"status\":\"ok\"}", Encoding.UTF8, "application/json")
+                };
+            }
+
+            request.RequestUri!.AbsolutePath.Should().Be("/segment");
+            request.RequestUri.Query.Should().Contain("min_area=1000.5");
+            request.RequestUri.Query.Should().NotContain(",");
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"zones\":[],\"total_zones\":0}", Encoding.UTF8, "application/json")
+            };
+        });
+
+        using var service = new HttpImageSegmentationService(
+            baseUrl: "http://ml-server:9000",
+            minArea: 1000.5,
+            maxRetryAttempts: 1,
+            messageHandler: handler);
+
+        var tmpFile = Path.GetTempFileName() + ".png";
+        await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
+
+        try
+        {
+            var result = await service.SegmentAsync(tmpFile);
+
+            result.Should().BeEmpty();
+            handler.RequestCount.Should().Be(2, "health and segmentation requests should both complete successfully");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+            CultureInfo.CurrentUICulture = previousUiCulture;
             File.Delete(tmpFile);
         }
     }

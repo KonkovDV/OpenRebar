@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible defect in A101-Reinforcement
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken and why does it matter?
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options:
+        - Domain rules
+        - Application pipeline
+        - Infrastructure adapter
+        - Revit plugin
+        - ML service
+        - CI / GitHub workflow
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Provide exact steps, inputs, and files if possible.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots, or traces
+      description: Paste relevant snippets only. Do not include secrets.

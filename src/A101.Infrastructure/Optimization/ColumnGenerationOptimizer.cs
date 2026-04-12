@@ -235,7 +235,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
                 HighsObjectiveSense.kMinimize);
 
             using var solver = new HighsLpSolver();
-            solver.setOptionValue("output_flag", "false");
+            solver.setBoolOptionValue("output_flag", 0);
             var passStatus = solver.passLp(model);
             if (passStatus != HighsStatus.kOk)
                 return null;

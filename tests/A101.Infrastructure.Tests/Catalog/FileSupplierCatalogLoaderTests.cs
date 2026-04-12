@@ -1,3 +1,4 @@
+using A101.Domain.Exceptions;
 using A101.Domain.Models;
 using A101.Infrastructure.Catalog;
 using FluentAssertions;
@@ -45,7 +46,24 @@ public class FileSupplierCatalogLoaderTests
         try
         {
             var act = async () => await _loader.LoadAsync(tmpFile);
-            await act.Should().ThrowAsync<NotSupportedException>();
+            await act.Should().ThrowAsync<SupplierCatalogLoadException>();
+        }
+        finally
+        {
+            File.Delete(tmpFile);
+        }
+    }
+
+    [Fact]
+    public async Task LoadAsync_InvalidJson_ShouldThrowSupplierCatalogLoadException()
+    {
+        var tmpFile = Path.GetTempFileName() + ".json";
+        await File.WriteAllTextAsync(tmpFile, "{not-json");
+
+        try
+        {
+            var act = async () => await _loader.LoadAsync(tmpFile);
+            await act.Should().ThrowAsync<SupplierCatalogLoadException>();
         }
         finally
         {

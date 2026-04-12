@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a new capability or roadmap item
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What workflow or constraint is not served today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the desired behavior, API, or user flow.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Normative, Revit, ML, performance, or publication constraints.

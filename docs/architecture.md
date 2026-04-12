@@ -66,6 +66,8 @@ Rebar cutting is a **1D Cutting Stock Problem** (CSP). The repository now contai
 
 This keeps the domain independent from any specific OR solver while allowing the standalone project to evolve toward exact or branch-and-price implementations later.
 
+Important implementation note: the current `ColumnGenerationOptimizer` is an LP-relaxation / pricing / rounding pipeline with an FFD non-regression floor. It should be presented as a strong production-oriented optimizer, not as a mathematically complete branch-and-price solver.
+
 ### 5. Supplier Catalogs
 
 Stock lengths vary by supplier and market. The `ISupplierCatalogLoader` port enables:
@@ -118,9 +120,24 @@ These are pure static functions with no I/O — fully testable with unit tests.
                          ┌────────▼───────────┐
                          │  Pipeline Result   │
                          │  zones, waste %,   │
-                         │  mass, cost        │
+                        │  mass, cost, JSON  │
+                        │  integration report│
                          └────────────────────┘
 ```
+
+## Integration Boundary
+
+The standalone project now exposes a canonical report artifact for external systems:
+
+- schema: `contracts/aerobim-reinforcement-report.schema.json`
+- payload: `ReinforcementExecutionReport`
+- persistence port: `IReportStore`
+
+This gives AeroBIM or other downstream consumers a stable machine-readable interface even before a fully validated IFC exporter exists.
+
+## Logging Boundary
+
+For this standalone .NET extraction, structured logging uses the official `ILogger<T>` abstraction from DI rather than a custom logger port. This follows current Microsoft guidance for DI-based .NET applications while keeping Domain models free of framework dependencies.
 
 ## Testing Strategy
 

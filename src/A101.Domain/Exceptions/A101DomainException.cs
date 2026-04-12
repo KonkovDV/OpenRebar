@@ -8,7 +8,12 @@ public abstract class A101DomainException : Exception
     public string ErrorCode { get; }
 
     protected A101DomainException(string errorCode, string message)
-        : base(message)
+        : this(errorCode, message, null)
+    {
+    }
+
+    protected A101DomainException(string errorCode, string message, Exception? innerException)
+        : base(message, innerException)
     {
         ErrorCode = errorCode;
     }

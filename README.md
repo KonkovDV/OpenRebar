@@ -21,9 +21,18 @@ This plugin automates the full pipeline:
 2. **Classify** zones and decompose complex polygons into rectangles
 3. **Calculate** rebar layout per zone (spacing, diameter, anchorage per SP 63.13330)
 4. **Optimize** cutting to minimise waste (Column Generation / bin-packing)
-5. **Place** `RebarInSystem` elements in Revit with tags and bending details
+5. **Persist** a canonical machine-readable reinforcement report for downstream BIM systems
+6. **Place** `RebarInSystem` elements in Revit with tags and bending details
 
 **Target:** reduce reinforcement placement from **2–3 weeks → 2–3 hours** per floor.
+
+## Integration Contract
+
+- Canonical report schema: `contracts/aerobim-reinforcement-report.schema.json`
+- Canonical report artifact: `*.result.json`
+- Primary downstream target: AeroBIM and adjacent BIM/data consumers that need stable slab, zone, cutting, and placement summaries
+
+The standalone project now emits a formal JSON contract instead of relying only on an ad-hoc CLI export shape. This makes the extracted project materially more useful for batch workflows, investor demos, and downstream BIM integration.
 
 ## Architecture
 
@@ -79,6 +88,8 @@ Two optimiser implementations behind the `IRebarOptimizer` port:
 
 The current default optimizer uses column-generation-style pattern search and heuristic repair. It is structured so the repository can later swap in a true LP master / branch-and-price backend without changing domain or application contracts.
 
+This matters for technical due diligence: the current implementation is stronger than a simple heuristic baseline, but it should still be presented honestly as a production-oriented optimizer rather than a mathematically complete branch-and-price engine.
+
 ### Color Recognition
 
 - **DXF:** Full AutoCAD ACI palette (256 colors) + ByLayer resolution
@@ -92,6 +103,12 @@ The current default optimizer uses column-generation-style pattern search and he
 - Per-zone mark numbering for rebar schedules
 - Polygon decomposition for L-shaped / around-opening zones
 
+### Observability
+
+- Entry points use `ILogger<T>` from .NET DI rather than handwritten logging helpers
+- Calculator warnings (for example spacing above code maxima) are emitted through structured templates
+- Pipeline execution is logged with stable scope fields such as `projectCode` and `slabId`
+
 ## Domain Ports
 
 | Port | Purpose |
@@ -101,6 +118,7 @@ The current default optimizer uses column-generation-style pattern search and he
 | `IReinforcementCalculator` | Generate rebar segments per zone |
 | `IRebarOptimizer` | Cutting stock optimisation |
 | `ISupplierCatalogLoader` | Load available stock lengths + prices |
+| `IReportStore` | Persist canonical reinforcement execution reports |
 | `IRevitPlacer` | Place rebars in Revit model |
 | `IImageSegmentationService` | ML-based image segmentation (Python) |
 
@@ -124,6 +142,20 @@ uvicorn src.api.server:app --port 8101
 ```
 
 If you publish this repository to GitHub, add the repository-specific CI badge URL after the final owner/repo name is known.
+
+## Community And Security
+
+- Security policy: [SECURITY.md](SECURITY.md)
+- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Architecture notes: [docs/architecture.md](docs/architecture.md)
+- Audit and roadmap: [HYPER_DEEP_AUDIT_REPORT.md](HYPER_DEEP_AUDIT_REPORT.md), [TASKS.md](TASKS.md)
+
+For a public GitHub launch, this repository now includes a baseline CI workflow,
+CodeQL workflow, dependency review workflow, Dependabot configuration, issue forms,
+and CODEOWNERS wiring. GitHub-side controls such as private vulnerability reporting,
+secret scanning, push protection, and branch rulesets still need to be enabled in
+repository settings after the first remote push.
 
 ## Project Structure
 

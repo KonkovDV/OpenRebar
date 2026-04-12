@@ -1,0 +1,9 @@
+# Replace @KonkovDV if the repository is ultimately published under another owner
+# or organization. GitHub requires CODEOWNERS principals to have write access.
+
+* @KonkovDV
+/.github/ @KonkovDV
+/src/ @KonkovDV
+/tests/ @KonkovDV
+/ml/ @KonkovDV
+/docs/ @KonkovDV

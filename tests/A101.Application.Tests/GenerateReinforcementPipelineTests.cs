@@ -1,4 +1,5 @@
 using A101.Application.UseCases;
+using A101.Domain.Exceptions;
 using A101.Domain.Models;
 using A101.Domain.Ports;
 using FluentAssertions;
@@ -17,6 +18,12 @@ public class GenerateReinforcementPipelineTests
     private readonly IRevitPlacer _placer = Substitute.For<IRevitPlacer>();
     private readonly IReportStore _reportStore = Substitute.For<IReportStore>();
     private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
+
+    public GenerateReinforcementPipelineTests()
+    {
+        _dxfParser.SupportedExtensions.Returns([".dxf"]);
+        _pngParser.SupportedExtensions.Returns([".png", ".jpg", ".jpeg", ".bmp", ".tiff"]);
+    }
 
     private GenerateReinforcementPipeline CreateSut() => new(
         _dxfParser,
@@ -88,6 +95,18 @@ public class GenerateReinforcementPipelineTests
 
         await _pngParser.Received(1).ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>());
         await _dxfParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UnsupportedInputFormat_ShouldThrowInvalidIsolineFileException()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.gif", placeInRevit: false);
+
+        var act = async () => await sut.ExecuteAsync(input);
+
+        await act.Should().ThrowAsync<InvalidIsolineFileException>()
+            .WithMessage("*Unsupported isoline file format*");
     }
 
     [Fact]

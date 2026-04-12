@@ -1,0 +1,65 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze-csharp:
+    name: CodeQL (C#)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        with:
+          languages: csharp
+          build-mode: manual
+
+      - name: Restore
+        run: dotnet restore A101.sln
+
+      - name: Build
+        run: dotnet build A101.sln --no-restore --configuration Release
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        with:
+          category: "/language:csharp"
+
+  analyze-python:
+    name: CodeQL (Python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        with:
+          languages: python
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c
+        with:
+          category: "/language:python"

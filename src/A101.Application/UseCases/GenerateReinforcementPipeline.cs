@@ -1,3 +1,4 @@
+using A101.Domain.Exceptions;
 using A101.Domain.Models;
 using A101.Domain.Ports;
 
@@ -45,8 +46,6 @@ public sealed class GenerateReinforcementPipeline
         PipelineInput input,
         CancellationToken cancellationToken = default)
     {
-        ValidateInput(input);
-
         var result = new PipelineResult();
 
         _logger.Info(
@@ -153,15 +152,6 @@ public sealed class GenerateReinforcementPipeline
             ("totalMassKg", Math.Round(result.TotalMassKg, 2)));
 
         return result;
-    }
-
-    private static void ValidateInput(PipelineInput input)
-    {
-        if (input.Legend.Entries.Count == 0)
-            throw new InvalidOperationException("Color legend must contain at least one entry.");
-
-        if (input.Slab.EffectiveDepthMm <= 0)
-            throw new InvalidOperationException("Slab effective depth must be positive.");
     }
 
     private static string ResolveReportOutputPath(PipelineInput input)
@@ -278,12 +268,24 @@ public sealed class GenerateReinforcementPipeline
     private IIsolineParser GetParser(string filePath)
     {
         var ext = Path.GetExtension(filePath).ToLowerInvariant();
-        return ext switch
+        if (SupportsExtension(_dxfParser, ext))
+            return _dxfParser;
+
+        if (SupportsExtension(_pngParser, ext))
+            return _pngParser;
+
+        throw new InvalidIsolineFileException(filePath, $"Unsupported isoline file format: {ext}");
+    }
+
+    private static bool SupportsExtension(IIsolineParser parser, string ext)
+    {
+        foreach (var supportedExtension in parser.SupportedExtensions)
         {
-            ".dxf" => _dxfParser,
-            ".png" or ".jpg" or ".jpeg" or ".bmp" or ".tiff" => _pngParser,
-            _ => throw new NotSupportedException($"Unsupported isoline file format: {ext}")
-        };
+            if (string.Equals(supportedExtension, ext, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 }
 

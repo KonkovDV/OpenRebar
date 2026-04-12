@@ -1,3 +1,4 @@
+using A101.Domain.Exceptions;
 using A101.Domain.Models;
 using A101.Domain.Ports;
 using System.Text.Json;
@@ -22,7 +23,7 @@ public sealed class FileSupplierCatalogLoader : ISupplierCatalogLoader
         {
             ".json" => await LoadJsonAsync(filePath, cancellationToken),
             ".csv" => await LoadCsvAsync(filePath, cancellationToken),
-            _ => throw new NotSupportedException($"Unsupported catalog format: {ext}")
+            _ => throw new SupplierCatalogLoadException(filePath, $"Unsupported catalog format: {ext}")
         };
     }
 
@@ -44,25 +45,39 @@ public sealed class FileSupplierCatalogLoader : ISupplierCatalogLoader
     private static async Task<SupplierCatalog> LoadJsonAsync(
         string filePath, CancellationToken ct)
     {
-        var json = await File.ReadAllTextAsync(filePath, ct);
-        var data = JsonSerializer.Deserialize<SupplierCatalogDto>(json, new JsonSerializerOptions
+        try
         {
-            PropertyNameCaseInsensitive = true
-        });
-
-        if (data is null)
-            throw new InvalidDataException("Failed to parse supplier catalog JSON.");
-
-        return new SupplierCatalog
-        {
-            SupplierName = data.SupplierName ?? Path.GetFileNameWithoutExtension(filePath),
-            AvailableLengths = data.Lengths.Select(l => new StockLength
+            var json = await File.ReadAllTextAsync(filePath, ct);
+            var data = JsonSerializer.Deserialize<SupplierCatalogDto>(json, new JsonSerializerOptions
             {
-                LengthMm = l.LengthMm,
-                PricePerTon = l.PricePerTon,
-                InStock = l.InStock
-            }).ToList()
-        };
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (data is null)
+                throw new SupplierCatalogLoadException(filePath, "Failed to parse supplier catalog JSON.");
+
+            if (data.Lengths.Count == 0)
+                throw new SupplierCatalogLoadException(filePath, "Supplier catalog does not contain any stock lengths.");
+
+            return new SupplierCatalog
+            {
+                SupplierName = data.SupplierName ?? Path.GetFileNameWithoutExtension(filePath),
+                AvailableLengths = data.Lengths.Select(l => new StockLength
+                {
+                    LengthMm = l.LengthMm,
+                    PricePerTon = l.PricePerTon,
+                    InStock = l.InStock
+                }).ToList()
+            };
+        }
+        catch (SupplierCatalogLoadException)
+        {
+            throw;
+        }
+        catch (JsonException ex)
+        {
+            throw new SupplierCatalogLoadException(filePath, ex.Message, ex);
+        }
     }
 
     private static async Task<SupplierCatalog> LoadCsvAsync(
@@ -90,6 +105,9 @@ public sealed class FileSupplierCatalogLoader : ISupplierCatalogLoader
                 });
             }
         }
+
+        if (lengths.Count == 0)
+            throw new SupplierCatalogLoadException(filePath, "CSV catalog does not contain any valid stock lengths.");
 
         return new SupplierCatalog
         {

@@ -18,6 +18,12 @@ public class BatchReinforcementPipelineTests
     private readonly IReportStore _reportStore = Substitute.For<IReportStore>();
     private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
 
+    public BatchReinforcementPipelineTests()
+    {
+        _dxfParser.SupportedExtensions.Returns([".dxf"]);
+        _pngParser.SupportedExtensions.Returns([".png", ".jpg", ".jpeg", ".bmp", ".tiff"]);
+    }
+
     [Fact]
     public async Task ExecuteAsync_ThreeInputs_ShouldAggregateResults()
     {

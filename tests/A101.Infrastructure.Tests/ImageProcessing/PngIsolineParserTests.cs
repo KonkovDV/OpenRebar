@@ -118,4 +118,38 @@ public class PngIsolineParserTests
                 File.Delete(tempFile);
         }
     }
+
+    [Fact]
+    public async Task ParseAsync_WithMlServiceDomainFailure_ShouldPropagateDomainException()
+    {
+        var mlService = Substitute.For<IImageSegmentationService>();
+        var parser = new PngIsolineParser(mlService);
+        var legend = new ColorLegend([
+            new LegendEntry(new IsolineColor(255, 0, 0), new ReinforcementSpec
+            {
+                DiameterMm = 12,
+                SpacingMm = 200,
+                SteelClass = "A500C"
+            })
+        ]);
+
+        var expected = new ImageSegmentationServiceException("Segmentation backend is offline.");
+        mlService.SegmentAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns<Task<IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)>>>(_ => throw expected);
+
+        var tempFile = Path.Combine(Path.GetTempPath(), $"a101-ml-error-{Guid.NewGuid():N}.png");
+        await File.WriteAllBytesAsync(tempFile, []);
+
+        try
+        {
+            var act = async () => await parser.ParseAsync(tempFile, legend);
+            await act.Should().ThrowAsync<ImageSegmentationServiceException>()
+                .Where(ex => ReferenceEquals(ex, expected));
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+                File.Delete(tempFile);
+        }
+    }
 }

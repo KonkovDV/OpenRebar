@@ -47,6 +47,10 @@ public sealed class PngIsolineParser : IIsolineParser
         {
             throw;
         }
+        catch (A101DomainException)
+        {
+            throw;
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             throw new InvalidIsolineFileException(filePath, ex.Message);

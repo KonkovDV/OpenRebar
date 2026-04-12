@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using A101.Domain.Exceptions;
 using A101.Domain.Models;
 using A101.Domain.Ports;
 
@@ -92,8 +94,12 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
                 fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
                 content.Add(fileContent, "file", Path.GetFileName(imagePath));
 
+                string requestPath = string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"/segment?min_area={_minArea}");
+
                 var response = await _httpClient.PostAsync(
-                    $"/segment?min_area={_minArea}",
+                    requestPath,
                     content,
                     ct);
 
@@ -127,7 +133,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
 
         var health = await response.Content.ReadFromJsonAsync<HealthDto>(JsonOptions, ct);
         if (health?.Status != "ok")
-            throw new InvalidOperationException(
+            throw new ImageSegmentationServiceException(
                 $"ML segmentation service is not ready. Status: {health?.Status ?? "unknown"}. " +
                 "Ensure the model checkpoint is placed at ml/models/isoline_unet.pt");
     }
@@ -150,7 +156,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
             }
         }
 
-        throw lastError ?? new InvalidOperationException("ML segmentation request failed.");
+        throw lastError ?? new ImageSegmentationServiceException("ML segmentation request failed.");
     }
 
     private static bool IsRetryable(Exception ex, CancellationToken cancellationToken)
@@ -170,7 +176,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
             var now = _timeProvider.GetUtcNow();
             if (_circuitOpenUntilUtc.HasValue && _circuitOpenUntilUtc.Value > now)
             {
-                throw new InvalidOperationException(
+                throw new ImageSegmentationServiceException(
                     $"{CircuitOpenMessagePrefix} until {_circuitOpenUntilUtc.Value:O}. " +
                     "The Python segmentation service is in cooldown after repeated failures.");
             }
@@ -202,26 +208,26 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
         }
     }
 
-    private InvalidOperationException WrapServiceException(Exception ex)
+    private ImageSegmentationServiceException WrapServiceException(Exception ex)
     {
-        if (IsCircuitOpenException(ex))
-            return ex as InvalidOperationException ?? new InvalidOperationException(ex.Message, ex);
+        if (ex is ImageSegmentationServiceException imageSegmentationServiceException)
+            return imageSegmentationServiceException;
 
         if (ex is HttpRequestException or TaskCanceledException)
         {
-            return new InvalidOperationException(
+            return new ImageSegmentationServiceException(
                 $"Cannot connect to ML segmentation service at {_httpClient.BaseAddress}. " +
                 "Start it with: uvicorn ml.src.api.server:app --host 0.0.0.0 --port 8101",
                 ex);
         }
 
-        return ex as InvalidOperationException ?? new InvalidOperationException(ex.Message, ex);
+        return new ImageSegmentationServiceException(ex.Message, ex);
     }
 
     private static bool IsCircuitOpenException(Exception ex)
     {
-        return ex is InvalidOperationException invalidOperationException
-            && invalidOperationException.Message.StartsWith(CircuitOpenMessagePrefix, StringComparison.Ordinal);
+        return ex is ImageSegmentationServiceException imageSegmentationServiceException
+            && imageSegmentationServiceException.Message.StartsWith(CircuitOpenMessagePrefix, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)> ConvertToPolygons(
