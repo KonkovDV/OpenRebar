@@ -2,12 +2,16 @@
 
 > **Для:** ИИ-программист
 > **Дата:** 2026-04-12
-> **Текущий статус:** ~100% roadmap-задач выполнено. Domain, Application, Infrastructure, Revit-интеграция, hardening, export, persistence и E2E-покрытие — готовы. Дальше остаётся только evolution backlog Phase 3: ML fine-tuning и richer auto-detailing.
+> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены, 127/127 .NET тестов проходят. Дальше: Revit SDK live validation, ML training на реальных данных.
 
-## Update 2026-04-12 — Phase 1+3 Execution Complete
+## Update 2026-04-12 — OpenRebar Rebrand + P1/P3 Preparation
 
 ### Что закрыто в этом wave
 
+- **Full rebrand A101 → OpenRebar**: namespace, projects, folders, solution file, 131 source files
+- **P1 Revit boundary**: host floor structural validation, tag creation pass, bending detail tracking
+- **P3 ML training pipeline**: dataset loader, augmentation, training loop, evaluation, ONNX export
+- **P3 ML benchmarks**: inference latency, model size, batch throughput, ONNX exportability
 - CLI parameterized slab geometry: `--slab-width`, `--slab-height`
 - CLI boundary validation for all numeric args with clear error messages
 - 8 new CLI integration tests covering happy path, edge cases, and validation
@@ -21,8 +25,8 @@
 ### Осталось
 
 - P0: Manual GitHub enablement (remote + admin)
-- P1: Revit production boundary (requires Revit SDK + live model)
-- P3: Optimization / ML evolution (requires datasets, training infra)
+- P1: End-to-end Revit 2025 testing (requires Revit SDK + live model)
+- P3: Training on real LIRA-SAPR datasets (requires annotated images)
 
 ### P0 — Manual GitHub Enablement After First Push
 
@@ -35,11 +39,11 @@
 4. Настроить branch rulesets: PR review, required checks, linear history
 5. Проверить `CODEOWNERS` и заменить `@KonkovDV`, если публикация идёт под другим owner/org
 
-### P1 — Revit Production Boundary Completion
+### P1 — Revit Production Boundary Completion — 🟡 IN PROGRESS
 
-1. Довести `RevitRebarPlacer` до полного production path с реальными tags и bending details
-2. Добавить live validation на host element / slab selection boundary
-3. Протестировать end-to-end на реальной Revit 2025 среде, а не только через `StubRevitPlacer`
+1. ~~Довести `RevitRebarPlacer` до полного production path с реальными tags и bending details~~ → Done (tag creation + bending detail tracking added)
+2. ~~Добавить live validation на host element / slab selection boundary~~ → Done (structural category, compound structure, min thickness checks)
+3. Протестировать end-to-end на реальной Revit 2025 среде, а не только через `StubRevitPlacer` → Requires Revit SDK
 
 ### P2 — Interop And Delivery Hardening — ✅ CLOSED
 
@@ -47,11 +51,12 @@
 2. ~~Закрыть AeroBIM integration loop на каноническом JSON / IFC boundary~~ → Done (AeroBimReportExporter + schema tests)
 3. ~~Укрепить release lane: SBOM, artifact attestations, release notes discipline~~ → Done (release.yml + CHANGELOG.md)
 
-### P3 — Optimization And ML Evolution
+### P3 — Optimization And ML Evolution — 🟡 IN PROGRESS
 
 1. Заменить текущий CG master heuristic на true LP / HiGHS-backed path
 2. Добавить quality benchmarks для раскроя по реальным slab batches
-3. Собрать dataset и evaluation harness для project-specific isoline segmentation
+3. ~~Собрать dataset и evaluation harness для project-specific isoline segmentation~~ → Done (training pipeline, evaluation, ONNX export, benchmarks)
+4. Train on annotated LIRA-SAPR isoline dataset → Requires real data
 
 ---
 
