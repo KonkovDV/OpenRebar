@@ -18,7 +18,7 @@ uvicorn>=0.27,<1.0
 pydantic>=2.6,<3.0
 
 # DXF geometry (shared with C# for validation)
-ezdxf>=0.19,<1.0
+ezdxf>=0.19,<2.0
 shapely>=2.0,<3.0
 
 # Dev / test
