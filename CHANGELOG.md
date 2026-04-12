@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **OpenRebar rebrand**: full namespace, project, and folder rename from A101 to OpenRebar
+- **OpenRebar rebrand**: full namespace, project, and folder rename from the legacy project name to OpenRebar
 - **P1 Revit boundary**: host floor structural validation (category, compound structure, min thickness)
 - **P1 Revit boundary**: rebar tag creation pass with `IndependentTag.Create` and midpoint positioning
 - **P1 Revit boundary**: bending detail tracking per unique `RebarShape`

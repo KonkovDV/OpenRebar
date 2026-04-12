@@ -8,7 +8,7 @@
 
 ### Что закрыто в этом wave
 
-- **Full rebrand A101 → OpenRebar**: namespace, projects, folders, solution file, 131 source files
+- **Full rebrand to OpenRebar**: namespace, projects, folders, solution file, 131 source files
 - **P1 Revit boundary**: host floor structural validation, tag creation pass, bending detail tracking
 - **P3 ML training pipeline**: dataset loader, augmentation, training loop, evaluation, ONNX export
 - **P3 ML benchmarks**: inference latency, model size, batch throughput, ONNX exportability

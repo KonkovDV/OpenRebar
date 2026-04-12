@@ -30,12 +30,10 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         int bendingDetails = 0;
         var warnings = new List<string>();
         var errors = new List<string>();
-
-        if (settings.CreateTags)
-            warnings.Add("Rebar tag creation is scheduled — requires active TaggedValue schedule in model.");
+        var createdRebarIds = new List<ElementId>();
 
         if (settings.CreateBendingDetails)
-            warnings.Add("Bending detail creation is scheduled — requires RebarShape definitions loaded.");
+            warnings.Add("Bending detail element creation is not implemented yet; OpenRebar will track unique bar shapes for downstream detailing.");
 
         var hostFloor = ResolveHostFloor(doc, settings, warnings);
         if (hostFloor is null)
@@ -149,6 +147,7 @@ public sealed class RevitRebarPlacer : IRevitPlacer
 
                         rebarsPlaced++;
                         rebarsInCurrentTransaction++;
+                        createdRebarIds.Add(rebar.Id);
                     }
                     catch (Exception ex)
                     {
@@ -162,20 +161,20 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             currentTransaction = null;
 
             // P1: Tag creation pass
-            if (settings.CreateTags && rebarsPlaced > 0)
+            if (settings.CreateTags && createdRebarIds.Count > 0)
             {
                 var tagTransaction = StartPlacementTransaction(doc, ++batchIndex);
                 try
                 {
                     var activeView = _uiDoc.ActiveView;
-                    var rebarCollector = new FilteredElementCollector(doc, activeView.Id)
-                        .OfClass(typeof(Rebar))
-                        .Cast<Rebar>()
-                        .Where(r => r.LookupParameter(settings.ZoneParameterName) is not null);
-
-                    foreach (var rebar in rebarCollector)
+                    foreach (var rebarId in createdRebarIds)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+
+                        var rebar = doc.GetElement(rebarId) as Rebar;
+                        if (rebar is null)
+                            continue;
+
                         try
                         {
                             var bbox = rebar.get_BoundingBox(activeView);
@@ -215,47 +214,28 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             }
 
             // P1: Bending detail creation pass
-            if (settings.CreateBendingDetails && rebarsPlaced > 0)
+            if (settings.CreateBendingDetails && createdRebarIds.Count > 0)
             {
-                var bendTransaction = StartPlacementTransaction(doc, ++batchIndex);
-                try
+                var processedShapes = new HashSet<ElementId>();
+
+                foreach (var rebarId in createdRebarIds)
                 {
-                    var activeView = _uiDoc.ActiveView;
-                    var processedShapes = new HashSet<ElementId>();
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    var rebars = new FilteredElementCollector(doc, activeView.Id)
-                        .OfClass(typeof(Rebar))
-                        .Cast<Rebar>()
-                        .Where(r => r.LookupParameter(settings.ZoneParameterName) is not null)
-                        .ToList();
+                    var rebar = doc.GetElement(rebarId) as Rebar;
+                    if (rebar is null)
+                        continue;
 
-                    foreach (var rebar in rebars)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        var shapeId = rebar.GetShapeId();
-                        if (shapeId == ElementId.InvalidElementId || !processedShapes.Add(shapeId))
-                            continue;
+                    var shapeId = rebar.GetShapeId();
+                    if (shapeId == ElementId.InvalidElementId)
+                        continue;
 
-                        try
-                        {
-                            // Schedule entries serve as bending details for straight bars.
-                            // For complex shapes, Revit's RebarFreeFormAccessor would extend this.
-                            bendingDetails++;
-                        }
-                        catch (Exception ex)
-                        {
-                            warnings.Add($"Bending detail warning: {ex.Message}");
-                        }
-                    }
-
-                    CommitPlacementTransaction(bendTransaction);
-                    bendTransaction.Dispose();
+                    processedShapes.Add(shapeId);
                 }
-                catch (Exception ex)
+
+                if (processedShapes.Count > 0)
                 {
-                    TryRollback(bendTransaction);
-                    bendTransaction.Dispose();
-                    warnings.Add($"Bending detail batch failed: {ex.Message}");
+                    warnings.Add($"Tracked {processedShapes.Count} unique rebar shapes for downstream bending details; element creation still requires shape-specific detailing implementation.");
                 }
             }
 
