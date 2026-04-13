@@ -8,4 +8,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Rules\Data\*.json" />
+  </ItemGroup>
+
 </Project>

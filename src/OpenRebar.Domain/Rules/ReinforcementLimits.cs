@@ -6,33 +6,16 @@ namespace OpenRebar.Domain.Rules;
 public static class ReinforcementLimits
 {
     /// <summary>Standard diameters available on Russian market (mm).</summary>
-    public static readonly IReadOnlyList<int> StandardDiameters = [6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36, 40];
+    public static IReadOnlyList<int> StandardDiameters => NormativeProfiles.Sp63_2018.StandardDiametersMm;
 
     /// <summary>Standard spacing values (mm).</summary>
-    public static readonly IReadOnlyList<int> StandardSpacings = [100, 150, 200, 250, 300];
+    public static IReadOnlyList<int> StandardSpacings => NormativeProfiles.Sp63_2018.StandardSpacingsMm;
 
     /// <summary>
     /// Linear mass of rebar (kg/m) by diameter.
     /// GOST 5781-82, class A500C.
     /// </summary>
-    public static double GetLinearMass(int diameterMm) => diameterMm switch
-    {
-        6 => 0.222,
-        8 => 0.395,
-        10 => 0.617,
-        12 => 0.888,
-        14 => 1.210,
-        16 => 1.580,
-        18 => 2.000,
-        20 => 2.470,
-        22 => 2.980,
-        25 => 3.850,
-        28 => 4.830,
-        32 => 6.310,
-        36 => 7.990,
-        40 => 9.870,
-        _ => Math.PI * Math.Pow(diameterMm / 2.0 / 1000.0, 2) * 7850.0, // γ_steel = 7850 kg/m³
-    };
+    public static double GetLinearMass(int diameterMm) => NormativeProfiles.GetLinearMass(diameterMm);
 
     /// <summary>
     /// Maximum spacing of reinforcement per SP 63 §10.3.8.

@@ -10,8 +10,8 @@ Usage:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable, cast
 
-import numpy as np
 import pytest
 import torch
 
@@ -55,11 +55,12 @@ class TestInferenceBenchmarks:
     def test_onnx_exportability(self, model: IsolineUNet, sample_input: torch.Tensor, tmp_path: Path) -> None:
         """Model should be exportable to ONNX without errors."""
         onnx_path = tmp_path / "test_model.onnx"
-        torch.onnx.export(
+        export_fn = cast(Callable[..., object], getattr(torch.onnx, "export"))
+        export_fn(
             model,
-            sample_input,
+            (sample_input,),
             str(onnx_path),
-            opset_version=17,
+            opset_version=18,
             input_names=["image"],
             output_names=["logits"],
         )

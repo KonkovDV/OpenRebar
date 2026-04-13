@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **OpenRebar rebrand**: full namespace, project, and folder rename from the legacy project name to OpenRebar
+- **P3 ML smoke coverage**: synthetic dataset tests for training dataset loading, one-epoch CPU training, evaluation metrics, and ONNX export
 - **P1 Revit boundary**: host floor structural validation (category, compound structure, min thickness)
 - **P1 Revit boundary**: rebar tag creation pass with `IndependentTag.Create` and midpoint positioning
 - **P1 Revit boundary**: bending detail tracking per unique `RebarShape`
@@ -22,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Academic optimization TEVV**: benchmark pack for score-gap and waste-gap distribution on small CSP instances
 - **Optimization hardening**: exact discrete search path for tiny mixed-stock instances
 - **Canonical report provenance**: normative profile + geometry/optimization provenance in `*.result.json`
+- **Normative data hardening**: SP 63 lookup tables moved into versioned embedded resource `ru.sp63.2018.tables.v1`
+- **Normative TEVV**: golden tests for bond stress, design strength, periodic-profile lookup, linear mass, and metadata defaults
 - CLI arguments `--slab-width` and `--slab-height` for configurable slab footprint
 - CLI boundary validation for numeric arguments (thickness, cover, slab dimensions)
 - CLI integration tests verifying exported artifacts and custom geometry
@@ -37,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Help text alignment for `--legend` option
+- Windows Unicode path handling for ML image loading (`cv2.imread` replaced with Unicode-safe decode path in training and inference)
+- Missing ONNX export dependencies in `ml/requirements.txt` (`onnx`, `onnxscript`) for `torch.onnx.export`
+- `torch.export` ONNX dynamic-shape wiring now uses positional tuple specs compatible with PyTorch 2.11 single-input exports
+- ONNX export default opset raised to `18`, matching the PyTorch 2.11 exporter implementation floor and avoiding downgrade-conversion warnings
 
 ## [1.0.0] — 2026-04-11
 

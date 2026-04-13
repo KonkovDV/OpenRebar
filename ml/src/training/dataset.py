@@ -24,7 +24,22 @@ except ImportError:
     cv2 = None  # type: ignore[assignment]
 
 
-class IsolineSegmentationDataset(Dataset):
+def _decode_image(path: Path, flags: int) -> np.ndarray | None:
+    if cv2 is None:
+        raise ImportError("opencv-python-headless is required for training")
+
+    try:
+        encoded = np.fromfile(path, dtype=np.uint8)
+    except OSError:
+        return None
+
+    if encoded.size == 0:
+        return None
+
+    return cv2.imdecode(encoded, flags)
+
+
+class IsolineSegmentationDataset(Dataset[dict[str, Any]]):
     """PyTorch dataset for isoline image segmentation training."""
 
     def __init__(
@@ -57,23 +72,25 @@ class IsolineSegmentationDataset(Dataset):
         if cv2 is None:
             raise ImportError("opencv-python-headless is required for training")
 
-        img = cv2.imread(str(img_path))
+        cv2_module = cv2
+
+        img = _decode_image(img_path, cv2_module.IMREAD_COLOR)
         if img is None:
             raise FileNotFoundError(f"Cannot read image: {img_path}")
 
-        mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+        mask = _decode_image(mask_path, cv2_module.IMREAD_GRAYSCALE)
         if mask is None:
             raise FileNotFoundError(f"Cannot read mask: {mask_path}")
 
-        img = cv2.resize(img, self.input_size)
-        mask = cv2.resize(mask, self.input_size, interpolation=cv2.INTER_NEAREST)
+        img = cv2_module.resize(img, self.input_size)
+        mask = cv2_module.resize(mask, self.input_size, interpolation=cv2_module.INTER_NEAREST)
 
         if self.augment:
             img, mask = self._apply_augmentation(img, mask)
 
         # Normalize to [0, 1] and convert to tensor
-        img_tensor = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
-        mask_tensor = torch.from_numpy(mask).long()
+        img_tensor = torch.as_tensor(img, dtype=torch.float32).permute(2, 0, 1) / 255.0
+        mask_tensor = torch.as_tensor(mask, dtype=torch.long)
 
         return {"image": img_tensor, "mask": mask_tensor, "path": str(img_path)}
 

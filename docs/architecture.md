@@ -89,6 +89,8 @@ All SP 63 / GOST calculations are in `OpenRebar.Domain.Rules/`:
 
 These are pure static functions with no I/O — fully testable with unit tests.
 
+Normative table values are now sourced from a versioned embedded resource (`ru.sp63.2018.tables.v1`) via a domain-level registry. This keeps table revisions explicit and gives the report a real table-set identifier rather than a placeholder string.
+
 The polygon decomposition remains heuristic for arbitrary shapes, but it is no longer silent. Orthogonal thin and strongly concave zones now use an exact strip-based rectangle cover before the grid fallback is considered. Complex zones carry decomposition metrics (coverage ratio, over-coverage ratio, rectangle count, cell size, shortcut usage), and the canonical report aggregates those metrics into analysis provenance.
 
 ## Data Flow
@@ -160,6 +162,8 @@ For this standalone .NET extraction, structured logging uses the official `ILogg
 | ML | Unit + integration | pytest |
 
 The infrastructure suite now includes an exact benchmark pack for CSP that checks bar-count gap, score gap, and waste-gap distribution against an exact small-instance reference.
+
+The domain suite now also includes golden tests for the normative profile resource and metadata defaults, so bond/design-strength lookups and report defaults stay aligned.
 
 ## Future Roadmap
 

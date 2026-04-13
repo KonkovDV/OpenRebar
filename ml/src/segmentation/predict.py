@@ -14,6 +14,18 @@ import torch
 from .model import IsolineUNet
 
 
+def _decode_image(path: Path, flags: int) -> np.ndarray | None:
+    try:
+        encoded = np.fromfile(path, dtype=np.uint8)
+    except OSError:
+        return None
+
+    if encoded.size == 0:
+        return None
+
+    return cv2.imdecode(encoded, flags)
+
+
 def load_model(
     model_path: Path,
     num_classes: int = 8,
@@ -40,7 +52,7 @@ def predict_mask(
     Returns:
         mask: H×W array of class indices (0 = background).
     """
-    img = cv2.imread(str(image_path))
+    img = _decode_image(image_path, cv2.IMREAD_COLOR)
     if img is None:
         raise FileNotFoundError(f"Cannot read image: {image_path}")
 

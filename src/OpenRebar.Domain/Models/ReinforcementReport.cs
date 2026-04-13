@@ -1,3 +1,5 @@
+using OpenRebar.Domain.Rules;
+
 namespace OpenRebar.Domain.Models;
 
 /// <summary>
@@ -13,8 +15,8 @@ public sealed record PipelineExecutionMetadata
     public string TargetSystem { get; init; } = "AeroBIM";
     public string CountryCode { get; init; } = "RU";
     public string DesignCode { get; init; } = "SP 63.13330.2018";
-    public string NormativeProfileId { get; init; } = "ru.sp63.2018";
-    public string NormativeTablesVersion { get; init; } = "embedded.sp63.v1";
+    public string NormativeProfileId { get; init; } = NormativeProfiles.DefaultProfileId;
+    public string NormativeTablesVersion { get; init; } = NormativeProfiles.DefaultTablesVersion;
 }
 
 /// <summary>

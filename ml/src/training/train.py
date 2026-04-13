@@ -8,8 +8,8 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
+from typing import Any, cast
 
 import torch
 import torch.nn as nn
@@ -31,8 +31,14 @@ def train(
     device: str = "cpu",
 ) -> Path:
     """Train the IsolineUNet model and save the best checkpoint."""
+    pin_memory = device != "cpu"
+
     model = IsolineUNet(num_classes=num_classes).to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=lr,
+        weight_decay=1e-4,
+    )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     criterion = nn.CrossEntropyLoss()
 
@@ -43,7 +49,7 @@ def train(
         augment=True,
     )
     train_loader = DataLoader(
-        train_ds, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True
+        train_ds, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=pin_memory
     )
 
     val_loader = None
@@ -71,7 +77,7 @@ def train(
             logits = model(images)
             loss = criterion(logits, masks)
             loss.backward()
-            optimizer.step()
+            cast(Any, optimizer).step()
             train_loss += loss.item()
 
         scheduler.step()

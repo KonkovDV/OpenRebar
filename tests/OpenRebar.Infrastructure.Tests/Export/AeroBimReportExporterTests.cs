@@ -54,7 +54,7 @@ public class AeroBimReportExporterTests
                 ProfileId = "ru.sp63.2018",
                 Jurisdiction = "RU",
                 DesignCode = "SP 63.13330.2018",
-                TablesVersion = "embedded.sp63.v1"
+                TablesVersion = "ru.sp63.2018.tables.v1"
             },
             AnalysisProvenance = new AnalysisProvenanceExecutionReport
             {

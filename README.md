@@ -34,6 +34,8 @@ This plugin automates the full pipeline:
 
 The standalone project now emits a formal JSON contract instead of relying only on an ad-hoc CLI export shape. The canonical report now carries a first-class normative profile (`ru.sp63.2018`) and analysis provenance for geometry decomposition and optimization, which makes downstream review and audit materially easier.
 
+The SP 63 normative tables are now loaded from a versioned embedded resource (`ru.sp63.2018.tables.v1`) instead of being duplicated across `switch` blocks. That makes the normative basis explicit, testable, and easier to revise when additional profile sets are introduced.
+
 ## Architecture
 
 Clean Architecture with 4 layers:
@@ -76,6 +78,8 @@ Clean Architecture with 4 layers:
 | Lap splice | l_lap = α · l₀,an; α ∈ {1.2, 1.4, 2.0} per lap percentage | SP 63 §10.3.31 |
 | Max spacing | min(1.5h, 400mm) primary; min(3.5h, 500mm) secondary | SP 63 §10.3.8 |
 | Min reinforcement | μ_min = 0.1% | SP 63 §10.3.5 |
+
+The current SP 63 implementation is backed by a versioned embedded profile resource and golden tests for bond stress, design strength, periodic-profile classification, and linear mass tables.
 
 ### Cutting Optimisation
 
@@ -133,6 +137,10 @@ The canonical report (`*.result.json`) now persists:
 
 Current validation rails include exact small-instance CSP checks and a benchmark pack covering score-gap and waste-gap distribution.
 
+Real slab-batch cutting benchmarks are still pending fixture acquisition: the repository currently ships exact/synthetic CSP packs, but not production slab-batch datasets or canonical `*.result.json` benchmark corpora.
+
+Current full .NET regression status: `158/158` green.
+
 ## Prerequisites
 
 - .NET 8 SDK
@@ -151,6 +159,8 @@ pip install -r requirements.txt
 pytest tests -q
 uvicorn src.api.server:app --port 8101
 ```
+
+The Python smoke rail now covers not only inference/server behavior, but also the training dataset loader, a one-epoch CPU training/evaluation pass on synthetic samples, and ONNX export.
 
 If you publish this repository to GitHub, add the repository-specific CI badge URL after the final owner/repo name is known.
 

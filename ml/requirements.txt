@@ -10,6 +10,8 @@ scikit-image>=0.22,<1.0
 # ML (U-Net segmentation)
 torch>=2.2,<3.0
 torchvision>=0.17,<1.0
+onnx>=1.16,<2.0
+onnxscript>=0.1,<1.0
 onnxruntime>=1.17,<2.0
 
 # API server

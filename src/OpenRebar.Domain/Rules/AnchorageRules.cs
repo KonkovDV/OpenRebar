@@ -120,44 +120,15 @@ public static class AnchorageRules
     /// Determines if rebar has periodic (ribbed) surface profile.
     /// Periodic profile → η₁ = 2.5; smooth → η₁ = 1.5.
     /// </summary>
-    public static bool IsPeriodicProfile(string steelClass) => steelClass switch
-    {
-        "A240" or "A-I" => false,       // Smooth (гладкая)
-        "A400" or "A-III" => true,      // Periodic (периодический профиль)
-        "A500" or "A500C" or "A500SP" => true,
-        "A600" => true,
-        "B500" or "B500C" => true,
-        _ => true, // Default: periodic
-    };
+    public static bool IsPeriodicProfile(string steelClass) => NormativeProfiles.IsPeriodicProfile(steelClass);
 
     /// <summary>
     /// Get design bond stress Rbt (MPa) for concrete class per SP 63 Table 6.8.
     /// </summary>
-    public static double GetBondStress(string concreteClass) => concreteClass switch
-    {
-        "B15" or "C12/15" => 0.75,
-        "B20" or "C16/20" => 0.90,
-        "B25" or "C20/25" => 1.05,
-        "B30" or "C25/30" => 1.15,
-        "B35" or "C28/35" => 1.30,
-        "B40" or "C32/40" => 1.40,
-        "B45" or "C35/45" => 1.50,
-        "B50" or "C40/50" => 1.60,
-        "B55" or "C45/55" => 1.65,
-        "B60" or "C50/60" => 1.70,
-        _ => 1.05, // Default B25
-    };
+    public static double GetBondStress(string concreteClass) => NormativeProfiles.GetBondStress(concreteClass);
 
     /// <summary>
     /// Get design tensile strength Rs (MPa) for steel class per SP 63 Table 6.14.
     /// </summary>
-    public static double GetDesignStrength(string steelClass) => steelClass switch
-    {
-        "A240" or "A-I" => 210,
-        "A400" or "A-III" => 355,
-        "A500" or "A500C" or "A500SP" => 435,
-        "A600" => 520,
-        "B500" or "B500C" => 435,
-        _ => 435, // Default A500C
-    };
+    public static double GetDesignStrength(string steelClass) => NormativeProfiles.GetDesignStrength(steelClass);
 }
