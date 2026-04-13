@@ -2,7 +2,7 @@
 
 > **Для:** ИИ-программист
 > **Дата:** 2026-04-12
-> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. 158/158 .NET тестов проходят. Дальше: Revit SDK live validation, cutting-quality benchmarks на реальных slab batches, ML training на реальных данных.
+> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. 158/158 .NET тестов проходят. Добавлены real-adapter batch benchmark harness на generated DXF fixtures и corpus-ready manifest rail для production slab batches. Дальше: Revit SDK live validation, production slab-batch corpora для cutting-quality benchmarks, ML training на реальных данных.
 
 ## Update 2026-04-12 — OpenRebar Rebrand + P1/P3 Preparation
 
@@ -13,6 +13,9 @@
 - **P3 ML training pipeline**: dataset loader, augmentation, training loop, evaluation, ONNX export
 - **P3 ML benchmarks**: inference latency, model size, batch throughput, ONNX exportability
 - **P3 optimization master**: restricted-master LP via HiGHS with bounded-knapsack pricing, exact small-instance path, and optimizer provenance
+- **Batch processing**: multi-slab reinforcement pipeline with aggregate KPIs and partial-failure capture
+- **P3 batch benchmark rail**: real adapters + generated DXF fixtures + persisted report checks + FFD quality envelope
+- **P3 corpus-ready batch rail**: optional manifest-driven fixture benchmark surface for production slab batches
 - **Academic geometry hardening**: decomposition metrics and coverage evidence for complex zones
 - **Academic optimization TEVV**: exact small-instance path + benchmark pack for score-gap and waste distribution
 - **Canonical report provenance**: normative profile and analysis provenance persisted in JSON Schema contract
@@ -31,7 +34,7 @@
 
 - P0: Manual GitHub enablement (remote + admin)
 - P1: End-to-end Revit 2025 testing (requires Revit SDK + live model)
-- P3: Cutting-quality benchmarks on real slab batches
+- P3: Production slab-batch corpora for cutting-quality benchmarks
 - P3: Training on real LIRA-SAPR datasets (requires annotated images)
 
 ### P0 — Manual GitHub Enablement After First Push
@@ -60,9 +63,10 @@
 ### P3 — Optimization And ML Evolution — 🟡 IN PROGRESS
 
 1. ~~Заменить текущий CG master heuristic на true LP / HiGHS-backed path~~ → Done (`ColumnGenerationOptimizer` uses `restricted-master-lp-highs` provenance with bounded-knapsack pricing and a documented fallback path)
-2. Добавить quality benchmarks для раскроя по реальным slab batches
-3. ~~Собрать dataset и evaluation harness для project-specific isoline segmentation~~ → Done (training pipeline, evaluation, ONNX export, benchmarks)
-4. Train on annotated LIRA-SAPR isoline dataset → Requires real data
+2. ~~Добавить batch benchmark harness для раскроя~~ → Done (real adapters, generated DXF fixtures, persisted report assertions, and FFD envelope checks in `BatchReinforcementBenchmarkPackTests`)
+3. Добавить production slab-batch corpora в уже подготовленный manifest-driven benchmark rail
+4. ~~Собрать dataset и evaluation harness для project-specific isoline segmentation~~ → Done (training pipeline, evaluation, ONNX export, benchmarks)
+5. Train on annotated LIRA-SAPR isoline dataset → Requires real data
 
 ---
 
@@ -840,7 +844,7 @@ private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLP(
 
 ---
 
-### T-13: IFC Export для интеграции с AeroBIM
+### T-13: IFC Export для интеграции с AeroBIM — ✅ CLOSED
 
 **Приоритет:** 🟡 СРЕДНИЙ
 **Зависимости:** T-09
@@ -849,7 +853,7 @@ private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLP(
 - `src/OpenRebar.Infrastructure/Export/XbimIfcExporter.cs`
 **NuGet:** `Xbim.Essentials`, `Xbim.Geometry`
 
-#### Что сделать
+#### Что сделано
 
 ```csharp
 // src/OpenRebar.Domain/Ports/IIfcExporter.cs
@@ -872,23 +876,24 @@ IFC entities:
 - `IfcQuantityArea` → Reinforcement area per zone
 - `IfcRelAssociatesMaterial` → steel material
 
-#### Acceptance Criteria
+#### Статус
 
-- [ ] Валидный IFC4 файл генерируется
-- [ ] Каждый `RebarSegment` → один `IfcReinforcingBar`
-- [ ] Property sets заполнены (diameter, length, steel class)
-- [ ] Файл открывается в BIM Viewer (xBIM Xplorer / Solibri Anywhere)
-- [ ] AeroBIM `IfcOpenShellValidator` парсит сгенерированный файл без ошибок
+- `IIfcExporter` и `XbimIfcExporter` реализованы и подключены в infrastructure layer
+- DI wiring закрыт в `src/OpenRebar.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`
+- Acceptance coverage закрыта в `tests/OpenRebar.Infrastructure.Tests/Export/XbimIfcExporterTests.cs`
+- Генерируется валидный IFC4 файл
+- Каждый `RebarSegment` экспортируется как `IfcReinforcingBar`
+- xBIM повторно открывает сгенерированный файл и валидирует material reuse
 
 ---
 
-### T-14: Multi-Slab Batch Processing
+### T-14: Multi-Slab Batch Processing — ✅ CLOSED
 
 **Приоритет:** 🟢 ПРОСТАЯ
 **Зависимости:** T-01
 **Новый файл:** `src/OpenRebar.Application/UseCases/BatchReinforcementPipeline.cs`
 
-#### Что сделать
+#### Что сделано
 
 ```csharp
 public sealed class BatchReinforcementPipeline
@@ -920,23 +925,26 @@ public sealed class BatchReinforcementPipeline
 }
 ```
 
-#### Acceptance Criteria
+#### Статус
 
-- [ ] Batch из 3 плит → 3 результата + aggregate stats
-- [ ] CancellationToken прерывает между плитами
-- [ ] Ошибка одной плиты не роняет весь batch
+- `BatchReinforcementPipeline` реализован в `src/OpenRebar.Application/UseCases/BatchReinforcementPipeline.cs`
+- DI wiring добавлен в `src/OpenRebar.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`
+- Acceptance tests закрыты в `tests/OpenRebar.Application.Tests/BatchReinforcementPipelineTests.cs`
+- Batch из 3 плит агрегирует результаты и KPI
+- `CancellationToken` прерывает между плитами
+- Ошибка одной плиты не роняет весь batch и сохраняется в `Failures`
 
 ---
 
-### T-15: AeroBIM Integration Adapter
+### T-15: AeroBIM Integration Adapter — ✅ CLOSED
 
 **Приоритет:** 🟢 ПРОСТАЯ
 **Зависимости:** T-09, T-10
 **Новый файл:** `src/OpenRebar.Infrastructure/Export/AeroBimReportExporter.cs`
 
-#### Контекст
+#### Что сделано
 
-Генерирует JSON в формате, который AeroBIM может принять через `OpenRebarReportRequirementExtractor` (будущий адаптер на стороне AeroBIM).
+`AeroBimReportExporter` реализован в `src/OpenRebar.Infrastructure/Export/AeroBimReportExporter.cs` и генерирует downstream-friendly JSON по каноническому report contract.
 
 #### Формат
 
@@ -974,12 +982,12 @@ public sealed class BatchReinforcementPipeline
 }
 ```
 
-#### Acceptance Criteria
+#### Статус
 
-- [ ] JSON генерируется по schema
-- [ ] Все зоны, cutting plans, нормативы включены
-- [ ] Тест: serialization round-trip
-- [ ] Файл парсится Python `json.loads()` без ошибок
+- `AeroBimReportExporter` реализован и зарегистрирован в DI
+- Schema/report coverage закрыта в `tests/OpenRebar.Infrastructure.Tests/Export/AeroBimReportExporterTests.cs`
+- Канонический JSON report store и schema compliance закрыты в `tests/OpenRebar.Infrastructure.Tests/Reporting/JsonFileReportStoreTests.cs` и `tests/OpenRebar.Infrastructure.Tests/Reporting/ReportSchemaComplianceTests.cs`
+- JSON генерируется по schema и включает зоны, cutting plans, нормативный профиль и provenance
 
 ---
 

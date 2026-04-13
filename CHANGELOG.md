@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **P3 ML evaluation**: per-class IoU, mean IoU, pixel accuracy, confusion matrix
 - **P3 ONNX export**: `export_onnx.py` for CPU-only C# inference via OnnxRuntime
 - **P3 Benchmarks**: inference latency, parameter count, batch throughput, ONNX exportability tests
+- **P3 Batch benchmark rail**: real-adapter application test pack with generated DXF slabs, persisted reports, and FFD quality-envelope checks
+- **P3 Corpus-ready batch rail**: optional manifest-driven fixture test for production slab batches with persisted report checks and configurable FFD regression envelopes
 - **Academic geometry hardening**: complex-zone decomposition now persists coverage and over-coverage metrics
 - **Academic optimization TEVV**: exact small-instance bar-count cross-checks for the column-generation optimizer
 - **Academic optimization TEVV**: benchmark pack for score-gap and waste-gap distribution on small CSP instances
@@ -36,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CLI no longer uses a hardcoded 30×20m demo slab footprint; geometry is parameterized
 - CLI wraps pipeline execution in structured error handling with meaningful exit codes
+- Validation story for cutting quality now distinguishes shipped generated/fixture-driven batch harnesses from still-missing production slab corpora
 
 ### Fixed
 

@@ -135,9 +135,9 @@ The canonical report (`*.result.json`) now persists:
 - optimization provenance (optimizer id, LP/pricing strategy, integerization, fallback usage)
 - per-zone decomposition coverage and over-coverage metrics for complex zones
 
-Current validation rails include exact small-instance CSP checks and a benchmark pack covering score-gap and waste-gap distribution.
+Current validation rails include exact small-instance CSP checks, a benchmark pack covering score-gap and waste-gap distribution, a real-adapter batch benchmark pack that drives generated DXF slabs through the end-to-end application pipeline, and an optional fixture-driven corpus rail for production slab batches.
 
-Real slab-batch cutting benchmarks are still pending fixture acquisition: the repository currently ships exact/synthetic CSP packs, but not production slab-batch datasets or canonical `*.result.json` benchmark corpora.
+Production slab-batch cutting benchmarks are still pending fixture acquisition: the repository now ships both a generated DXF harness and a manifest-driven corpus-ready rail under `tests/OpenRebar.Application.Tests/Fixtures/BatchBenchmarkCorpus`, but not production slab-batch datasets or canonical `*.result.json` benchmark corpora.
 
 Current full .NET regression status: `158/158` green.
 
@@ -152,6 +152,7 @@ Current full .NET regression status: `158/158` green.
 ```bash
 dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --filter Category=Corpus
 
 # Python ML setup / smoke tests
 cd ml
