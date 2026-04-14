@@ -71,5 +71,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI with SHA-pinned actions, CodeQL for C# and Python, dependency review
 - Dependabot for NuGet, pip, and GitHub Actions
 - CODEOWNERS, issue templates, and PR template
-- 114 automated tests across Domain, Application, and Infrastructure layers
-- 4 Python ML smoke tests
+- Initial automated test suite across Domain, Application, and Infrastructure layers
+- Initial Python ML smoke suite

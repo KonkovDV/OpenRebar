@@ -459,7 +459,7 @@ flowchart LR
     subgraph OpenRebar["OpenRebar-Reinforcement (.NET/Revit)"]
         IFC_OUT["IFC Export<br/>(СЂРµРєРѕРјРµРЅРґСѓРµРјС‹Р№ РїРѕСЂС‚)"]
         ZONES["ReinforcementZone[]<br/>+ CuttingPlan[]"]
-        REVIT["Revit Model<br/>(RebarInSystem)"]
+        REVIT["Revit Model<br/>(shape-driven Rebar)"]
     end
 
     subgraph AeroBIM["AeroBIM (Python/FastAPI)"]

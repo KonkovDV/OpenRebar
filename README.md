@@ -22,7 +22,7 @@ This plugin automates the full pipeline:
 3. **Calculate** rebar layout per zone (spacing, diameter, anchorage per SP 63.13330)
 4. **Optimize** cutting to minimise waste (column-generation-style CSP with exact small-instance search for tiny batches and benchmark-pack TEVV)
 5. **Persist** a canonical machine-readable reinforcement report for downstream BIM systems, including normative profile and analysis provenance
-6. **Place** `RebarInSystem` elements in Revit with tags and bending details
+6. **Place** shape-driven `Rebar` elements in Revit via `Rebar.CreateFromCurves`, with tag creation and bending-detail tracking
 
 **Target:** reduce reinforcement placement from **2–3 weeks → 2–3 hours** per floor.
 
@@ -139,7 +139,7 @@ Current validation rails include exact small-instance CSP checks, a benchmark pa
 
 Production slab-batch cutting benchmarks are still pending fixture acquisition: the repository now ships both a generated DXF harness and a manifest-driven corpus-ready rail under `tests/OpenRebar.Application.Tests/Fixtures/BatchBenchmarkCorpus`, but not production slab-batch datasets or canonical `*.result.json` benchmark corpora.
 
-Current full .NET regression status: `158/158` green.
+Current full .NET regression status: `160/160` green.
 
 ## Prerequisites
 
