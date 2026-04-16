@@ -29,10 +29,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln
+        run: dotnet restore OpenRebar.sln -p:EnableWindowsTargeting=true
 
       - name: Build
-        run: dotnet build OpenRebar.sln --no-restore --configuration Release
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
 
       - name: Test
         run: dotnet test OpenRebar.sln --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
@@ -48,7 +48,7 @@ jobs:
         run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release --output ./publish/cli
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58571
+        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb
         with:
           path: ./publish/cli
           artifact-name: OpenRebar-sbom.spdx.json

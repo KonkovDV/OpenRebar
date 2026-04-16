@@ -18,9 +18,11 @@ onnxruntime>=1.17,<2.0
 fastapi>=0.110,<1.0
 uvicorn>=0.27,<1.0
 pydantic>=2.6,<3.0
+python-multipart>=0.0.9,<1.0
 
 # DXF geometry (shared with C# for validation)
-ezdxf>=0.19,<1.0
+# ezdxf jumped from 0.18.x to 1.x, so 0.19-0.99 does not exist on PyPI.
+ezdxf>=1.0,<2.0
 shapely>=2.0,<3.0
 
 # Dev / test
