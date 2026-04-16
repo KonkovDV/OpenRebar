@@ -2,7 +2,22 @@
 
 > **Для:** ИИ-программист
 > **Дата:** 2026-04-12
-> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. 160/160 .NET тестов проходят. Добавлены real-adapter batch benchmark harness на generated DXF fixtures и corpus-ready manifest rail для production slab batches. Дальше: Revit SDK live validation, production slab-batch corpora для cutting-quality benchmarks, ML training на реальных данных.
+> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. 160/160 .NET тестов проходят. Добавлены real-adapter batch benchmark harness на generated DXF fixtures и corpus-ready manifest rail для production slab batches. В апреле 2026 стабилизированы CI-ветки Linux и python-smoke (imports/dependencies/action pins). Дальше: Revit SDK live validation, production slab-batch corpora для cutting-quality benchmarks, ML training на реальных данных.
+
+## Update 2026-04-16 — CI Stabilization (Linux + Python smoke)
+
+### Что закрыто в этом wave
+
+- CI/build-and-test и CodeQL(C#) стабилизированы на Ubuntu: solution restore/build запускаются с `EnableWindowsTargeting=true` для `net8.0-windows` Revit plugin проекта.
+- Python smoke стабилизирован: исправлен неразрешимый диапазон `ezdxf` (переведён на `>=1.0,<2.0`), добавлен `python-multipart` для FastAPI file-upload endpoints.
+- Устранён плавающий импортный контекст `No module named 'src'`: в `python-smoke` job добавлен явный `PYTHONPATH` на `ml`.
+- Исправлен невалидный pin у `anchore/sbom-action` в CI/release workflows.
+- Добавлен git hygiene для локального воспроизведения CI: `ml/.venv-ci-*/` в `.gitignore`.
+
+### Верификация wave
+
+- Full .NET lane (restore/build/test) локально зелёный: 160/160 passed.
+- Python smoke в CI-подобном запуске зелёный: 7/7 passed.
 
 ## Update 2026-04-12 — OpenRebar Rebrand + P1/P3 Preparation
 
