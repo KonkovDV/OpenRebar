@@ -73,5 +73,7 @@ jobs:
           pip install -r ml/requirements.txt
 
       - name: Run Python smoke tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/ml
         working-directory: ml
         run: pytest tests -q

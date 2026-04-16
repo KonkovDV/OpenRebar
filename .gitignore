@@ -80,3 +80,4 @@ coverage/
 # Local runtime payloads / scratch audit outputs
 .dotnet8-local/
 _OpenRebar_*.txt
+ml/.venv-ci-*/
