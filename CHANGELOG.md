@@ -33,12 +33,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CHANGELOG.md with Keep a Changelog format
 - Release workflow with SBOM generation and artifact attestation
 - JSON report schema validation test against `contracts/aerobim-reinforcement-report.schema.json`
+- Linux CI hardening for mixed solution targets: workflow restore/build lanes now pass `EnableWindowsTargeting=true` for `net8.0-windows` Revit project compatibility on Ubuntu runners
+- Python smoke hardening in CI/release workflows with explicit `PYTHONPATH` for stable `ml/src` imports
 
 ### Changed
 
 - CLI no longer uses a hardcoded 30×20m demo slab footprint; geometry is parameterized
 - CLI wraps pipeline execution in structured error handling with meaningful exit codes
 - Validation story for cutting quality now distinguishes shipped generated/fixture-driven batch harnesses from still-missing production slab corpora
+- Local CI reproduction hygiene now ignores `ml/.venv-ci-*` virtual environments by default
 
 ### Fixed
 
@@ -47,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing ONNX export dependencies in `ml/requirements.txt` (`onnx`, `onnxscript`) for `torch.onnx.export`
 - `torch.export` ONNX dynamic-shape wiring now uses positional tuple specs compatible with PyTorch 2.11 single-input exports
 - ONNX export default opset raised to `18`, matching the PyTorch 2.11 exporter implementation floor and avoiding downgrade-conversion warnings
+- Python ML dependency graph corrected: `ezdxf` range moved to `>=1.0,<2.0` (0.19-0.99 does not exist on PyPI)
+- FastAPI upload dependency gap fixed by adding `python-multipart` to `ml/requirements.txt`
+- CI/release SBOM step pin corrected to an existing `anchore/sbom-action` commit SHA
+- Intermittent CI import failure `ModuleNotFoundError: No module named 'src'` resolved in python-smoke lanes
 
 ## [1.0.0] — 2026-04-11
 

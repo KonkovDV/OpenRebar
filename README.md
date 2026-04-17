@@ -159,6 +159,12 @@ cd ml
 pip install -r requirements.txt
 pytest tests -q
 uvicorn src.api.server:app --port 8101
+
+# Python smoke from repository root (CI-equivalent import context)
+# Linux/macOS:
+PYTHONPATH=ml python -m pytest ml/tests -q
+# PowerShell:
+$env:PYTHONPATH="$PWD\\ml"; python -m pytest ml/tests -q
 ```
 
 The Python smoke rail now covers not only inference/server behavior, but also the training dataset loader, a one-epoch CPU training/evaluation pass on synthetic samples, and ONNX export.
