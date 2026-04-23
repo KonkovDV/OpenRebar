@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- OpenSSF Scorecards workflow (`.github/workflows/scorecards.yml`) with SARIF upload to GitHub code scanning
+- Citation metadata (`CITATION.cff`) for academic and technical referencing
+- Funding metadata (`.github/FUNDING.yml`) for GitHub Sponsors discoverability
 - **OpenRebar rebrand**: full namespace, project, and folder rename from the legacy project name to OpenRebar
 - **P3 ML smoke coverage**: synthetic dataset tests for training dataset loading, one-epoch CPU training, evaluation metrics, and ONNX export
 - **P1 Revit boundary**: host floor structural validation (category, compound structure, min thickness)

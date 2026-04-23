@@ -1,6 +1,7 @@
 # OpenRebar — автоматизация армирования ЖБ плит по изолиниям
 
 [![CI](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg)](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge)](https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -169,6 +170,8 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 - Contribution guide: CONTRIBUTING.md
 - Security policy: SECURITY.md
 - Code of conduct: CODE_OF_CONDUCT.md
+- Citation metadata: CITATION.cff
+- Funding metadata: .github/FUNDING.yml
 
 ## Лицензия
 

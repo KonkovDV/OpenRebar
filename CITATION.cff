@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: "OpenRebar"
+message: "If you use OpenRebar in research, engineering validation, or benchmarking, please cite this software."
+type: software
+authors:
+  - name: "KonkovDV"
+license: MIT
+repository-code: "https://github.com/KonkovDV/OpenRebar"
+url: "https://github.com/KonkovDV/OpenRebar"
+version: "1.0.0"
+date-released: 2026-04-11
+keywords:
+  - reinforced-concrete
+  - rebar
+  - revit
+  - cutting-stock-problem
+  - clean-architecture
+  - bim
+abstract: >-
+  OpenRebar is a .NET-based reinforcement automation project for flat reinforced
+  concrete slabs. It provides a reproducible pipeline from isoline parsing and
+  zone classification to normative layout calculation, cutting optimisation, and
+  machine-readable BIM integration artifacts.
