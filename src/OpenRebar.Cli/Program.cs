@@ -5,6 +5,7 @@ using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Infrastructure.DependencyInjection;
+using OpenRebar.Infrastructure.Export;
 using OpenRebar.Infrastructure.Stubs;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,6 +32,7 @@ public static class Program
         string? catalogPath = GetArgValue(args, "--catalog");
         string? legendPath = GetArgValue(args, "--legend");
         string? mlUrl = GetArgValue(args, "--ml-url");
+        string? aeroBimStorageDir = GetArgValue(args, "--aerobim-storage-dir");
         string steelClass = GetArgValue(args, "--steel") ?? "A500C";
         string concreteClass = GetArgValue(args, "--concrete") ?? "B25";
 
@@ -90,6 +92,7 @@ public static class Program
             var legendLoader = sp.GetRequiredService<ILegendLoader>();
             var ifcExporter = sp.GetRequiredService<IIfcExporter>();
             var reportExporter = sp.GetRequiredService<IReportExporter>();
+            var handoffWriter = sp.GetRequiredService<AeroBimHandoffManifestWriter>();
             var scheduleExporter = sp.GetRequiredService<IScheduleExporter>();
 
             var legend = legendPath is not null
@@ -143,6 +146,17 @@ public static class Program
             {
                 Console.WriteLine($"\nResult exported to: {result.StoredReport.OutputPath}");
                 Console.WriteLine("Schema contract: contracts/aerobim-reinforcement-report.schema.json");
+
+                if (!string.IsNullOrWhiteSpace(aeroBimStorageDir) && result.Report is not null)
+                {
+                    var handoff = await handoffWriter.WriteAsync(
+                        result.Report,
+                        result.StoredReport,
+                        aeroBimStorageDir);
+                    Console.WriteLine($"AeroBIM handoff manifest written to: {handoff.ManifestPath}");
+                    Console.WriteLine(
+                        $"AeroBIM request field reinforcement_handoff_path: {handoff.RelativeManifestPath}");
+                }
             }
 
             string schedulePath = Path.ChangeExtension(isolineFile, ".schedule.csv");
@@ -186,6 +200,8 @@ Options:
   --catalog <path>     Supplier catalog (JSON/CSV). Default: Russian market standard.
     --legend <path>      Legend config (JSON). Default: built-in 7-color A500C legend.
   --ml-url <url>       ML segmentation service URL. Default: color quantization fallback.
+    --aerobim-storage-dir <path>
+                                                Copy the canonical report into an AeroBIM storage root and emit a handoff manifest.
   --steel <class>      Steel class. Default: A500C.
   --concrete <class>   Concrete class. Default: B25.
   --thickness <mm>     Slab thickness. Default: 200.
@@ -198,6 +214,7 @@ Examples:
     dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --legend configs/lira.legend.json
   dotnet run --project src/OpenRebar.Cli -- data/isoline.png --ml-url http://localhost:8101
   dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --catalog suppliers/evraz.json
+    dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --aerobim-storage-dir ../AeroBIM/var/reports
     dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --slab-width 18000 --slab-height 9000
 ");
     }

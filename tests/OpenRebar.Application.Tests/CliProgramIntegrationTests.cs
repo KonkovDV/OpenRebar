@@ -56,6 +56,47 @@ public class CliProgramIntegrationTests
     }
 
     [Fact]
+    public async Task Main_WithAeroBimStorageDir_ShouldWriteHandoffManifestInsideStorageRoot()
+    {
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"OpenRebar-cli-handoff-{Guid.NewGuid():N}");
+        var aeroBimStorageDir = Path.Combine(tempDirectory, "aerobim-storage");
+        Directory.CreateDirectory(tempDirectory);
+
+        var dxfPath = Path.Combine(tempDirectory, "floor-10.dxf");
+        CreateSampleDxf(dxfPath);
+
+        try
+        {
+            var exitCode = await global::OpenRebar.Cli.Program.Main(
+            [
+                dxfPath,
+                "--aerobim-storage-dir", aeroBimStorageDir
+            ]);
+
+            exitCode.Should().Be(0);
+
+            var copiedReportPath = Path.Combine(aeroBimStorageDir, "integrations", "openrebar", "floor-10.result.json");
+            var handoffPath = Path.Combine(aeroBimStorageDir, "integrations", "openrebar", "floor-10.result.handoff.json");
+
+            File.Exists(copiedReportPath).Should().BeTrue();
+            File.Exists(handoffPath).Should().BeTrue();
+
+            using var handoff = JsonDocument.Parse(await File.ReadAllTextAsync(handoffPath));
+            handoff.RootElement.GetProperty("reinforcement_report_path").GetString()
+                .Should().Be("integrations/openrebar/floor-10.result.json");
+            handoff.RootElement.GetProperty("contract_id").GetString()
+                .Should().Be("OpenRebar.reinforcement.report.v1");
+            handoff.RootElement.GetProperty("project_code").GetString()
+                .Should().Be("OpenRebar-CLI");
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+                Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Main_WhenCoverIsNotLessThanThickness_ShouldReturnOne()
     {
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"OpenRebar-cli-invalid-{Guid.NewGuid():N}");

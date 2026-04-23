@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IIfcExporter, XbimIfcExporter>();
         services.AddSingleton<IReportStore, JsonFileReportStore>();
         services.AddSingleton<IReportExporter, AeroBimReportExporter>();
+        services.AddSingleton<AeroBimHandoffManifestWriter>();
         services.AddSingleton<IScheduleExporter, CsvScheduleExporter>();
 
         if (!string.IsNullOrWhiteSpace(mlServiceUrl))
