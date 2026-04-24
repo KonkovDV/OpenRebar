@@ -5,11 +5,7 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-  id-token: write
-  attestations: write
-  packages: read
+permissions: read-all
 
 concurrency:
   group: release-${{ github.ref }}
@@ -66,6 +62,11 @@ jobs:
     needs: [build-and-test, python-smoke]
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      packages: read
 
     steps:
       - name: Checkout

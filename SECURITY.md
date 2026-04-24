@@ -18,9 +18,10 @@ Current support expectations:
 1. Do not open a public issue for a suspected vulnerability.
 2. If GitHub private vulnerability reporting is enabled for the repository, use the
    Security tab and submit a private report there.
-3. If private reporting is not enabled yet, contact the maintainer privately before
-   any public disclosure.
-4. Include the affected commit or branch, reproduction steps, impact, and whether
+3. Preferred reporting channel: https://github.com/KonkovDV/OpenRebar/security/advisories/new
+4. If private reporting is not enabled yet, contact the maintainer privately at
+   KonkovDV@users.noreply.github.com before any public disclosure.
+5. Include the affected commit or branch, reproduction steps, impact, and whether
    secrets or customer data may be exposed.
 
 ## In Scope
