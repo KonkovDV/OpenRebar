@@ -243,30 +243,38 @@ public sealed class GenerateReinforcementPipeline
                 var maxStockLength = catalog.AvailableLengths.MaxBy(s => s.LengthMm)?.LengthMm ?? 12000;
                 var cuts = group.Select(r => r.TotalLength).ToList();
                 var totalLength = cuts.Sum();
-                var fallbackBins = new List<List<double>>();
-
-                foreach (var cut in cuts.OrderByDescending(length => length))
+                if (!TryBuildFallbackCuttingPlans(
+                        cuts,
+                        maxStockLength,
+                        input.OptimizationSettings.SawCutWidthMm,
+                        out var cuttingPlans,
+                        out var infeasibleReason))
                 {
-                    var existingBin = fallbackBins.FirstOrDefault(bin =>
-                        bin.Sum() + cut <= maxStockLength);
+                    var fallbackDiagnostic = new PipelineFailureDiagnostic
+                    {
+                        Stage = $"OptimizationFallback(d{group.Key}mm)",
+                        ErrorMessage = infeasibleReason ?? "Fallback packing failed.",
+                        ExceptionType = nameof(OptimizationException),
+                        OccurredAtUtc = DateTimeOffset.UtcNow,
+                        IsCritical = true
+                    };
+                    failures.Add(fallbackDiagnostic);
 
-                    if (existingBin is not null)
+                    _logger.Warn(
+                        "Fallback optimization became infeasible; aborting pipeline",
+                        ("diameterMm", group.Key),
+                        ("reason", fallbackDiagnostic.ErrorMessage));
+
+                    result.Report = BuildPartialReport(input, failures, result);
+                    if (input.PersistReport)
                     {
-                        existingBin.Add(cut);
+                        var outputPath = ResolveReportOutputPath(input);
+                        result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+                        _logger.Info("Stored partial reinforcement report after fallback optimization failure", ("outputPath", result.StoredReport.OutputPath));
                     }
-                    else
-                    {
-                        fallbackBins.Add([cut]);
-                    }
+
+                    return result;
                 }
-
-                var cuttingPlans = fallbackBins
-                    .Select(bin => new CuttingPlan
-                    {
-                        StockLengthMm = maxStockLength,
-                        Cuts = bin
-                    })
-                    .ToList();
 
                 var stocksNeeded = cuttingPlans.Count;
                 
@@ -349,6 +357,51 @@ public sealed class GenerateReinforcementPipeline
             ("failureCount", failures.Count));
 
         return result;
+    }
+
+    private static bool TryBuildFallbackCuttingPlans(
+        IReadOnlyList<double> cuts,
+        double stockLengthMm,
+        double sawCutWidthMm,
+        out List<CuttingPlan> cuttingPlans,
+        out string? infeasibleReason)
+    {
+        var bins = new List<(double UsedLengthMm, List<double> Cuts)>();
+
+        foreach (double cut in cuts.OrderByDescending(length => length))
+        {
+            double effectiveLength = cut + sawCutWidthMm;
+            if (effectiveLength > stockLengthMm + 1e-6)
+            {
+                cuttingPlans = [];
+                infeasibleReason =
+                    $"Fallback infeasible for cut {cut:F1} mm (effective {effectiveLength:F1} mm with saw cut) and stock length {stockLengthMm:F1} mm.";
+                return false;
+            }
+
+            int binIndex = bins.FindIndex(bin => bin.UsedLengthMm + effectiveLength <= stockLengthMm + 1e-6);
+            if (binIndex >= 0)
+            {
+                var bin = bins[binIndex];
+                bin.UsedLengthMm += effectiveLength;
+                bin.Cuts.Add(cut);
+                bins[binIndex] = bin;
+            }
+            else
+            {
+                bins.Add((effectiveLength, [cut]));
+            }
+        }
+
+        cuttingPlans = bins
+            .Select(bin => new CuttingPlan
+            {
+                StockLengthMm = stockLengthMm,
+                Cuts = bin.Cuts
+            })
+            .ToList();
+        infeasibleReason = null;
+        return true;
     }
 
     private static string ResolveReportOutputPath(PipelineInput input)
