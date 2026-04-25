@@ -173,7 +173,7 @@ uvicorn src.api.server:app --port 8101
 
 **Security**: See [ml/SUPPLY_CHAIN_SECURITY.md](ml/SUPPLY_CHAIN_SECURITY.md) for:
 - Dependency lock file with SHA256 hashes
-- Model checkpoint manifest with integrity verification
+- Model checkpoint manifest at `ml/models/MANIFEST.json` with integrity verification
 - CI/CD verification procedures
 - Weekly dependency re-pinning workflow
 

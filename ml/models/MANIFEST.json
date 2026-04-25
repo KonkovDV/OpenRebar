@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at_utc": "2026-04-25T00:00:00Z",
+  "repository": "KonkovDV/OpenRebar",
+  "description": "Model registry for ONNX release artifacts. Binaries are distributed via releases, not tracked in git.",
+  "models": []
+}

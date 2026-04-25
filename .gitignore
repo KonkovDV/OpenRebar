@@ -51,6 +51,8 @@ env/
 *.onnx
 *.h5
 ml/models/
+!ml/models/
+!ml/models/MANIFEST.json
 models/*.bin
 
 # IDE

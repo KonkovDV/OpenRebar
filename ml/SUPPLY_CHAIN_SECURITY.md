@@ -46,12 +46,14 @@ The `ml/models/MANIFEST.json` file tracks all ONNX model checkpoints:
 - **Provenance**: Source, license, training dataset reference
 - **Verification command**: How to recompute the hash locally
 
+The repository keeps this manifest in git even when the model registry is empty; model binaries remain release artifacts and are not committed into source control.
+
 ### Verifying Model Integrity
 
 ```bash
 # Verify a downloaded model
 sha256sum unet_segmentation_v1.onnx
-# Compare output against MANIFEST.json["models"][0]["sha256"]
+# Compare output against MANIFEST.json entry for your model_id
 
 # Or use openssl
 openssl dgst -sha256 unet_segmentation_v1.onnx
@@ -70,7 +72,7 @@ Example in Python:
 import hashlib
 import json
 
-def load_verified_model(model_path, manifest_path="ml/models/MANIFEST.json"):
+def load_verified_model(model_path, model_id, manifest_path="ml/models/MANIFEST.json"):
     # Read manifest
     with open(manifest_path) as f:
         manifest = json.load(f)
@@ -84,7 +86,10 @@ def load_verified_model(model_path, manifest_path="ml/models/MANIFEST.json"):
     computed_hash = sha256_hash.hexdigest()
     
     # Verify against manifest
-    expected_hash = manifest["models"][0]["sha256"]
+    model_entry = next((m for m in manifest["models"] if m["model_id"] == model_id), None)
+    if model_entry is None:
+      raise ValueError(f"Model {model_id} not found in manifest")
+    expected_hash = model_entry["sha256"]
     if computed_hash != expected_hash:
         raise ValueError(f"Hash mismatch! {computed_hash} != {expected_hash}")
     
@@ -115,7 +120,7 @@ Example CI step (add to `.github/workflows/ci.yml`):
 
 - name: Validate model manifest
   run: |
-    python scripts/validate_model_manifest.py ml/models/MANIFEST.json
+    python ml/scripts/validate_model_manifest.py ml/models/MANIFEST.json
 ```
 
 ### Weekly Re-pinning (Optional)

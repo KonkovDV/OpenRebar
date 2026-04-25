@@ -72,6 +72,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ml/requirements.txt
 
+      - name: Validate locked requirements hash entries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          lock_path = Path("ml/requirements.locked.txt")
+          text = lock_path.read_text(encoding="utf-8")
+          if "--hash=sha256:" not in text:
+              raise SystemExit(f"No sha256 hashes found in {lock_path}")
+          print(f"OK: hash entries detected in {lock_path}")
+          PY
+
+      - name: Validate model manifest
+        run: python ml/scripts/validate_model_manifest.py ml/models/MANIFEST.json
+
       - name: Run Python smoke tests
         env:
           PYTHONPATH: ${{ github.workspace }}/ml
