@@ -239,8 +239,39 @@ public sealed class GenerateReinforcementPipeline
                     ("diameterMm", group.Key),
                     ("message", ex.Message));
                 
-                // Create a fallback optimization result (no optimization, use all lengths from single stock)
-                var maxStockLength = catalog.AvailableLengths.MaxBy(s => s.LengthMm)?.LengthMm ?? 12000;
+                // Create a fallback optimization result (no optimization, use all lengths from single in-stock stock).
+                var inStockLengths = catalog.AvailableLengths
+                    .Where(s => s.InStock)
+                    .ToList();
+
+                if (inStockLengths.Count == 0)
+                {
+                    var fallbackDiagnostic = new PipelineFailureDiagnostic
+                    {
+                        Stage = $"OptimizationFallback(d{group.Key}mm)",
+                        ErrorMessage = "Fallback requires at least one in-stock bar length.",
+                        ExceptionType = nameof(OptimizationException),
+                        OccurredAtUtc = DateTimeOffset.UtcNow,
+                        IsCritical = true
+                    };
+                    failures.Add(fallbackDiagnostic);
+
+                    _logger.Warn(
+                        "Fallback optimization cannot start: no in-stock stock lengths",
+                        ("diameterMm", group.Key));
+
+                    result.Report = BuildPartialReport(input, failures, result);
+                    if (input.PersistReport)
+                    {
+                        var outputPath = ResolveReportOutputPath(input);
+                        result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+                        _logger.Info("Stored partial reinforcement report after fallback stock availability failure", ("outputPath", result.StoredReport.OutputPath));
+                    }
+
+                    return result;
+                }
+
+                var maxStockLength = inStockLengths.MaxBy(s => s.LengthMm)!.LengthMm;
                 var cuts = group.Select(r => r.TotalLength).ToList();
                 var totalLength = cuts.Sum();
                 if (!TryBuildFallbackCuttingPlans(
@@ -283,7 +314,9 @@ public sealed class GenerateReinforcementPipeline
                     CuttingPlans = cuttingPlans,
                     TotalStockBarsNeeded = stocksNeeded,
                     TotalWasteMm = cuttingPlans.Sum(p => p.WasteMm),
-                    TotalWastePercent = cuttingPlans.Average(p => p.WastePercent),
+                    TotalWastePercent = cuttingPlans.Sum(p => p.StockLengthMm) > 0
+                        ? cuttingPlans.Sum(p => p.WasteMm) / cuttingPlans.Sum(p => p.StockLengthMm) * 100.0
+                        : 0,
                     TotalRebarLengthMm = totalLength,
                     TotalMassKg = null,
                     EstimatedCost = null,

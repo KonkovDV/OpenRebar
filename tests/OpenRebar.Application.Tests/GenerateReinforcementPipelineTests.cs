@@ -495,6 +495,50 @@ public class GenerateReinforcementPipelineTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WhenOptimizerThrowsAndNoInStockLengths_ShouldReturnPartialReport()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false);
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(1500, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 200,
+                AnchorageLengthEnd = 200,
+                Mark = "1"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths = [new StockLength { LengthMm = 6000, InStock = false }]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(_ => throw new OptimizationException("solver failed"));
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.Report.Should().NotBeNull();
+        result.Report!.PartialResult.Should().BeTrue();
+        result.OptimizationResults.Should().NotContainKey(12);
+        result.Report.Errors.Should().Contain(error =>
+            error.Stage == "OptimizationFallback(d12mm)" &&
+            error.IsCritical &&
+            error.ErrorMessage.Contains("in-stock", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenDecompositionQualityViolatesThreshold_ShouldRecordNonCriticalDiagnostic()
     {
         var sut = CreateSut();

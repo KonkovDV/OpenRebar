@@ -117,7 +117,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **175/175 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **176/176 тестов проходят**.
 
 ## Комплексный аудит (2026-04-25)
 
