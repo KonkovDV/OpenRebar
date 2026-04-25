@@ -104,7 +104,7 @@ def load_verified_model(model_path, model_id, manifest_path="ml/models/MANIFEST.
 
 When a PR modifies ML code or dependencies:
 
-1. **Dependency check**: Verify `requirements.locked.txt` is properly formatted with hashes
+1. **Dependency check**: Install from `requirements.locked.txt` with `--require-hashes` and verify lock formatting
 2. **Manifest check**: Validate `MANIFEST.json` has valid SHA256 formats
 3. **Security scan**: Check for known vulnerable packages via `pip-audit` or similar
 4. **Model integrity**: (If models included in repo) Verify model hashes

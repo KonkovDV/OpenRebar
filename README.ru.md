@@ -164,7 +164,7 @@ pytest tests -q
 uvicorn src.api.server:app --port 8101
 ```
 
-В CI python-smoke тесты запускаются с явным PYTHONPATH, указывающим на ml/.
+В CI python-smoke тесты запускаются с явным PYTHONPATH, указывающим на ml/, а зависимости устанавливаются из `ml/requirements.locked.txt` с `--require-hashes`.
 
 **Безопасность**: см. [ml/SUPPLY_CHAIN_SECURITY.md](ml/SUPPLY_CHAIN_SECURITY.md)
 

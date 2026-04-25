@@ -177,7 +177,7 @@ uvicorn src.api.server:app --port 8101
 - CI/CD verification procedures
 - Weekly dependency re-pinning workflow
 
-CI executes the Python smoke tests with an explicit `PYTHONPATH` pointing to `ml/`.
+CI executes the Python smoke tests with an explicit `PYTHONPATH` pointing to `ml/` and installs dependencies from `ml/requirements.locked.txt` using `--require-hashes`.
 
 ## Revit Host Boundary
 

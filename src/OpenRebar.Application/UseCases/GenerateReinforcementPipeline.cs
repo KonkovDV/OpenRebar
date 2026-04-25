@@ -100,6 +100,30 @@ public sealed class GenerateReinforcementPipeline
             classifiedZones = _zoneDetector.ClassifyAndDecompose(rawZones, input.Slab);
             result.ClassifiedZones = classifiedZones;
             _logger.Info("Classified reinforcement zones", ("classifiedZoneCount", classifiedZones.Count));
+
+            var qualityDiagnostics = EvaluateDecompositionQuality(classifiedZones, input.DecompositionQualityGate);
+            foreach (var diagnostic in qualityDiagnostics)
+            {
+                failures.Add(diagnostic);
+                _logger.Warn(
+                    "Geometry quality gate violation detected",
+                    ("stage", diagnostic.Stage),
+                    ("message", diagnostic.ErrorMessage),
+                    ("isCritical", diagnostic.IsCritical));
+            }
+
+            if (qualityDiagnostics.Any(d => d.IsCritical))
+            {
+                _logger.Error("Critical geometry quality gate violation; aborting pipeline");
+                result.Report = BuildPartialReport(input, failures, result);
+                if (input.PersistReport)
+                {
+                    var outputPath = ResolveReportOutputPath(input);
+                    result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+                    _logger.Info("Stored partial reinforcement report after geometry quality gate failure", ("outputPath", result.StoredReport.OutputPath));
+                }
+                return result;
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -320,6 +344,51 @@ public sealed class GenerateReinforcementPipeline
             return input.ReportOutputPath;
 
         return Path.ChangeExtension(input.IsolineFilePath, ".result.json");
+    }
+
+    private static IReadOnlyList<PipelineFailureDiagnostic> EvaluateDecompositionQuality(
+        IReadOnlyList<ReinforcementZone> zones,
+        DecompositionQualityGateSettings gate)
+    {
+        if (!gate.Enabled)
+            return [];
+
+        var diagnostics = new List<PipelineFailureDiagnostic>();
+
+        foreach (var zone in zones)
+        {
+            if (zone.ZoneType != ZoneType.Complex || zone.DecompositionMetrics is null)
+                continue;
+
+            var metrics = zone.DecompositionMetrics;
+            var reasons = new List<string>();
+
+            if (metrics.CoverageRatio < gate.MinCoverageRatio)
+            {
+                reasons.Add(
+                    $"coverage ratio {metrics.CoverageRatio:F3} is below minimum {gate.MinCoverageRatio:F3}");
+            }
+
+            if (metrics.OverCoverageRatio > gate.MaxOverCoverageRatio)
+            {
+                reasons.Add(
+                    $"over-coverage ratio {metrics.OverCoverageRatio:F3} exceeds maximum {gate.MaxOverCoverageRatio:F3}");
+            }
+
+            if (reasons.Count == 0)
+                continue;
+
+            diagnostics.Add(new PipelineFailureDiagnostic
+            {
+                Stage = "GeometryQualityGate",
+                ErrorMessage = $"Zone {zone.Id}: {string.Join("; ", reasons)}",
+                ExceptionType = "DecompositionQualityViolation",
+                OccurredAtUtc = DateTimeOffset.UtcNow,
+                IsCritical = gate.TreatViolationsAsCritical
+            });
+        }
+
+        return diagnostics;
     }
 
     private static ReinforcementExecutionReport BuildReport(
@@ -619,9 +688,22 @@ public sealed record PipelineInput
     public string? SupplierCatalogPath { get; init; }
     public string? ReportOutputPath { get; init; }
     public OptimizationSettings OptimizationSettings { get; init; } = new();
+    public DecompositionQualityGateSettings DecompositionQualityGate { get; init; } = new();
     public PlacementSettings PlacementSettings { get; init; } = new();
     public bool PlaceInRevit { get; init; } = true;
     public bool PersistReport { get; init; }
+}
+
+/// <summary>
+/// Acceptance gate for polygon decomposition quality metrics.
+/// Allows warning-only operation or fail-fast behavior for strict lanes.
+/// </summary>
+public sealed record DecompositionQualityGateSettings
+{
+    public bool Enabled { get; init; } = true;
+    public double MinCoverageRatio { get; init; } = 0.94;
+    public double MaxOverCoverageRatio { get; init; } = 0.25;
+    public bool TreatViolationsAsCritical { get; init; }
 }
 
 /// <summary>

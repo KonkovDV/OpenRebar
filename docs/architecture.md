@@ -93,6 +93,8 @@ Normative table values are now sourced from a versioned embedded resource (`ru.s
 
 The polygon decomposition remains heuristic for arbitrary shapes, but it is no longer silent. Orthogonal thin and strongly concave zones now use an exact strip-based rectangle cover before the grid fallback is considered. Complex zones carry decomposition metrics (coverage ratio, over-coverage ratio, rectangle count, cell size, shortcut usage), and the canonical report aggregates those metrics into analysis provenance.
 
+The application pipeline now applies a decomposition quality gate for complex zones (default thresholds: coverage ratio >= 0.94 and over-coverage ratio <= 0.25). Violations are persisted as diagnostics in the execution report and can be promoted to fail-fast behavior via `PipelineInput.DecompositionQualityGate.TreatViolationsAsCritical` for strict QA lanes.
+
 ## Data Flow
 
 ```

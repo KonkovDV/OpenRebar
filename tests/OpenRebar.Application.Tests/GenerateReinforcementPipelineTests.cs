@@ -387,6 +387,72 @@ public class GenerateReinforcementPipelineTests
         result.Report!.Summary.EstimatedCost.Should().BeNull();
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WhenDecompositionQualityViolatesThreshold_ShouldRecordNonCriticalDiagnostic()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false);
+
+        var complexZone = CreateComplexZoneWithPoorDecomposition("Z-COMPLEX");
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns([complexZone]);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns([complexZone]);
+        _calculator.CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns([complexZone]);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(CreateOptimizationResult());
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.Report.Should().NotBeNull();
+        result.Report!.PartialResult.Should().BeFalse();
+        result.Report.Errors.Should().ContainSingle(e =>
+            e.Stage == "GeometryQualityGate" &&
+            e.ExceptionType == "DecompositionQualityViolation" &&
+            e.IsCritical == false);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenCriticalDecompositionQualityViolation_ShouldAbortBeforeRebarCalculation()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false) with
+        {
+            DecompositionQualityGate = new DecompositionQualityGateSettings
+            {
+                Enabled = true,
+                MinCoverageRatio = 0.95,
+                MaxOverCoverageRatio = 0.10,
+                TreatViolationsAsCritical = true
+            }
+        };
+
+        var complexZone = CreateComplexZoneWithPoorDecomposition("Z-COMPLEX-CRITICAL");
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns([complexZone]);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns([complexZone]);
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.Report.Should().NotBeNull();
+        result.Report!.PartialResult.Should().BeTrue();
+        result.Report.Errors.Should().ContainSingle(e =>
+            e.Stage == "GeometryQualityGate" &&
+            e.ExceptionType == "DecompositionQualityViolation" &&
+            e.IsCritical);
+
+        _calculator.DidNotReceive().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), Arg.Any<SlabGeometry>());
+    }
+
     private static PipelineInput CreateInput(string filePath, bool placeInRevit)
     {
         return new PipelineInput
@@ -455,6 +521,50 @@ public class GenerateReinforcementPipelineTests
             TotalWastePercent = 38.46,
             TotalRebarLengthMm = 7200,
             TotalMassKg = 6.39
+        };
+    }
+
+    private static ReinforcementZone CreateComplexZoneWithPoorDecomposition(string id)
+    {
+        return new ReinforcementZone
+        {
+            Id = id,
+            Boundary = new Polygon([
+                new Point2D(0, 0),
+                new Point2D(3000, 0),
+                new Point2D(3000, 3000),
+                new Point2D(0, 3000)
+            ]),
+            Spec = new ReinforcementSpec
+            {
+                DiameterMm = 12,
+                SpacingMm = 200,
+                SteelClass = "A500C"
+            },
+            Direction = RebarDirection.X,
+            ZoneType = ZoneType.Complex,
+            DecompositionMetrics = new PolygonDecompositionMetrics
+            {
+                PolygonAreaMm2 = 100_000,
+                RectangleCoverAreaMm2 = 140_000,
+                CoverageRatio = 0.90,
+                OverCoverageRatio = 0.40,
+                CellSizeMm = 500,
+                RectangleCount = 6,
+                UsedRectangularShortcut = false
+            },
+            Rebars =
+            [
+                new RebarSegment
+                {
+                    Start = new Point2D(0, 0),
+                    End = new Point2D(1000, 0),
+                    DiameterMm = 12,
+                    AnchorageLengthStart = 200,
+                    AnchorageLengthEnd = 200,
+                    Mark = "1"
+                }
+            ]
         };
     }
 }
