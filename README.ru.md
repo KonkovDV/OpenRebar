@@ -208,7 +208,9 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 
 ### Базовый Протокол Воспроизводимости
 
-Перед публикацией инженерных или benchmark-выводов используйте:
+Используйте [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md) как канонический validation baseline перед публикацией инженерных или benchmark-утверждений.
+
+Минимальный репозиторный baseline:
 
 ```bash
 dotnet build OpenRebar.sln --configuration Release
@@ -218,7 +220,7 @@ python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q
 ```
 
-Если менялись ML-зависимости или workflow-логика, дополнительно проверьте pinned lock-refresh path, который используется в Ubuntu CI:
+Если менялись ML-зависимости или workflow-логика, дополнительно проверьте pinned lock-refresh path, описанный в [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md):
 
 ```bash
 cd ml

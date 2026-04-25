@@ -1,11 +1,21 @@
 # OpenRebar-Reinforcement: Academic Review And Execution Plan
 
+## Document Status
+
+This document is a historical review-and-plan snapshot dated 2026-04-12.
+
+- It should be read as an archived execution framing from that date, not as the current repository status surface.
+- For current repository evidence, use [COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md).
+- For the current executable validation baseline, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
+
 ## Scope
 
 This review was produced from a fresh repository pass over source, tests, workflows,
 contracts, and runnable entrypoints in `external/OpenRebar-reinforcement`.
 
 ## Verified Baseline
+
+The numbers in this section are historical to the review date and are preserved for audit traceability.
 
 - Git working tree was clean at the start of the review.
 - `dotnet test OpenRebar.sln --no-restore` passed: 114/114.
@@ -51,6 +61,8 @@ The standalone surface is already meaningful:
   CI, CodeQL, and dependency review.
 
 ### 4. Residual risk concentration
+
+The points below describe the risk picture observed at the time of the 2026-04-12 review. Some of these items were subsequently remediated in later waves.
 
 The codebase is not risk-free. The risk is simply concentrated in a few obvious
 outer-boundary surfaces rather than diffused across the system:

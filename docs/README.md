@@ -8,7 +8,7 @@ OpenRebar distinguishes between three documentation classes:
 
 | Class | Purpose | Files |
 |---|---|---|
-| Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md` |
+| Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md`, `VALIDATION_BASELINE.md` |
 | Evidence and audits | Time-bounded verification snapshots, findings, and remediation evidence | `COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md`, `HYPER_DEEP_AUDIT_REPORT.md` |
 | Roadmaps and execution plans | Planned work, historical execution intent, and backlog framing | `ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md`, `TASKS.md` |
 
@@ -18,6 +18,7 @@ OpenRebar distinguishes between three documentation classes:
 
 - [architecture.md](architecture.md): layer boundaries, data flow, domain ports, optimization architecture, and ML boundary
 - [NORMATIVE_TRACEABILITY.md](NORMATIVE_TRACEABILITY.md): clause-to-code and clause-to-test traceability for the normative core
+- [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): canonical executable validation baseline for repository, ML, and CI lock-refresh claims
 
 ### Review repository quality and evidence
 

@@ -215,7 +215,9 @@ This README distinguishes implemented and verified behavior from roadmap intent.
 
 ### Reproducibility Baseline
 
-Use this baseline before publishing engineering or benchmark claims:
+Use [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md) as the canonical validation baseline before publishing engineering or benchmark claims.
+
+Minimum repository baseline:
 
 ```bash
 dotnet build OpenRebar.sln --configuration Release
@@ -225,7 +227,7 @@ python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q
 ```
 
-If you changed ML dependency governance or workflow behavior, also verify the pinned lock-refresh path used on Ubuntu CI runners:
+If you changed ML dependency governance or workflow behavior, also verify the pinned lock-refresh path documented in [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md):
 
 ```bash
 cd ml

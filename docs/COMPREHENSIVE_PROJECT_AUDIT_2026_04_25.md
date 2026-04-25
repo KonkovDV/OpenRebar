@@ -1,5 +1,13 @@
 # OpenRebar Comprehensive Project Audit (2026-04-25)
 
+## Document Status
+
+This is a dated evidence document. It records the audit state and findings as of 2026-04-25.
+
+- For current architectural understanding, use [architecture.md](architecture.md).
+- For the canonical executable validation baseline, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
+- For historical academic review context, use [ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md](ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md).
+
 ## Scope and Objective
 
 This audit was executed as a full-spectrum, evidence-based project review with three objectives:
@@ -92,3 +100,8 @@ The following external references were used for audit criteria calibration:
 ## Audit Outcome
 
 **Status: PASS with targeted remediation complete and two non-blocking governance improvements queued (format normalization and dependency refresh lane).**
+
+## Limits Of This Document
+
+- This audit is not a living source of truth for future test counts or dependency state.
+- If repository behavior changes after 2026-04-25, newer executable evidence overrides this snapshot.

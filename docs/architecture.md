@@ -1,5 +1,13 @@
 # Architecture
 
+## Scope
+
+This document describes the current architectural model of OpenRebar as an implemented system, not as a historical plan or an audit snapshot.
+
+For executable validation expectations, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
+
+For dated audit evidence, use [COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md).
+
 ## Overview
 
 OpenRebar-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, geometry processing, optimization algorithms) must be testable without Revit or any I/O**.
@@ -173,7 +181,12 @@ Geometry predicates now use a shared `GeometryTolerance` policy in the Domain mo
 
 1. **Replace heuristic internals of the current CG implementation** with a true LP master + exact dual pricing or OR-Tools-backed branch-and-price
 2. **Strengthen polygon decomposition further** toward exact clipping / coverage proofs for thin or highly concave zones
-3. **Revit view filters** for color-coded zone visualization
-4. **Multi-slab batch processing** across floors
-5. **Export to IFC** for BIM collaboration
-6. **Training pipeline** for U-Net on customer-specific isoline styles
+3. **Complete the live Revit production boundary** beyond the currently validated standalone and testable host-independent surfaces
+4. **Add richer Revit-side visualization and QA affordances** such as view filters for color-coded zone review
+5. **Expand ML benchmarking and customer-specific fine-tuning** beyond the current optional segmentation surface
+
+## Claim Boundary
+
+- This document describes current structure and boundary decisions.
+- It should not be used as the source for test counts, audit verdicts, or release-readiness status.
+- Time-bounded evidence belongs in the dated audit documents under `docs/`.

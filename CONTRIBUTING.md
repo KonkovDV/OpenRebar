@@ -32,9 +32,8 @@ pytest tests -q
 1. `dotnet build OpenRebar.sln`
 2. `dotnet test OpenRebar.sln`
 3. If you touched `ml/`, run `pytest tests -q` from `ml/`
-4. If you changed `ml/requirements.in`, `.github/workflows/*.yml`, or `.github/requirements/*.locked.txt`, verify the pinned lock-refresh path:
-  `cd ml && python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt && python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in`
-5. If you changed docs or governance surfaces, re-read [docs/README.md](docs/README.md) and the touched public-facing docs for consistency and GitHub safety
+4. If you changed ML dependency or workflow surfaces, run the relevant steps from [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
+5. If you changed docs or governance surfaces, re-read [docs/README.md](docs/README.md), [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), and the touched public-facing docs for consistency and GitHub safety
 6. Do not include local logs, generated temp files, ML checkpoints, or Revit SDK binaries
 
 ## Architecture Guardrails
