@@ -29,16 +29,25 @@ updates:
     directory: "/tests/OpenRebar.Application.Tests"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "FluentAssertions"
+        versions: [">=8.0.0"]
 
   - package-ecosystem: "nuget"
     directory: "/tests/OpenRebar.Domain.Tests"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "FluentAssertions"
+        versions: [">=8.0.0"]
 
   - package-ecosystem: "nuget"
     directory: "/tests/OpenRebar.Infrastructure.Tests"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "FluentAssertions"
+        versions: [">=8.0.0"]
 
   - package-ecosystem: "pip"
     directory: "/ml"
