@@ -189,6 +189,15 @@ public class ColumnGenerationOptimizerTests
     }
 
     [Fact]
+    public void PieceLongerThanAnyStock_ShouldThrowOptimizationException()
+    {
+        var act = () => _optimizer.Optimize([12_000], DefaultStock, DefaultSettings);
+
+        act.Should().Throw<OptimizationException>()
+            .WithMessage("*exceeds all available stock lengths*");
+    }
+
+    [Fact]
     public void SmallExactInstance_ShouldMatchExactMinimumBarCount()
     {
         var lengths = new List<double> { 5800, 5800, 3500, 3500, 2200, 2200 };

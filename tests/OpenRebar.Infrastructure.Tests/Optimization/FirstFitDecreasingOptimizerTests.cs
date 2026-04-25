@@ -1,4 +1,5 @@
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Exceptions;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Infrastructure.Optimization;
 using FluentAssertions;
@@ -88,5 +89,16 @@ public class FirstFitDecreasingOptimizerTests
         result.TotalStockBarsNeeded.Should().BeLessThanOrEqualTo(3);
         result.TotalWastePercent.Should().BeLessThan(50,
             "efficient packing should waste less than 50%");
+    }
+
+    [Fact]
+    public void PieceLongerThanAnyStock_ShouldThrowOptimizationException()
+    {
+        var lengths = new List<double> { 12_000 }; // 12000 + 3mm saw cut > 11700 stock
+
+        var act = () => _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
+
+        act.Should().Throw<OptimizationException>()
+            .WithMessage("*exceeds all available stock lengths*");
     }
 }

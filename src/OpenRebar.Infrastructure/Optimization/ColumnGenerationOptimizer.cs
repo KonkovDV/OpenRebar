@@ -68,6 +68,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         if (availableStock.Count == 0)
             throw new OptimizationException("No in-stock bar lengths are available for optimization.");
 
+        EnsureAllCutsFitStock(requiredLengths, availableStock, settings.SawCutWidthMm);
+
         var exactSmallInstance = TryOptimizeExactSmallInstance(requiredLengths, availableStock, settings);
         if (exactSmallInstance is not null)
             return exactSmallInstance;
@@ -108,6 +110,24 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             return baseline;
 
         return bestColumnGeneration;
+    }
+
+    private static void EnsureAllCutsFitStock(
+        IReadOnlyList<double> requiredLengths,
+        IReadOnlyList<StockLength> availableStock,
+        double sawCutWidthMm)
+    {
+        foreach (double length in requiredLengths)
+        {
+            double requiredEffectiveLength = length + sawCutWidthMm;
+            bool hasCompatibleStock = availableStock.Any(stock => stock.LengthMm + 1e-6 >= requiredEffectiveLength);
+            if (hasCompatibleStock)
+                continue;
+
+            double maxStock = availableStock.Max(stock => stock.LengthMm);
+            throw new OptimizationException(
+                $"Required cut {length:F1} mm (effective {requiredEffectiveLength:F1} mm with saw cut) exceeds all available stock lengths. Max in-stock length: {maxStock:F1} mm.");
+        }
     }
 
     private static OptimizationResult OptimizeForStockLength(

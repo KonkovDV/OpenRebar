@@ -1,4 +1,5 @@
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Exceptions;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Domain.Rules;
 
@@ -32,8 +33,16 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
         var sorted = requiredLengths.OrderDescending().ToList();
 
         // Choose the best stock length (prefer longest available for less waste)
-        var preferredStock = stockLengths
+        var inStockLengths = stockLengths
             .Where(s => s.InStock)
+            .ToList();
+
+        if (inStockLengths.Count == 0)
+            throw new OptimizationException("No in-stock bar lengths are available for optimization.");
+
+        EnsureAllCutsFitStock(requiredLengths, inStockLengths, settings.SawCutWidthMm);
+
+        var preferredStock = inStockLengths
             .OrderByDescending(s => s.LengthMm)
             .First();
 
@@ -97,6 +106,24 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
             TotalRebarLengthMm = totalRequired,
             Provenance = BuildFfdProvenance()
         };
+    }
+
+    private static void EnsureAllCutsFitStock(
+        IReadOnlyList<double> requiredLengths,
+        IReadOnlyList<StockLength> inStockLengths,
+        double sawCutWidthMm)
+    {
+        foreach (double length in requiredLengths)
+        {
+            double requiredEffectiveLength = length + sawCutWidthMm;
+            bool hasCompatibleStock = inStockLengths.Any(stock => stock.LengthMm + 1e-6 >= requiredEffectiveLength);
+            if (hasCompatibleStock)
+                continue;
+
+            double maxStock = inStockLengths.Max(stock => stock.LengthMm);
+            throw new OptimizationException(
+                $"Required cut {length:F1} mm (effective {requiredEffectiveLength:F1} mm with saw cut) exceeds all available stock lengths. Max in-stock length: {maxStock:F1} mm.");
+        }
     }
 
     private static OptimizationProvenance BuildFfdProvenance()
