@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSON report schema validation test against `contracts/aerobim-reinforcement-report.schema.json`
 - Linux CI hardening for mixed solution targets: workflow restore/build lanes now pass `EnableWindowsTargeting=true` for `net8.0-windows` Revit project compatibility on Ubuntu runners
 - Python smoke hardening in CI/release workflows with explicit `PYTHONPATH` for stable `ml/src` imports
+- Comprehensive multi-level audit report `docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md` with evidence-backed findings and remediation log
 
 ### Changed
 
@@ -57,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FastAPI upload dependency gap fixed by adding `python-multipart` to `ml/requirements.txt`
 - CI/release SBOM step pin corrected to an existing `anchore/sbom-action` commit SHA
 - Intermittent CI import failure `ModuleNotFoundError: No module named 'src'` resolved in python-smoke lanes
+- Cost-aware non-regression guard in `ColumnGenerationOptimizer` so baseline fallback no longer contradicts cost-prioritized candidate scoring
+- Regression coverage for cost-prioritized optimizer selection in `ColumnGenerationOptimizerTests`
+- README and README.ru regression status refreshed to the current validated test count (163/163)
 
 ## [1.0.0] — 2026-04-11
 

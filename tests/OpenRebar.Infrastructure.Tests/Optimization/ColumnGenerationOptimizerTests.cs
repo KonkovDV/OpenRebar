@@ -153,6 +153,30 @@ public class ColumnGenerationOptimizerTests
     }
 
     [Fact]
+    public void CostWeightedOptimization_ShouldNotBeOverriddenByBaselineGuard()
+    {
+        var stock = new List<StockLength>
+        {
+            new() { LengthMm = 12000, InStock = true, PricePerTon = 100 },
+            new() { LengthMm = 6000, InStock = true, PricePerTon = 1 },
+        };
+
+        var settings = new OptimizationSettings
+        {
+            SawCutWidthMm = 3,
+            MinScrapLengthMm = 300,
+            WasteWeight = 0,
+            InstallationWeight = 0,
+            CostWeight = 1,
+        };
+
+        var result = _optimizer.Optimize([5500, 5500], stock, settings);
+
+        result.CuttingPlans.Should().OnlyContain(plan => plan.StockLengthMm == 6000,
+            "with CostWeight=1, optimizer should keep the cheaper stock strategy and avoid baseline override");
+    }
+
+    [Fact]
     public void NoInStockLengths_ShouldThrowOptimizationException()
     {
         var stock = new List<StockLength>

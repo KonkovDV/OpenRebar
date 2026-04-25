@@ -91,12 +91,20 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             })
             .ToList();
 
-        var bestColumnGeneration = ChooseBestCandidate(candidates, requiredLengths.Count, settings).Result;
+        var bestCandidate = ChooseBestCandidate(candidates, requiredLengths.Count, settings);
+        var bestColumnGeneration = bestCandidate.Result;
 
         // Guard against pathological CG rounding/pricing behavior by keeping the simpler
         // best-fit-decreasing baseline as a floor for solution quality.
         var baseline = new FirstFitDecreasingOptimizer().Optimize(requiredLengths, availableStock, settings);
-        if (IsBaselineBetter(baseline, bestColumnGeneration, requiredLengths.Count, settings))
+        double? baselineCostProxy = EstimateCostProxy(baseline, availableStock);
+        if (IsBaselineBetter(
+            baseline,
+            bestColumnGeneration,
+            requiredLengths.Count,
+            settings,
+            baselineCostProxy,
+            bestCandidate.CostProxy))
             return baseline;
 
         return bestColumnGeneration;
@@ -760,10 +768,37 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         OptimizationResult baseline,
         OptimizationResult candidate,
         int itemCount,
-        OptimizationSettings settings)
+        OptimizationSettings settings,
+        double? baselineCostProxy,
+        double? candidateCostProxy)
     {
-        double baselineScore = ScoreResult(baseline, itemCount, settings);
-        double candidateScore = ScoreResult(candidate, itemCount, settings);
+        double minCost = new[] { baselineCostProxy, candidateCostProxy }
+            .Where(cost => cost.HasValue)
+            .Select(cost => cost!.Value)
+            .DefaultIfEmpty(0)
+            .Min();
+
+        double maxCost = new[] { baselineCostProxy, candidateCostProxy }
+            .Where(cost => cost.HasValue)
+            .Select(cost => cost!.Value)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        double baselineScore = ScoreResultForGuard(
+            baseline,
+            itemCount,
+            settings,
+            baselineCostProxy,
+            minCost,
+            maxCost);
+
+        double candidateScore = ScoreResultForGuard(
+            candidate,
+            itemCount,
+            settings,
+            candidateCostProxy,
+            minCost,
+            maxCost);
 
         if (baselineScore < candidateScore - 1e-6)
             return true;
@@ -780,18 +815,55 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         return baseline.TotalStockBarsNeeded < candidate.TotalStockBarsNeeded;
     }
 
-    private static double ScoreResult(
+    private static double? EstimateCostProxy(
+        OptimizationResult result,
+        IReadOnlyList<StockLength> availableStock)
+    {
+        if (!availableStock.Any(stock => stock.PricePerTon.HasValue))
+            return null;
+
+        var priceByLength = availableStock
+            .Where(stock => stock.PricePerTon.HasValue)
+            .GroupBy(stock => stock.LengthMm)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Min(stock => stock.PricePerTon!.Value));
+
+        double total = 0;
+        bool hasAnyPricedPlan = false;
+
+        foreach (var plan in result.CuttingPlans)
+        {
+            if (!priceByLength.TryGetValue(plan.StockLengthMm, out double pricePerTon))
+                continue;
+
+            total += plan.StockLengthMm * pricePerTon;
+            hasAnyPricedPlan = true;
+        }
+
+        return hasAnyPricedPlan ? total : null;
+    }
+
+    private static double ScoreResultForGuard(
         OptimizationResult result,
         int itemCount,
-        OptimizationSettings settings)
+        OptimizationSettings settings,
+        double? costProxy,
+        double minCost,
+        double maxCost)
     {
         double wasteScore = result.TotalWastePercent / 100.0;
         double installScore = itemCount > 0
             ? (double)result.TotalStockBarsNeeded / itemCount
             : 0;
 
+        double costScore = 0;
+        if (costProxy.HasValue && maxCost > minCost)
+            costScore = (costProxy.Value - minCost) / (maxCost - minCost);
+
         return settings.WasteWeight * wasteScore
-             + settings.InstallationWeight * installScore;
+             + settings.InstallationWeight * installScore
+             + settings.CostWeight * costScore;
     }
 
     private static OptimizationProvenance BuildColumnGenerationProvenance(bool usedFallbackMasterSolver)

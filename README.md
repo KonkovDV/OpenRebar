@@ -117,7 +117,15 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln`): **160/160 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **163/163 tests passing**.
+
+## Comprehensive Audit (2026-04-25)
+
+A full project-wide audit was executed across architecture, algorithmic correctness, build/release reliability, supply-chain security, dependency risk, and documentation quality.
+
+- Audit report: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
+- Key fix delivered: cost-aware non-regression guard in `ColumnGenerationOptimizer` with dedicated regression test coverage
+- Verification baseline: `git fsck --full`, `dotnet build`, `dotnet test`, `dotnet list package --vulnerable --include-transitive`, and formatting gate check (`dotnet format --verify-no-changes`)
 
 ### Optional corpus rail
 
@@ -165,6 +173,7 @@ The repository includes:
 ## Project Docs
 
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
+- Comprehensive audit: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Audit and roadmap: [HYPER_DEEP_AUDIT_REPORT.md](HYPER_DEEP_AUDIT_REPORT.md), [TASKS.md](TASKS.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)

@@ -117,7 +117,15 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Текущий регрессионный статус (локальный dotnet test OpenRebar.sln): **160/160 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **163/163 теста проходят**.
+
+## Комплексный аудит (2026-04-25)
+
+Проведён полный аудит проекта по уровням: архитектура, алгоритмическая корректность, качество CI/CD, supply-chain безопасность, уязвимости зависимостей и качество документации.
+
+- Отчёт аудита: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
+- Ключевой технический фикс: cost-aware non-regression guard в `ColumnGenerationOptimizer` + отдельный регрессионный тест
+- Базовый стек верификации: `git fsck --full`, `dotnet build`, `dotnet test`, `dotnet list package --vulnerable --include-transitive` и формат-гейт `dotnet format --verify-no-changes`
 
 ### Опциональный corpus rail
 
@@ -165,6 +173,7 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 ## Документация
 
 - Архитектурные заметки: docs/architecture.md
+- Комплексный аудит: docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md
 - Changelog: CHANGELOG.md
 - Audit и roadmap: HYPER_DEEP_AUDIT_REPORT.md, TASKS.md
 - Contribution guide: CONTRIBUTING.md
