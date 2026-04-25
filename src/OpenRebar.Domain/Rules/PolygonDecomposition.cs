@@ -293,19 +293,23 @@ public static class PolygonDecomposition
     }
 
     /// <summary>
-    /// Ray casting algorithm for point-in-polygon test.
+    /// Ray casting algorithm for point-in-polygon test with tolerance.
     /// </summary>
-    public static bool IsPointInPolygon(Point2D point, Polygon polygon)
+    public static bool IsPointInPolygon(Point2D point, Polygon polygon, GeometryTolerance? tolerance = null)
     {
+        tolerance ??= GeometryTolerance.Default;
         var vertices = polygon.Vertices;
         bool inside = false;
         int n = vertices.Count;
 
         for (int i = 0, j = n - 1; i < n; j = i++)
         {
-            if ((vertices[i].Y > point.Y) != (vertices[j].Y > point.Y) &&
+            // Use tolerance-aware comparison for Y-axis
+            if (!IsZero(vertices[i].Y - vertices[j].Y, tolerance.LinearToleranceMm) &&
+                (vertices[i].Y > point.Y + tolerance.LinearToleranceMm) != 
+                (vertices[j].Y > point.Y - tolerance.LinearToleranceMm) &&
                 point.X < (vertices[j].X - vertices[i].X) * (point.Y - vertices[i].Y)
-                    / (vertices[j].Y - vertices[i].Y) + vertices[i].X)
+                    / (vertices[j].Y - vertices[i].Y) + vertices[i].X - tolerance.LinearToleranceMm)
             {
                 inside = !inside;
             }
@@ -477,31 +481,36 @@ public static class PolygonDecomposition
         ];
     }
 
-    private static bool IsPointInBox(Point2D point, BoundingBox box, double tolerance = 1e-6)
+    private static bool IsPointInBox(Point2D point, BoundingBox box, GeometryTolerance? tolerance = null)
     {
-        return point.X >= box.Min.X - tolerance &&
-               point.X <= box.Max.X + tolerance &&
-               point.Y >= box.Min.Y - tolerance &&
-               point.Y <= box.Max.Y + tolerance;
+        tolerance ??= GeometryTolerance.Default;
+        double tol = tolerance.LinearToleranceMm;
+        return point.X >= box.Min.X - tol &&
+               point.X <= box.Max.X + tol &&
+               point.Y >= box.Min.Y - tol &&
+               point.Y <= box.Max.Y + tol;
     }
 
-    private static bool SegmentsIntersect(Point2D a1, Point2D a2, Point2D b1, Point2D b2)
+    private static bool SegmentsIntersect(Point2D a1, Point2D a2, Point2D b1, Point2D b2, GeometryTolerance? tolerance = null)
     {
+        tolerance ??= GeometryTolerance.Default;
         double o1 = Orientation(a1, a2, b1);
         double o2 = Orientation(a1, a2, b2);
         double o3 = Orientation(b1, b2, a1);
         double o4 = Orientation(b1, b2, a2);
 
-        if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) &&
-            (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0))
+        if ((o1 > tolerance.LinearToleranceMm && o2 < -tolerance.LinearToleranceMm || 
+             o1 < -tolerance.LinearToleranceMm && o2 > tolerance.LinearToleranceMm) &&
+            (o3 > tolerance.LinearToleranceMm && o4 < -tolerance.LinearToleranceMm || 
+             o3 < -tolerance.LinearToleranceMm && o4 > tolerance.LinearToleranceMm))
         {
             return true;
         }
 
-        return IsZero(o1) && IsPointOnSegment(b1, a1, a2) ||
-               IsZero(o2) && IsPointOnSegment(b2, a1, a2) ||
-               IsZero(o3) && IsPointOnSegment(a1, b1, b2) ||
-               IsZero(o4) && IsPointOnSegment(a2, b1, b2);
+        return IsZero(o1, tolerance.LinearToleranceMm) && IsPointOnSegment(b1, a1, a2, tolerance) ||
+               IsZero(o2, tolerance.LinearToleranceMm) && IsPointOnSegment(b2, a1, a2, tolerance) ||
+               IsZero(o3, tolerance.LinearToleranceMm) && IsPointOnSegment(a1, b1, b2, tolerance) ||
+               IsZero(o4, tolerance.LinearToleranceMm) && IsPointOnSegment(a2, b1, b2, tolerance);
     }
 
     private static double Orientation(Point2D a, Point2D b, Point2D c)
@@ -509,12 +518,14 @@ public static class PolygonDecomposition
         return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
     }
 
-    private static bool IsPointOnSegment(Point2D point, Point2D start, Point2D end, double tolerance = 1e-6)
+    private static bool IsPointOnSegment(Point2D point, Point2D start, Point2D end, GeometryTolerance? tolerance = null)
     {
-        return point.X >= Math.Min(start.X, end.X) - tolerance &&
-               point.X <= Math.Max(start.X, end.X) + tolerance &&
-               point.Y >= Math.Min(start.Y, end.Y) - tolerance &&
-               point.Y <= Math.Max(start.Y, end.Y) + tolerance;
+        tolerance ??= GeometryTolerance.Default;
+        double tol = tolerance.LinearToleranceMm;
+        return point.X >= Math.Min(start.X, end.X) - tol &&
+               point.X <= Math.Max(start.X, end.X) + tol &&
+               point.Y >= Math.Min(start.Y, end.Y) - tol &&
+               point.Y <= Math.Max(start.Y, end.Y) + tol;
     }
 
     private static bool IsZero(double value, double tolerance = 1e-6)

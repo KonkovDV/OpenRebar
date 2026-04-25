@@ -1,6 +1,61 @@
 namespace OpenRebar.Domain.Models;
 
 /// <summary>
+/// Tolerance parameters for geometric operations and predicates.
+/// Allows robust handling of floating-point coordinates and epsilon-based comparisons.
+/// </summary>
+public sealed record GeometryTolerance
+{
+    /// <summary>
+    /// Linear tolerance in millimeters for point-in-polygon and line-intersection tests.
+    /// Default: 0.01 mm (10 micrometers) for typical CAD precision.
+    /// </summary>
+    public double LinearToleranceMm { get; init; } = 0.01;
+
+    /// <summary>
+    /// Area ratio tolerance for coverage verification (0-1 scale).
+    /// Default: 0.05 (5% variation acceptable for polygon decomposition coverage/overcoverage).
+    /// </summary>
+    public double AreaRatioTolerance { get; init; } = 0.05;
+
+    /// <summary>
+    /// Validates that tolerance parameters are in valid range.
+    /// </summary>
+    public void Validate()
+    {
+        if (LinearToleranceMm < 0 || LinearToleranceMm > 1)
+            throw new ArgumentOutOfRangeException(nameof(LinearToleranceMm), 
+                "Linear tolerance must be between 0 and 1 mm");
+        if (AreaRatioTolerance < 0 || AreaRatioTolerance > 1)
+            throw new ArgumentOutOfRangeException(nameof(AreaRatioTolerance),
+                "Area ratio tolerance must be between 0 and 1");
+    }
+
+    /// <summary>
+    /// Returns default tolerance (0.01 mm linear, 5% area).
+    /// </summary>
+    public static GeometryTolerance Default => new();
+
+    /// <summary>
+    /// Returns strict tolerance (0.001 mm linear, 1% area) for high-precision work.
+    /// </summary>
+    public static GeometryTolerance Strict => new()
+    {
+        LinearToleranceMm = 0.001,
+        AreaRatioTolerance = 0.01
+    };
+
+    /// <summary>
+    /// Returns relaxed tolerance (0.1 mm linear, 10% area) for coarse geometries.
+    /// </summary>
+    public static GeometryTolerance Relaxed => new()
+    {
+        LinearToleranceMm = 0.1,
+        AreaRatioTolerance = 0.1
+    };
+}
+
+/// <summary>
 /// 2D point in slab coordinate system (millimeters).
 /// </summary>
 public readonly record struct Point2D(double X, double Y)
