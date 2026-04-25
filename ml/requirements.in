@@ -1,0 +1,35 @@
+# OpenRebar Reinforcement — Python ML Module Input Requirements
+# Isoline image segmentation service for PNG processing.
+# Generated from audit finding ML-1 (ML Supply-Chain Hardening)
+#
+# To generate locked requirements.txt with hashes:
+#   pip install pip-tools
+#   pip-compile --generate-hashes -o requirements.txt requirements.in
+
+# Core scientific computing
+numpy>=1.26,<2.0
+opencv-python-headless>=4.9,<5.0
+Pillow>=10.2,<11.0
+scikit-image>=0.22,<1.0
+
+# Deep learning and model serving
+torch>=2.2,<3.0
+torchvision>=0.17,<1.0
+onnx>=1.16,<2.0
+onnxscript>=0.1,<1.0
+onnxruntime>=1.17,<2.0
+
+# REST API framework
+fastapi>=0.110,<1.0
+uvicorn>=0.27,<1.0
+pydantic>=2.6,<3.0
+python-multipart>=0.0.9,<1.0
+
+# Geometry validation (shared with C# for consistency)
+ezdxf>=1.0,<2.0
+shapely>=2.0,<3.0
+
+# Development and testing
+pytest>=8.0,<9.0
+pytest-asyncio>=0.23,<1.0
+httpx>=0.27,<1.0

@@ -151,12 +151,31 @@ The CLI writes the canonical report next to the input file (`.result.json`) and 
 
 ## Python ML Module (Optional)
 
+### Installation with Supply-Chain Security
+
+The ML module uses cryptographically-verified dependencies to prevent supply-chain attacks:
+
 ```bash
 cd ml
+
+# Install with hash verification (recommended for production)
+pip install --require-hashes -r requirements.locked.txt
+
+# Or use the standard requirements (development)
 pip install -r requirements.txt
+
+# Run tests
 pytest tests -q
+
+# Start segmentation service
 uvicorn src.api.server:app --port 8101
 ```
+
+**Security**: See [ml/SUPPLY_CHAIN_SECURITY.md](ml/SUPPLY_CHAIN_SECURITY.md) for:
+- Dependency lock file with SHA256 hashes
+- Model checkpoint manifest with integrity verification
+- CI/CD verification procedures
+- Weekly dependency re-pinning workflow
 
 CI executes the Python smoke tests with an explicit `PYTHONPATH` pointing to `ml/`.
 
