@@ -232,6 +232,15 @@ For report-derived claims, include the report file path, schema contract version
 - For comparative studies, report both achieved quality indicators and unresolved boundary conditions.
 - Keep normative profile and tables version visible when sharing external evidence.
 
+## Governance
+
+- [Support](SUPPORT.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Maintainers](MAINTAINERS.md)
+- [Release Policy](RELEASE_POLICY.md)
+- [Citation Metadata](CITATION.cff)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

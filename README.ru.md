@@ -225,6 +225,15 @@ python -m pytest tests -q
 - Для сравнительных исследований фиксируйте и достигнутые quality-индикаторы, и оставшиеся граничные условия.
 - При внешних публикациях сохраняйте явную связку с `normativeProfile` и версией таблиц.
 
+## Governance
+
+- [Support](SUPPORT.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+- [Maintainers](MAINTAINERS.md)
+- [Release Policy](RELEASE_POLICY.md)
+- [Citation Metadata](CITATION.cff)
+
 ## Лицензия
 
 MIT — см. LICENSE.
