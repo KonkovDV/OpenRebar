@@ -74,11 +74,27 @@ dotnet list OpenRebar.sln package --outdated
 dotnet format OpenRebar.sln --verify-no-changes
 ```
 
+GitHub workflow and dependency-governance audit checks:
+
+```bash
+dotnet list OpenRebar.sln package --include-transitive --vulnerable
+dotnet list OpenRebar.sln package --outdated
+```
+
+Review these control-plane files when claim scope includes CI/CD security posture:
+
+- `.github/workflows/ci.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/dependency-review.yml`
+- `.github/dependabot.yml`
+- `.github/CODEOWNERS`
+
 Interpretation rules:
 
 - `git fsck --full` supports repository-integrity claims.
 - vulnerability and outdated reports support supply-chain posture claims.
 - formatting output is a hygiene signal, not by itself a product-correctness signal.
+- workflow permission scope and Dependabot surface coverage are governance checks, not runtime correctness checks.
 
 ## Evidence Rules
 

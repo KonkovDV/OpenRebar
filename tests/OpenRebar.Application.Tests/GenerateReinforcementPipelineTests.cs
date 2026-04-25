@@ -388,6 +388,70 @@ public class GenerateReinforcementPipelineTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WhenOptimizerThrows_ShouldBuildCapacitySafeFallbackPlans()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false);
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(4900, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 0,
+                AnchorageLengthEnd = 0,
+                Mark = "1"
+            },
+            new RebarSegment
+            {
+                Start = new Point2D(0, 100),
+                End = new Point2D(4900, 100),
+                DiameterMm = 12,
+                AnchorageLengthStart = 0,
+                AnchorageLengthEnd = 0,
+                Mark = "2"
+            },
+            new RebarSegment
+            {
+                Start = new Point2D(0, 200),
+                End = new Point2D(200, 200),
+                DiameterMm = 12,
+                AnchorageLengthStart = 0,
+                AnchorageLengthEnd = 0,
+                Mark = "3"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths = [new StockLength { LengthMm = 5000, InStock = true }]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(_ => throw new OptimizationException("solver failed"));
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.OptimizationResults.Should().ContainKey(12);
+        var fallback = result.OptimizationResults[12];
+        fallback.TotalStockBarsNeeded.Should().Be(3);
+        fallback.CuttingPlans.Should().HaveCount(3);
+        fallback.CuttingPlans.Should().OnlyContain(plan => plan.Cuts.Sum() <= plan.StockLengthMm);
+        result.Report.Should().NotBeNull();
+        result.Report!.Errors.Should().ContainSingle(error =>
+            error.Stage == "Optimization(d12mm)" &&
+            error.IsCritical == false);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenDecompositionQualityViolatesThreshold_ShouldRecordNonCriticalDiagnostic()
     {
         var sut = CreateSut();

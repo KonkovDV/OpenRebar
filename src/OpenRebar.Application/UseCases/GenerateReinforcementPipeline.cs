@@ -243,19 +243,32 @@ public sealed class GenerateReinforcementPipeline
                 var maxStockLength = catalog.AvailableLengths.MaxBy(s => s.LengthMm)?.LengthMm ?? 12000;
                 var cuts = group.Select(r => r.TotalLength).ToList();
                 var totalLength = cuts.Sum();
-                var stocksNeeded = (int)Math.Ceiling(totalLength / maxStockLength);
-                var cuttingPlans = new List<CuttingPlan>();
-                for (int i = 0; i < stocksNeeded; i++)
+                var fallbackBins = new List<List<double>>();
+
+                foreach (var cut in cuts.OrderByDescending(length => length))
                 {
-                    var planCuts = i == stocksNeeded - 1
-                        ? cuts.Skip(i * 1).ToList()  // remaining cuts
-                        : cuts.Skip(i * 1).Take(1).ToList();
-                    cuttingPlans.Add(new CuttingPlan
+                    var existingBin = fallbackBins.FirstOrDefault(bin =>
+                        bin.Sum() + cut <= maxStockLength);
+
+                    if (existingBin is not null)
+                    {
+                        existingBin.Add(cut);
+                    }
+                    else
+                    {
+                        fallbackBins.Add([cut]);
+                    }
+                }
+
+                var cuttingPlans = fallbackBins
+                    .Select(bin => new CuttingPlan
                     {
                         StockLengthMm = maxStockLength,
-                        Cuts = planCuts
-                    });
-                }
+                        Cuts = bin
+                    })
+                    .ToList();
+
+                var stocksNeeded = cuttingPlans.Count;
                 
                 optimizationResults[group.Key] = new OptimizationResult
                 {

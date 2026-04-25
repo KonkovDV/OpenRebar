@@ -24,6 +24,7 @@ OpenRebar distinguishes between three documentation classes:
 
 - [COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md): latest repository-wide audit with evidence snapshot and remediation status
 - [HYPER_DEEP_AUDIT_REPORT.md](HYPER_DEEP_AUDIT_REPORT.md): deeper architectural and academic audit narrative, including integration framing
+- [.github/workflows/release.yml](../.github/workflows/release.yml), [.github/dependabot.yml](../.github/dependabot.yml), and [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): operational governance surfaces for CI token scope and dependency-update coverage
 
 ### Understand roadmap and planned work
 

@@ -21,6 +21,11 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "nuget"
+    directory: "/src/OpenRebar.Cli"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "nuget"
     directory: "/tests/OpenRebar.Application.Tests"
     schedule:
       interval: "weekly"
