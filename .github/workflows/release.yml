@@ -26,7 +26,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln -p:EnableWindowsTargeting=true
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
 
       - name: Build (Release)
         run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
@@ -48,9 +48,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install ML dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --require-hashes -r ml/requirements.locked.txt
+        run: pip install --require-hashes -r ml/requirements.locked.txt
 
       - name: Run Python smoke tests
         env:
@@ -78,7 +76,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln -p:EnableWindowsTargeting=true
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
 
       - name: Build (Release)
         run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true

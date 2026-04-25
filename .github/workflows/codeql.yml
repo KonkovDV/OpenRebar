@@ -38,7 +38,7 @@ jobs:
           build-mode: manual
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln -p:EnableWindowsTargeting=true
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
 
       - name: Build
         run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true

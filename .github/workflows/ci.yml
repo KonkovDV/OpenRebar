@@ -29,7 +29,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln -p:EnableWindowsTargeting=true
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
 
       - name: Build
         run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
@@ -67,16 +67,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Refresh locked requirements
-        working-directory: ml
-        run: |
-          pip install pip-tools
-          pip-compile --generate-hashes --output-file=requirements.locked.txt requirements.in
-
       - name: Install ML dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --require-hashes -r ml/requirements.locked.txt
+        run: pip install --require-hashes -r ml/requirements.locked.txt
 
       - name: Validate locked requirements hash entries
         run: |
