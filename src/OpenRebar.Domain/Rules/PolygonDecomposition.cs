@@ -14,6 +14,7 @@ public static class PolygonDecomposition
     public const int DefaultCellDivisionCount = 20;
     public const int CoverageSamplingResolutionPerAxis = 4;
     public const double CellCoverageInclusionThreshold = 0.35;
+    private static readonly GeometryTolerance ComputationalTolerance = GeometryTolerance.Computational;
 
     /// <summary>
     /// Decompose a polygon into a set of axis-aligned rectangles.
@@ -140,7 +141,7 @@ public static class PolygonDecomposition
         {
             double minY = sortedY[bandIndex];
             double maxY = sortedY[bandIndex + 1];
-            if (maxY - minY <= 1e-6)
+            if (maxY - minY <= ComputationalTolerance.LinearToleranceMm)
                 continue;
 
             double sampleY = (minY + maxY) / 2.0;
@@ -152,7 +153,7 @@ public static class PolygonDecomposition
             {
                 double minX = intersections[i];
                 double maxX = intersections[i + 1];
-                if (maxX - minX <= 1e-6)
+                if (maxX - minX <= ComputationalTolerance.LinearToleranceMm)
                     continue;
 
                 strips.Add(new BoundingBox(
@@ -250,7 +251,7 @@ public static class PolygonDecomposition
             .ToList();
 
         return sortedY.Zip(sortedY.Skip(1), (first, second) => second - first)
-            .Where(delta => delta > 1e-6)
+            .Where(delta => delta > ComputationalTolerance.LinearToleranceMm)
             .DefaultIfEmpty(Math.Max(polygon.GetBoundingBox().Width, polygon.GetBoundingBox().Height))
             .Min();
     }
@@ -528,7 +529,7 @@ public static class PolygonDecomposition
                point.Y <= Math.Max(start.Y, end.Y) + tol;
     }
 
-    private static bool IsZero(double value, double tolerance = 1e-6)
+    private static bool IsZero(double value, double tolerance = GeometryTolerance.ComputationalEpsilonMm)
     {
         return Math.Abs(value) <= tolerance;
     }

@@ -165,6 +165,8 @@ The infrastructure suite now includes an exact benchmark pack for CSP that check
 
 The domain suite now also includes golden tests for the normative profile resource and metadata defaults, so bond/design-strength lookups and report defaults stay aligned.
 
+Geometry predicates now use a shared `GeometryTolerance` policy in the Domain model. The `Computational` profile centralizes low-level epsilon usage for segment intersection, point-in-polygon, and DXF polygon stitching so adapters do not drift on magic constants.
+
 ## Future Roadmap
 
 1. **Replace heuristic internals of the current CG implementation** with a true LP master + exact dual pricing or OR-Tools-backed branch-and-price

@@ -7,6 +7,12 @@ namespace OpenRebar.Domain.Models;
 public sealed record GeometryTolerance
 {
     /// <summary>
+    /// Shared computational epsilon (mm) for low-level geometric predicates.
+    /// Keep this value stable to avoid test and runtime drift across adapters.
+    /// </summary>
+    public const double ComputationalEpsilonMm = 1e-6;
+
+    /// <summary>
     /// Linear tolerance in millimeters for point-in-polygon and line-intersection tests.
     /// Default: 0.01 mm (10 micrometers) for typical CAD precision.
     /// </summary>
@@ -43,6 +49,16 @@ public sealed record GeometryTolerance
     {
         LinearToleranceMm = 0.001,
         AreaRatioTolerance = 0.01
+    };
+
+    /// <summary>
+    /// Returns computational tolerance profile used by low-level predicates.
+    /// This preserves legacy epsilon-based behavior while centralizing policy.
+    /// </summary>
+    public static GeometryTolerance Computational => new()
+    {
+        LinearToleranceMm = ComputationalEpsilonMm,
+        AreaRatioTolerance = 0.05
     };
 
     /// <summary>

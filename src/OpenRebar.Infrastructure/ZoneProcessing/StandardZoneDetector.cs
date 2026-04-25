@@ -14,6 +14,7 @@ public sealed class StandardZoneDetector : IZoneDetector
     /// Minimum area for a zone to be considered valid (mm²). ~0.01 m².
     /// </summary>
     private const double MinZoneAreaMm2 = 100_000;
+    private static readonly GeometryTolerance ComputationalTolerance = GeometryTolerance.Computational;
 
     public IReadOnlyList<ReinforcementZone> ClassifyAndDecompose(
         IReadOnlyList<ReinforcementZone> zones,
@@ -157,16 +158,18 @@ public sealed class StandardZoneDetector : IZoneDetector
         return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
     }
 
-    private static bool IsPointOnSegment(Point2D point, Point2D start, Point2D end, double tolerance = 1e-6)
+    private static bool IsPointOnSegment(Point2D point, Point2D start, Point2D end)
     {
+        double tolerance = ComputationalTolerance.LinearToleranceMm;
         return point.X >= Math.Min(start.X, end.X) - tolerance &&
                point.X <= Math.Max(start.X, end.X) + tolerance &&
                point.Y >= Math.Min(start.Y, end.Y) - tolerance &&
                point.Y <= Math.Max(start.Y, end.Y) + tolerance;
     }
 
-    private static bool IsZero(double value, double tolerance = 1e-6)
+    private static bool IsZero(double value)
     {
+        double tolerance = ComputationalTolerance.LinearToleranceMm;
         return Math.Abs(value) <= tolerance;
     }
 }

@@ -11,6 +11,8 @@ namespace OpenRebar.Infrastructure.DxfProcessing;
 /// </summary>
 public sealed class DxfIsolineParser : IIsolineParser
 {
+    private static readonly GeometryTolerance ComputationalTolerance = GeometryTolerance.Computational;
+
     public IReadOnlyList<string> SupportedExtensions => [".dxf"];
 
     public Task<IReadOnlyList<ReinforcementZone>> ParseAsync(
@@ -339,7 +341,7 @@ public sealed class DxfIsolineParser : IIsolineParser
         var startDistance = last.DistanceTo(segment[0]);
         var endDistance = last.DistanceTo(segment[^1]);
 
-        if (endDistance + 1e-6 < startDistance)
+        if (endDistance + ComputationalTolerance.LinearToleranceMm < startDistance)
         {
             for (int i = segment.Count - 1; i >= 0; i--)
                 AppendPoint(points, segment[i]);
@@ -370,8 +372,9 @@ public sealed class DxfIsolineParser : IIsolineParser
         return new Polygon(points);
     }
 
-    private static bool AlmostEqual(Point2D a, Point2D b, double tolerance = 1e-6)
+    private static bool AlmostEqual(Point2D a, Point2D b)
     {
+        double tolerance = ComputationalTolerance.LinearToleranceMm;
         return Math.Abs(a.X - b.X) <= tolerance && Math.Abs(a.Y - b.Y) <= tolerance;
     }
 
