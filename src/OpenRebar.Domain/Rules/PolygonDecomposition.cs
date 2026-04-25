@@ -303,6 +303,17 @@ public static class PolygonDecomposition
         bool inside = false;
         int n = vertices.Count;
 
+        // Boundary points are treated as inside for robust CAD behavior.
+        for (int i = 0; i < n; i++)
+        {
+            var start = vertices[i];
+            var end = vertices[(i + 1) % n];
+            if (DistanceToSegment(point, start, end) <= tolerance.LinearToleranceMm)
+            {
+                return true;
+            }
+        }
+
         for (int i = 0, j = n - 1; i < n; j = i++)
         {
             // Use tolerance-aware comparison for Y-axis
@@ -527,6 +538,24 @@ public static class PolygonDecomposition
                point.X <= Math.Max(start.X, end.X) + tol &&
                point.Y >= Math.Min(start.Y, end.Y) - tol &&
                point.Y <= Math.Max(start.Y, end.Y) + tol;
+    }
+
+    private static double DistanceToSegment(Point2D point, Point2D start, Point2D end)
+    {
+        var dx = end.X - start.X;
+        var dy = end.Y - start.Y;
+        var lenSquared = dx * dx + dy * dy;
+
+        if (lenSquared <= GeometryTolerance.ComputationalEpsilonMm)
+        {
+            return point.DistanceTo(start);
+        }
+
+        var t = ((point.X - start.X) * dx + (point.Y - start.Y) * dy) / lenSquared;
+        t = Math.Max(0.0, Math.Min(1.0, t));
+
+        var projection = new Point2D(start.X + t * dx, start.Y + t * dy);
+        return point.DistanceTo(projection);
     }
 
     private static bool IsZero(double value, double tolerance = GeometryTolerance.ComputationalEpsilonMm)

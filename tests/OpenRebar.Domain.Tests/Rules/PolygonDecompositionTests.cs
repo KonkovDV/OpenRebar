@@ -52,6 +52,40 @@ public class PolygonDecompositionTests
             .Should().BeFalse();
     }
 
+    [Fact(DisplayName = "SP 63 §6.1 — Point-in-Polygon Test (Boundary On Edge)")]
+    public void PointInPolygon_OnBoundaryEdge_ShouldReturnTrue()
+    {
+        var polygon = new Polygon([
+            new Point2D(0, 0),
+            new Point2D(1000, 0),
+            new Point2D(1000, 1000),
+            new Point2D(0, 1000)
+        ]);
+
+        PolygonDecomposition.IsPointInPolygon(new Point2D(500, 0), polygon)
+            .Should().BeTrue("boundary points should be considered inside for robust zone classification");
+    }
+
+    [Fact(DisplayName = "SP 63 §6.1 — Point-in-Polygon Test (Boundary With Tolerance)")]
+    public void PointInPolygon_PointNearBoundaryWithinTolerance_ShouldReturnTrue()
+    {
+        var polygon = new Polygon([
+            new Point2D(0, 0),
+            new Point2D(1000, 0),
+            new Point2D(1000, 1000),
+            new Point2D(0, 1000)
+        ]);
+
+        var tolerance = new GeometryTolerance
+        {
+            LinearToleranceMm = 0.1,
+            AreaRatioTolerance = 0.05
+        };
+
+        PolygonDecomposition.IsPointInPolygon(new Point2D(500, -0.05), polygon, tolerance)
+            .Should().BeTrue("near-boundary points inside tolerance should be classified as inside");
+    }
+
     [Fact(DisplayName = "SP 63 §6.1 — Area Calculation (Rectangle)")]
     public void PolygonArea_Rectangle_ShouldBeCorrect()
     {
