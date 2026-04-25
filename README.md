@@ -202,6 +202,36 @@ The repository includes:
 - Citation metadata: [CITATION.cff](CITATION.cff)
 - Funding metadata: [.github/FUNDING.yml](.github/FUNDING.yml)
 
+## Scientific Reporting Standard
+
+### Claim Boundary
+
+This README distinguishes implemented and verified behavior from roadmap intent.
+
+- Verified statements map to executable code paths, contracts, tests, and persisted reports.
+- Planned work remains explicitly framed as future roadmap.
+- Performance and quality metrics are tied to named artifacts and validation lanes, not universal guarantees.
+
+### Reproducibility Baseline
+
+Use this baseline before publishing engineering or benchmark claims:
+
+```bash
+dotnet build OpenRebar.sln --configuration Release
+dotnet test OpenRebar.sln --configuration Release
+cd ml
+python -m pip install --require-hashes -r requirements.locked.txt
+python -m pytest tests -q
+```
+
+For report-derived claims, include the report file path, schema contract version, and commit SHA.
+
+### Citation and Research Reuse
+
+- Cite software metadata via [CITATION.cff](CITATION.cff).
+- For comparative studies, report both achieved quality indicators and unresolved boundary conditions.
+- Keep normative profile and tables version visible when sharing external evidence.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
