@@ -146,7 +146,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         var integerSolution = RoundSolution(finalMaster.Solution ?? [], patterns, itemDemand, m);
 
         // Build cutting plans from the integer solution
-        return BuildResult(integerSolution, patterns, demand, stockLength, requiredLengths, usedFallbackMasterSolver);
+        return BuildResult(integerSolution, patterns, demand, stockLength, requiredLengths, usedFallbackMasterSolver, finalMaster.LpObjectiveValue);
     }
 
     private static OptimizationResult? TryOptimizeExactSmallInstance(
@@ -360,15 +360,15 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     {
         var highs = TrySolveRestrictedMasterLpWithHighs(patterns, demand, m);
         if (highs is not null)
-            return new MasterSolveResult(highs.Value.Solution, highs.Value.Duals, false);
+            return new MasterSolveResult(highs.Value.Solution, highs.Value.Duals, false, highs.Value.ObjectiveValue);
 
         var fallback = SolveRestrictedMasterLpFallback(patterns, demand, m);
-        return new MasterSolveResult(fallback.Solution, fallback.Duals, true);
+        return new MasterSolveResult(fallback.Solution, fallback.Duals, true, fallback.ObjectiveValue);
     }
 
-    private sealed record MasterSolveResult(double[]? Solution, double[] Duals, bool UsedFallbackMasterSolver);
+    private sealed record MasterSolveResult(double[]? Solution, double[] Duals, bool UsedFallbackMasterSolver, double? LpObjectiveValue);
 
-    private static (double[]? Solution, double[] Duals)? TrySolveRestrictedMasterLpWithHighs(
+    private static (double[]? Solution, double[] Duals, double? ObjectiveValue)? TrySolveRestrictedMasterLpWithHighs(
         List<int[]> patterns,
         int[] demand,
         int m)
@@ -377,7 +377,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         {
             int n = patterns.Count;
             if (n == 0)
-                return (null, new double[m]);
+                return (null, new double[m], null);
 
             double infinity = double.PositiveInfinity;
             var colCost = Enumerable.Repeat(1.0, n).ToArray();
@@ -435,7 +435,9 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
                 return null;
 
             var solution = solver.getSolution();
-            return (solution.colvalue, solution.rowdual.Select(Math.Abs).ToArray());
+            // Objective value is the sum of solution (all costs are 1.0 in the column generation master)
+            double objectiveValue = solution.colvalue.Sum();
+            return (solution.colvalue, solution.rowdual.Select(Math.Abs).ToArray(), objectiveValue);
         }
         catch
         {
@@ -443,13 +445,13 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         }
     }
 
-    private static (double[]? Solution, double[] Duals) SolveRestrictedMasterLpFallback(
+    private static (double[]? Solution, double[] Duals, double? ObjectiveValue) SolveRestrictedMasterLpFallback(
         List<int[]> patterns,
         int[] demand,
         int m)
     {
         int n = patterns.Count;
-        if (n == 0) return (null, new double[m]);
+        if (n == 0) return (null, new double[m], null);
 
         double[] x = new double[n];
         double[] duals = new double[m];
@@ -522,7 +524,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             duals[i] = maxCover > 0 ? 1.0 / maxCover : 0;
         }
 
-        return (x, duals);
+        double objectiveValue = x.Sum();
+        return (x, duals, objectiveValue);
     }
 
     #endregion
@@ -674,7 +677,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         List<DemandItem> demand,
         double stockLength,
         IReadOnlyList<double> originalLengths,
-        bool usedFallbackMasterSolver)
+        bool usedFallbackMasterSolver,
+        double? lpObjectiveValue)
     {
         var plans = new List<CuttingPlan>();
 
@@ -704,6 +708,20 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         double totalStock = plans.Count * stockLength;
         double totalWaste = totalStock - totalRequired;
 
+        // Calculate gap: (primal - dual) / dual * 100
+        double primalObjective = plans.Count;
+        double? gap = null;
+        if (lpObjectiveValue.HasValue && lpObjectiveValue.Value > 1e-10)
+        {
+            gap = (primalObjective - lpObjectiveValue.Value) / lpObjectiveValue.Value * 100.0;
+        }
+
+        var provenance = BuildColumnGenerationProvenance(usedFallbackMasterSolver);
+        if (provenance != null && gap.HasValue)
+        {
+            provenance = provenance with { QualityGapPercent = gap.Value };
+        }
+
         return new OptimizationResult
         {
             CuttingPlans = plans,
@@ -711,7 +729,9 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             TotalWasteMm = totalWaste,
             TotalWastePercent = totalStock > 0 ? totalWaste / totalStock * 100 : 0,
             TotalRebarLengthMm = totalRequired,
-            Provenance = BuildColumnGenerationProvenance(usedFallbackMasterSolver)
+            DualBound = lpObjectiveValue,
+            Gap = gap,
+            Provenance = provenance
         };
     }
 

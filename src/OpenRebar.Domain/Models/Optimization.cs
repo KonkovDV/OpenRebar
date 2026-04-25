@@ -79,6 +79,12 @@ public sealed class OptimizationResult
     /// <summary>Estimated cost based on supplier prices.</summary>
     public double? EstimatedCost { get; init; }
 
+    /// <summary>Dual bound from LP relaxation (e.g., from column generation master problem).</summary>
+    public double? DualBound { get; init; }
+
+    /// <summary>Quality gap: (Primal - Dual) / Dual * 100 as a percentage.</summary>
+    public double? Gap { get; init; }
+
     /// <summary>
     /// Execution provenance for the optimizer that produced this result.
     /// Used in the canonical report and verification-oriented tests.
@@ -99,4 +105,7 @@ public sealed record OptimizationProvenance
     public required double DemandAggregationPrecisionMm { get; init; }
     public required string QualityFloor { get; init; }
     public required bool UsedFallbackMasterSolver { get; init; }
+
+    /// <summary>Quality gap in percentage: (primal - dual) / dual * 100.</summary>
+    public double? QualityGapPercent { get; init; }
 }
