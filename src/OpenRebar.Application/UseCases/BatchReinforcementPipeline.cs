@@ -32,11 +32,25 @@ public sealed class BatchReinforcementPipeline
             try
             {
                 var result = await _singlePipeline.ExecuteAsync(input, ct);
-                slabResults.Add(new BatchSlabResult
+                
+                // Check if the pipeline had critical errors
+                if (result.Report?.PartialResult == true && result.Report.Errors.Any(e => e.IsCritical))
                 {
-                    SlabId = slabId,
-                    Result = result
-                });
+                    var criticalError = result.Report.Errors.First(e => e.IsCritical);
+                    failures.Add(new BatchFailure
+                    {
+                        SlabId = slabId,
+                        ErrorMessage = $"{criticalError.Stage}: {criticalError.ErrorMessage}"
+                    });
+                }
+                else
+                {
+                    slabResults.Add(new BatchSlabResult
+                    {
+                        SlabId = slabId,
+                        Result = result
+                    });
+                }
             }
             catch (OperationCanceledException)
             {

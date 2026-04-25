@@ -38,6 +38,8 @@ public sealed record ReinforcementExecutionReport
     public required PlacementExecutionReport Placement { get; init; }
     public required ExecutionSummaryReport Summary { get; init; }
     public IReadOnlyList<string> Warnings { get; init; } = [];
+    public IReadOnlyList<PipelineFailureDiagnostic> Errors { get; init; } = [];
+    public bool PartialResult { get; init; }  // true if pipeline aborted early due to critical error
 }
 
 public sealed record NormativeProfileExecutionReport
@@ -157,4 +159,18 @@ public sealed record ExecutionSummaryReport
     public required double TotalWasteMm { get; init; }
     public required double TotalMassKg { get; init; }
     public double? EstimatedCost { get; init; }
+}
+
+/// <summary>
+/// Diagnostic entry for pipeline failures and recoverable errors.
+/// Allows partial results when non-critical stages fail.
+/// </summary>
+public sealed record PipelineFailureDiagnostic
+{
+    public required string Stage { get; init; }  // e.g., "Parse", "ZoneDetection", "Optimization"
+    public required string ErrorMessage { get; init; }
+    public required string ExceptionType { get; init; }
+    public required DateTimeOffset OccurredAtUtc { get; init; }
+    public string? StackTrace { get; init; }
+    public bool IsCritical { get; init; }  // true = pipeline aborted, false = skipped stage
 }

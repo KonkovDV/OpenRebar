@@ -48,6 +48,7 @@ public sealed class GenerateReinforcementPipeline
         CancellationToken cancellationToken = default)
     {
         var result = new PipelineResult();
+        var failures = new List<PipelineFailureDiagnostic>();
 
         _logger.Info(
             "Starting reinforcement pipeline",
@@ -56,52 +57,198 @@ public sealed class GenerateReinforcementPipeline
             ("levelName", input.Metadata.LevelName),
             ("isolineFilePath", input.IsolineFilePath));
 
-        // 1. Parse isoline file
-        var parser = GetParser(input.IsolineFilePath);
-        var rawZones = await parser.ParseAsync(
-            input.IsolineFilePath,
-            input.Legend,
-            cancellationToken);
-        result.ParsedZoneCount = rawZones.Count;
-        _logger.Info("Parsed reinforcement zones", ("parsedZoneCount", result.ParsedZoneCount));
+        // 1. Parse isoline file (CRITICAL - abort on failure)
+        IReadOnlyList<ReinforcementZone> rawZones;
+        try
+        {
+            var parser = GetParser(input.IsolineFilePath);
+            rawZones = await parser.ParseAsync(
+                input.IsolineFilePath,
+                input.Legend,
+                cancellationToken);
+            result.ParsedZoneCount = rawZones.Count;
+            _logger.Info("Parsed reinforcement zones", ("parsedZoneCount", result.ParsedZoneCount));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var diagnostic = new PipelineFailureDiagnostic
+            {
+                Stage = "Parse",
+                ErrorMessage = ex.Message,
+                ExceptionType = ex.GetType().Name,
+                OccurredAtUtc = DateTimeOffset.UtcNow,
+                StackTrace = ex.StackTrace,
+                IsCritical = true
+            };
+            failures.Add(diagnostic);
+            _logger.Error("Failed to parse isoline file; aborting pipeline", ex, ("filePath", input.IsolineFilePath));
+            
+            result.Report = BuildPartialReport(input, failures, result);
+            if (input.PersistReport)
+            {
+                var outputPath = ResolveReportOutputPath(input);
+                result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+                _logger.Info("Stored partial reinforcement report after parse failure", ("outputPath", result.StoredReport.OutputPath));
+            }
+            return result;
+        }
 
         // 2. Classify zones and decompose complex ones
-        var classifiedZones = _zoneDetector.ClassifyAndDecompose(rawZones, input.Slab);
-        result.ClassifiedZones = classifiedZones;
-        _logger.Info("Classified reinforcement zones", ("classifiedZoneCount", classifiedZones.Count));
+        IReadOnlyList<ReinforcementZone> classifiedZones;
+        try
+        {
+            classifiedZones = _zoneDetector.ClassifyAndDecompose(rawZones, input.Slab);
+            result.ClassifiedZones = classifiedZones;
+            _logger.Info("Classified reinforcement zones", ("classifiedZoneCount", classifiedZones.Count));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var diagnostic = new PipelineFailureDiagnostic
+            {
+                Stage = "ZoneDetection",
+                ErrorMessage = ex.Message,
+                ExceptionType = ex.GetType().Name,
+                OccurredAtUtc = DateTimeOffset.UtcNow,
+                StackTrace = ex.StackTrace,
+                IsCritical = true
+            };
+            failures.Add(diagnostic);
+            _logger.Error("Zone classification failed; aborting pipeline", ex);
+            
+            // Use raw zones as fallback
+            classifiedZones = rawZones;
+        }
 
         // 3. Calculate rebar layout per zone
-        var zonesWithRebars = _calculator.CalculateRebars(classifiedZones, input.Slab);
-        result.TotalRebarSegments = zonesWithRebars.Sum(z => z.Rebars.Count);
-        _logger.Info(
-            "Calculated reinforcement layout",
-            ("totalRebarSegments", result.TotalRebarSegments),
-            ("zoneCount", zonesWithRebars.Count));
+        IReadOnlyList<ReinforcementZone> zonesWithRebars;
+        try
+        {
+            zonesWithRebars = _calculator.CalculateRebars(classifiedZones, input.Slab);
+            result.TotalRebarSegments = zonesWithRebars.Sum(z => z.Rebars.Count);
+            _logger.Info(
+                "Calculated reinforcement layout",
+                ("totalRebarSegments", result.TotalRebarSegments),
+                ("zoneCount", zonesWithRebars.Count));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var diagnostic = new PipelineFailureDiagnostic
+            {
+                Stage = "RebarCalculation",
+                ErrorMessage = ex.Message,
+                ExceptionType = ex.GetType().Name,
+                OccurredAtUtc = DateTimeOffset.UtcNow,
+                StackTrace = ex.StackTrace,
+                IsCritical = true
+            };
+            failures.Add(diagnostic);
+            _logger.Error("Rebar calculation failed; aborting pipeline", ex);
+            
+            result.Report = BuildPartialReport(input, failures, result);
+            if (input.PersistReport)
+            {
+                var outputPath = ResolveReportOutputPath(input);
+                result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+                _logger.Info("Stored partial reinforcement report after calculation failure", ("outputPath", result.StoredReport.OutputPath));
+            }
+            return result;
+        }
 
-        // 4. Optimize cutting (group by diameter)
+        // 4. Load supplier catalog (recoverable failure)
+        SupplierCatalog catalog;
+        try
+        {
+            catalog = input.SupplierCatalogPath is not null
+                ? await _catalogLoader.LoadAsync(input.SupplierCatalogPath, cancellationToken)
+                : _catalogLoader.GetDefaultCatalog();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            var diagnostic = new PipelineFailureDiagnostic
+            {
+                Stage = "CatalogLoading",
+                ErrorMessage = ex.Message,
+                ExceptionType = ex.GetType().Name,
+                OccurredAtUtc = DateTimeOffset.UtcNow,
+                StackTrace = ex.StackTrace,
+                IsCritical = false
+            };
+            failures.Add(diagnostic);
+            _logger.Warn("Failed to load supplier catalog; using default", ("catalogPath", input.SupplierCatalogPath));
+            
+            catalog = _catalogLoader.GetDefaultCatalog();
+        }
+
+        // 5. Optimize cutting (group by diameter) - try to optimize each diameter
         var rebarsByDiameter = zonesWithRebars
             .SelectMany(z => z.Rebars)
             .GroupBy(r => r.DiameterMm);
 
-        var catalog = input.SupplierCatalogPath is not null
-            ? await _catalogLoader.LoadAsync(input.SupplierCatalogPath, cancellationToken)
-            : _catalogLoader.GetDefaultCatalog();
-
         var optimizationResults = new Dictionary<int, OptimizationResult>();
         foreach (var group in rebarsByDiameter)
         {
-            var lengths = group.Select(r => r.TotalLength).ToList();
-            var optResult = _optimizer.Optimize(lengths, catalog.AvailableLengths, input.OptimizationSettings);
-            optimizationResults[group.Key] = optResult;
-            _logger.Info(
-                "Optimized cutting plan",
-                ("diameterMm", group.Key),
-                ("stockBarsNeeded", optResult.TotalStockBarsNeeded),
-                ("wastePercent", Math.Round(optResult.TotalWastePercent, 2)));
+            try
+            {
+                var lengths = group.Select(r => r.TotalLength).ToList();
+                var optResult = _optimizer.Optimize(lengths, catalog.AvailableLengths, input.OptimizationSettings);
+                optimizationResults[group.Key] = optResult;
+                _logger.Info(
+                    "Optimized cutting plan",
+                    ("diameterMm", group.Key),
+                    ("stockBarsNeeded", optResult.TotalStockBarsNeeded),
+                    ("wastePercent", Math.Round(optResult.TotalWastePercent, 2)));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                var diagnostic = new PipelineFailureDiagnostic
+                {
+                    Stage = $"Optimization(d{group.Key}mm)",
+                    ErrorMessage = ex.Message,
+                    ExceptionType = ex.GetType().Name,
+                    OccurredAtUtc = DateTimeOffset.UtcNow,
+                    StackTrace = ex.StackTrace,
+                    IsCritical = false
+                };
+                failures.Add(diagnostic);
+                _logger.Warn(
+                    "Optimization failed for diameter; skipping",
+                    ("diameterMm", group.Key),
+                    ("message", ex.Message));
+                
+                // Create a fallback optimization result (no optimization, use all lengths from single stock)
+                var maxStockLength = catalog.AvailableLengths.MaxBy(s => s.LengthMm)?.LengthMm ?? 12000;
+                var cuts = group.Select(r => r.TotalLength).ToList();
+                var totalLength = cuts.Sum();
+                var stocksNeeded = (int)Math.Ceiling(totalLength / maxStockLength);
+                var cuttingPlans = new List<CuttingPlan>();
+                for (int i = 0; i < stocksNeeded; i++)
+                {
+                    var planCuts = i == stocksNeeded - 1
+                        ? cuts.Skip(i * 1).ToList()  // remaining cuts
+                        : cuts.Skip(i * 1).Take(1).ToList();
+                    cuttingPlans.Add(new CuttingPlan
+                    {
+                        StockLengthMm = maxStockLength,
+                        Cuts = planCuts
+                    });
+                }
+                
+                optimizationResults[group.Key] = new OptimizationResult
+                {
+                    CuttingPlans = cuttingPlans,
+                    TotalStockBarsNeeded = stocksNeeded,
+                    TotalWasteMm = cuttingPlans.Sum(p => p.WasteMm),
+                    TotalWastePercent = cuttingPlans.Average(p => p.WastePercent),
+                    TotalRebarLengthMm = totalLength,
+                    TotalMassKg = null,
+                    EstimatedCost = null,
+                    Provenance = null
+                };
+            }
         }
         result.OptimizationResults = optimizationResults;
 
-        // 5. Place in Revit (if requested)
+        // 6. Place in Revit (if requested)
         if (input.PlaceInRevit)
         {
             try
@@ -122,6 +269,17 @@ public sealed class GenerateReinforcementPipeline
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                var diagnostic = new PipelineFailureDiagnostic
+                {
+                    Stage = "RevitPlacement",
+                    ErrorMessage = ex.Message,
+                    ExceptionType = ex.GetType().Name,
+                    OccurredAtUtc = DateTimeOffset.UtcNow,
+                    StackTrace = ex.StackTrace,
+                    IsCritical = false
+                };
+                failures.Add(diagnostic);
+                
                 result.PlacementResult = new PlacementResult
                 {
                     TotalRebarsPlaced = 0,
@@ -138,19 +296,20 @@ public sealed class GenerateReinforcementPipeline
             }
         }
 
-        result.Report = BuildReport(input, catalog.SupplierName, zonesWithRebars, result);
+        result.Report = BuildReport(input, catalog.SupplierName, zonesWithRebars, result, failures);
 
         if (input.PersistReport)
         {
             var outputPath = ResolveReportOutputPath(input);
             result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
-            _logger.Info("Stored reinforcement report", ("outputPath", result.StoredReport.OutputPath));
+            _logger.Info("Stored reinforcement report", ("outputPath", result.StoredReport.OutputPath), ("hasErrors", failures.Any()));
         }
 
         _logger.Info(
             "Pipeline completed",
             ("totalWastePercent", Math.Round(result.TotalWastePercent, 2)),
-            ("totalMassKg", Math.Round(result.TotalMassKg, 2)));
+            ("totalMassKg", Math.Round(result.TotalMassKg, 2)),
+            ("failureCount", failures.Count));
 
         return result;
     }
@@ -167,7 +326,8 @@ public sealed class GenerateReinforcementPipeline
         PipelineInput input,
         string supplierName,
         IReadOnlyList<ReinforcementZone> zonesWithRebars,
-        PipelineResult result)
+        PipelineResult result,
+        IReadOnlyList<PipelineFailureDiagnostic> failures)
     {
         var slabBox = input.Slab.OuterBoundary.GetBoundingBox();
         var placement = result.PlacementResult;
@@ -263,7 +423,91 @@ public sealed class GenerateReinforcementPipeline
                 TotalMassKg = result.TotalMassKg,
                 EstimatedCost = estimatedCosts.Count > 0 ? estimatedCosts.Sum() : null
             },
-            Warnings = placement?.Warnings ?? []
+            Warnings = placement?.Warnings ?? [],
+            Errors = failures,
+            PartialResult = failures.Any(f => f.IsCritical)
+        };
+    }
+
+    /// <summary>
+    /// Build a minimal report when pipeline aborts early due to critical failure.
+    /// Includes diagnostic information but minimal execution details.
+    /// </summary>
+    private static ReinforcementExecutionReport BuildPartialReport(
+        PipelineInput input,
+        IReadOnlyList<PipelineFailureDiagnostic> failures,
+        PipelineResult result)
+    {
+        return new ReinforcementExecutionReport
+        {
+            GeneratedAtUtc = DateTimeOffset.UtcNow,
+            Metadata = input.Metadata,
+            NormativeProfile = new NormativeProfileExecutionReport
+            {
+                ProfileId = input.Metadata.NormativeProfileId,
+                Jurisdiction = input.Metadata.CountryCode,
+                DesignCode = input.Metadata.DesignCode,
+                TablesVersion = input.Metadata.NormativeTablesVersion
+            },
+            AnalysisProvenance = new AnalysisProvenanceExecutionReport
+            {
+                Geometry = new GeometryProcessingExecutionReport
+                {
+                    DecompositionAlgorithm = "n/a",
+                    RectangularShortcutFillRatio = 0,
+                    MinRectangleAreaMm2 = 0,
+                    SamplingResolutionPerAxis = 0,
+                    CellCoverageInclusionThreshold = 0
+                },
+                Optimization = new OptimizationProcessingExecutionReport
+                {
+                    OptimizerId = "n/a",
+                    MasterProblemStrategy = "n/a",
+                    PricingStrategy = "n/a",
+                    IntegerizationStrategy = "n/a",
+                    DemandAggregationPrecisionMm = 0,
+                    QualityFloor = "n/a",
+                    AnyFallbackMasterSolverUsed = false
+                }
+            },
+            IsolineFileName = Path.GetFileName(input.IsolineFilePath),
+            IsolineFileFormat = Path.GetExtension(input.IsolineFilePath).TrimStart('.').ToLowerInvariant(),
+            Slab = new SlabExecutionReport
+            {
+                ConcreteClass = input.Slab.ConcreteClass,
+                ThicknessMm = input.Slab.ThicknessMm,
+                CoverMm = input.Slab.CoverMm,
+                EffectiveDepthMm = input.Slab.EffectiveDepthMm,
+                AreaMm2 = input.Slab.OuterBoundary.CalculateArea(),
+                OpeningCount = input.Slab.Openings.Count,
+                BoundingBox = ToBoundingBoxReport(input.Slab.OuterBoundary.GetBoundingBox())
+            },
+            Zones = [],
+            OptimizationByDiameter = [],
+            Placement = new PlacementExecutionReport
+            {
+                Requested = false,
+                Executed = false,
+                Success = false,
+                TotalRebarsPlaced = 0,
+                TotalTagsCreated = 0,
+                TotalBendingDetails = 0,
+                Warnings = [],
+                Errors = []
+            },
+            Summary = new ExecutionSummaryReport
+            {
+                ParsedZoneCount = result.ParsedZoneCount,
+                ClassifiedZoneCount = 0,
+                TotalRebarSegments = 0,
+                TotalWastePercent = 0,
+                TotalWasteMm = 0,
+                TotalMassKg = 0,
+                EstimatedCost = null
+            },
+            Warnings = [],
+            Errors = failures,
+            PartialResult = true
         };
     }
 

@@ -98,15 +98,19 @@ public class GenerateReinforcementPipelineTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UnsupportedInputFormat_ShouldThrowInvalidIsolineFileException()
+    public async Task ExecuteAsync_UnsupportedInputFormat_ShouldReturnPartialResultWithError()
     {
         var sut = CreateSut();
         var input = CreateInput("plan.gif", placeInRevit: false);
 
-        var act = async () => await sut.ExecuteAsync(input);
+        var result = await sut.ExecuteAsync(input);
 
-        await act.Should().ThrowAsync<InvalidIsolineFileException>()
-            .WithMessage("*Unsupported isoline file format*");
+        result.Report.Should().NotBeNull();
+        result.Report!.PartialResult.Should().BeTrue();
+        result.Report.Errors.Should().ContainSingle();
+        result.Report.Errors[0].Stage.Should().Be("Parse");
+        result.Report.Errors[0].IsCritical.Should().BeTrue();
+        result.Report.Errors[0].ErrorMessage.Should().Contain("Unsupported isoline file format");
     }
 
     [Fact]
