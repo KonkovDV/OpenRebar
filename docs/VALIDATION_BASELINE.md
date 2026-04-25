@@ -109,6 +109,11 @@ For each lane, require:
 - at least one targeted suite proving touched behavior,
 - one repository-level dependency audit (`--vulnerable` and `--outdated`) captured in commit evidence.
 
+License governance gate for test dependencies:
+
+- Do not auto-upgrade assertion libraries if the new major version changes license terms.
+- If dependency output indicates a commercial-only upgrade path for common OSS/test workflows, pin the last acceptable version and document the rationale in the commit evidence.
+
 ## Evidence Rules
 
 - Prefer commands and outputs over narrative-only claims.
