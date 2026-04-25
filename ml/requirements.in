@@ -2,9 +2,9 @@
 # Isoline image segmentation service for PNG processing.
 # Generated from audit finding ML-1 (ML Supply-Chain Hardening)
 #
-# To generate locked requirements.txt with hashes:
+# To generate requirements.locked.txt with hashes:
 #   pip install pip-tools
-#   pip-compile --generate-hashes -o requirements.txt requirements.in
+#   pip-compile --generate-hashes -o requirements.locked.txt requirements.in
 
 # Core scientific computing
 numpy>=1.26,<2.0
