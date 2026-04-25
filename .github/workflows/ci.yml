@@ -67,6 +67,12 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Refresh locked requirements
+        working-directory: ml
+        run: |
+          pip install pip-tools
+          pip-compile --generate-hashes --output-file=requirements.locked.txt requirements.in
+
       - name: Install ML dependencies
         run: |
           python -m pip install --upgrade pip

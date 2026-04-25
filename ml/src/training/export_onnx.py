@@ -66,7 +66,6 @@ def export_to_onnx(
                 "image": {0: "batch", 2: "height", 3: "width"},
                 "logits": {0: "batch", 2: "height", 3: "width"},
             },
-            dynamo=False if supports_dynamo else False,
         )
 
     print(f"Exported ONNX model to {output_path}")
