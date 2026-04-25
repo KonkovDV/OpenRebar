@@ -47,8 +47,13 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Refresh locked requirements
+        run: |
+          python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
+          python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in
+
       - name: Install ML dependencies
-        run: pip install --require-hashes -r ml/requirements.locked.txt
+        run: python -m pip install --require-hashes -r ml/requirements.locked.txt
 
       - name: Run Python smoke tests
         env:

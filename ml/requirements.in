@@ -21,18 +21,13 @@ onnxruntime>=1.17,<2.0
 
 # Linux-only transitive runtime deps for torch wheels on GitHub ubuntu-latest.
 # Keep these explicit so requirements.locked.txt includes hashes for require-hashes mode.
-nvidia-cuda-nvrtc-cu12==12.1.105; platform_system == "Linux"
-nvidia-cuda-runtime-cu12==12.1.105; platform_system == "Linux"
-nvidia-cuda-cupti-cu12==12.1.105; platform_system == "Linux"
-nvidia-cudnn-cu12==8.9.2.26; platform_system == "Linux"
-nvidia-cublas-cu12==12.1.3.1; platform_system == "Linux"
-nvidia-cufft-cu12==11.0.2.54; platform_system == "Linux"
-nvidia-curand-cu12==10.3.2.106; platform_system == "Linux"
-nvidia-cusolver-cu12==11.4.5.107; platform_system == "Linux"
-nvidia-cusparse-cu12==12.1.0.106; platform_system == "Linux"
-nvidia-nccl-cu12==2.19.3; platform_system == "Linux"
-nvidia-nvtx-cu12==12.1.105; platform_system == "Linux"
-triton==2.2.0; platform_system == "Linux"
+cuda-bindings>=13.0.3,<14; platform_system == "Linux"
+cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"
+nvidia-cudnn-cu13==9.19.0.56; platform_system == "Linux"
+nvidia-cusparselt-cu13==0.8.0; platform_system == "Linux"
+nvidia-nccl-cu13==2.28.9; platform_system == "Linux"
+nvidia-nvshmem-cu13==3.4.5; platform_system == "Linux"
+triton==3.6.0; platform_system == "Linux"
 
 # REST API framework
 fastapi>=0.110,<1.0
