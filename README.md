@@ -172,6 +172,7 @@ The repository includes:
 
 ## Project Docs
 
+- **Normative Traceability**: [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — mapping of SP 63 clauses to code and tests
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
 - Comprehensive audit: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)

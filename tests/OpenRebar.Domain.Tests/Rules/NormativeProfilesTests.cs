@@ -6,7 +6,7 @@ namespace OpenRebar.Domain.Tests.Rules;
 
 public class NormativeProfilesTests
 {
-    [Fact]
+    [Fact(DisplayName = "SP 63 §1.1 — Normative Profile Metadata")]
     public void DefaultProfile_ShouldExposeStableMetadata()
     {
         var profile = NormativeProfiles.Sp63_2018;
@@ -17,7 +17,7 @@ public class NormativeProfilesTests
         profile.TablesVersion.Should().Be("ru.sp63.2018.tables.v1");
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §N-9.1 — Normative Profile Version Tracking")]
     public void PipelineExecutionMetadata_DefaultsShouldTrackNormativeRegistry()
     {
         var metadata = new PipelineExecutionMetadata();
@@ -26,7 +26,7 @@ public class NormativeProfilesTests
         metadata.NormativeTablesVersion.Should().Be(NormativeProfiles.DefaultTablesVersion);
     }
 
-    [Theory]
+    [Theory(DisplayName = "SP 63 §10.3.24 — Bond Stress by Concrete Class")]
     [InlineData("B15", 0.75)]
     [InlineData("C12/15", 0.75)]
     [InlineData("B25", 1.05)]
@@ -37,7 +37,7 @@ public class NormativeProfilesTests
         AnchorageRules.GetBondStress(concreteClass).Should().Be(expected);
     }
 
-    [Theory]
+    [Theory(DisplayName = "SP 63 §5.2.1 — Rebar Design Strength by Steel Class")]
     [InlineData("A240", 210)]
     [InlineData("A-I", 210)]
     [InlineData("A400", 355)]
@@ -48,7 +48,7 @@ public class NormativeProfilesTests
         AnchorageRules.GetDesignStrength(steelClass).Should().Be(expected);
     }
 
-    [Theory]
+    [Theory(DisplayName = "SP 63 §5.1.7 — Periodic Profile Detection")]
     [InlineData("A240", false)]
     [InlineData("A-I", false)]
     [InlineData("A400", true)]
@@ -59,7 +59,7 @@ public class NormativeProfilesTests
         AnchorageRules.IsPeriodicProfile(steelClass).Should().Be(expected);
     }
 
-    [Theory]
+    [Theory(DisplayName = "SP 63 Table 1.2 — Rebar Linear Mass")]
     [InlineData(6, 0.222)]
     [InlineData(12, 0.888)]
     [InlineData(25, 3.850)]

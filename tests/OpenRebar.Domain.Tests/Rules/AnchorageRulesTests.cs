@@ -5,7 +5,7 @@ namespace OpenRebar.Domain.Tests.Rules;
 
 public class AnchorageRulesTests
 {
-    [Theory]
+    [Theory(DisplayName = "SP 63 §9.2.1 — Anchorage Length Minimum Constraints")]
     [InlineData(12, "A500C", "B25", 200)]    // min(15*12=180, 200, calc) → at least 200mm
     [InlineData(16, "A500C", "B25", 240)]    // min(15*16=240, 200, calc)
     [InlineData(20, "A500C", "B25", 300)]    // min(15*20=300, 200, calc)
@@ -17,7 +17,7 @@ public class AnchorageRulesTests
         result.Should().BeGreaterThanOrEqualTo(minExpected);
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §9.2.1 — Anchorage Length Golden Case (d12 A500C B25)")]
     public void AnchorageLength_A500C_B25_d12_ShouldBeReasonable()
     {
         // Current domain formula includes the periodic-profile bond coefficient η1 = 2.5
@@ -29,7 +29,7 @@ public class AnchorageRulesTests
             "anchorage for d12 A500C B25 should be about 500mm with the current η1·η2 bond model");
     }
 
-    [Theory]
+    [Theory(DisplayName = "SP 63 §9.2.2 — Lap Length Must Exceed Anchorage")]
     [InlineData(12, "A500C", "B25")]
     [InlineData(16, "A400", "B30")]
     [InlineData(20, "A500C", "B20")]
@@ -42,7 +42,7 @@ public class AnchorageRulesTests
         lap.Should().BeGreaterThan(anchorage, "lap splice length must exceed anchorage length");
     }
 
-    [Theory]
+    [Theory(DisplayName = "SP 63 §9.2.2 — Lap Length Minimum (20·d or 250mm)")]
     [InlineData(12)]
     [InlineData(16)]
     [InlineData(20)]

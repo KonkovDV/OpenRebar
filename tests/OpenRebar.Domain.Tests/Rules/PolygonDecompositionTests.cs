@@ -6,7 +6,7 @@ namespace OpenRebar.Domain.Tests.Rules;
 
 public class PolygonDecompositionTests
 {
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Geometric Decomposition: Rectangle Shortcut")]
     public void DecomposeRectangle_ShouldReturnSingleBbox()
     {
         // A rectangular polygon should decompose to a single bounding box
@@ -24,7 +24,7 @@ public class PolygonDecompositionTests
         result[0].Height.Should().BeApproximately(2000, 1);
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Point-in-Polygon Test (Inside)")]
     public void PointInPolygon_InsideRectangle_ShouldReturnTrue()
     {
         var polygon = new Polygon([
@@ -38,7 +38,7 @@ public class PolygonDecompositionTests
             .Should().BeTrue();
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Point-in-Polygon Test (Outside)")]
     public void PointInPolygon_OutsideRectangle_ShouldReturnFalse()
     {
         var polygon = new Polygon([
@@ -52,7 +52,7 @@ public class PolygonDecompositionTests
             .Should().BeFalse();
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Area Calculation (Rectangle)")]
     public void PolygonArea_Rectangle_ShouldBeCorrect()
     {
         var polygon = new Polygon([
@@ -65,7 +65,7 @@ public class PolygonDecompositionTests
         polygon.CalculateArea().Should().BeApproximately(6_000_000, 1); // 3000 * 2000
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Area Calculation (Triangle)")]
     public void PolygonArea_Triangle_ShouldBeCorrect()
     {
         var polygon = new Polygon([
@@ -77,7 +77,7 @@ public class PolygonDecompositionTests
         polygon.CalculateArea().Should().BeApproximately(6_000_000, 1); // 0.5 * 4000 * 3000
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Rectangular Decomposition with Metrics")]
     public void DecomposeWithMetrics_Rectangle_ShouldUseRectangularShortcut()
     {
         var polygon = new Polygon([
@@ -95,7 +95,7 @@ public class PolygonDecompositionTests
         result.Metrics.OverCoverageRatio.Should().BeApproximately(0.0, 0.001);
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Decomposition with Coverage Metrics (L-Shape)")]
     public void DecomposeWithMetrics_LShape_ShouldProvideCoverageEvidence()
     {
         var polygon = new Polygon([
@@ -118,7 +118,7 @@ public class PolygonDecompositionTests
             "the decomposition should not explode over-coverage for a simple L-shape");
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Exact Coverage for Orthogonal Corridor")]
     public void DecomposeWithMetrics_ThinOrthogonalCorridor_ShouldUseExactCoveragePath()
     {
         var polygon = new Polygon([
@@ -138,7 +138,7 @@ public class PolygonDecompositionTests
         result.Metrics.OverCoverageRatio.Should().BeApproximately(0.0, 0.001);
     }
 
-    [Fact]
+    [Fact(DisplayName = "SP 63 §6.1 — Complex Concave Geometry")]
     public void DecomposeWithMetrics_StronglyConcaveOrthogonalShape_ShouldRetainExactCoverage()
     {
         var polygon = new Polygon([
