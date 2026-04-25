@@ -96,6 +96,19 @@ Interpretation rules:
 - formatting output is a hygiene signal, not by itself a product-correctness signal.
 - workflow permission scope and Dependabot surface coverage are governance checks, not runtime correctness checks.
 
+## Dependency Modernization Policy
+
+When `dotnet list ... --outdated` shows both runtime and test-stack updates, apply modernization in two lanes:
+
+1. Runtime lane first (application, infrastructure, host projects): prioritize security posture and production behavior.
+2. Test lane second (`FluentAssertions`, `Microsoft.NET.Test.Sdk`, `xunit.runner.visualstudio`): isolate potential assertion/discovery breaking changes.
+
+For each lane, require:
+
+- lockfile refresh via `dotnet restore` before validation,
+- at least one targeted suite proving touched behavior,
+- one repository-level dependency audit (`--vulnerable` and `--outdated`) captured in commit evidence.
+
 ## Evidence Rules
 
 - Prefer commands and outputs over narrative-only claims.
