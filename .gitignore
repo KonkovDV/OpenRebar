@@ -83,3 +83,7 @@ coverage/
 .dotnet8-local/
 _OpenRebar_*.txt
 ml/.venv-ci-*/
+
+# Keep root markdown surface minimal; store audit and task documents in docs/
+/HYPER_DEEP_AUDIT_REPORT*.md
+/TASKS*.md

@@ -195,7 +195,7 @@ The repository includes:
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
 - Comprehensive audit: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Audit and roadmap: [HYPER_DEEP_AUDIT_REPORT.md](HYPER_DEEP_AUDIT_REPORT.md), [TASKS.md](TASKS.md)
+- Audit and roadmap: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)

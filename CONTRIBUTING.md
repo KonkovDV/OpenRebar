@@ -49,7 +49,7 @@ pytest tests -q
 - Link changed contracts, docs, or audit notes when behavior changes
 - Add or update tests for bug fixes and new behavior
 - Keep publication-facing docs accurate: `README.md`, `docs/architecture.md`,
-  `HYPER_DEEP_AUDIT_REPORT.md`, `TASKS.md`
+  `docs/HYPER_DEEP_AUDIT_REPORT.md`, `docs/TASKS.md`
 
 ## Security
 

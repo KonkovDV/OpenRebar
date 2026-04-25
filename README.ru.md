@@ -185,15 +185,15 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 
 ## Документация
 
-- Архитектурные заметки: docs/architecture.md
-- Комплексный аудит: docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md
-- Changelog: CHANGELOG.md
-- Audit и roadmap: HYPER_DEEP_AUDIT_REPORT.md, TASKS.md
-- Contribution guide: CONTRIBUTING.md
-- Security policy: SECURITY.md
-- Code of conduct: CODE_OF_CONDUCT.md
-- Citation metadata: CITATION.cff
-- Funding metadata: .github/FUNDING.yml
+- Архитектурные заметки: [docs/architecture.md](docs/architecture.md)
+- Комплексный аудит: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+- Audit и roadmap: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
+- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security policy: [SECURITY.md](SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Citation metadata: [CITATION.cff](CITATION.cff)
+- Funding metadata: [.github/FUNDING.yml](.github/FUNDING.yml)
 
 ## Академический Стандарт Отчётности
 
