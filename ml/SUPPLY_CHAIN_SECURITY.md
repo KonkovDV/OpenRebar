@@ -16,10 +16,11 @@ The locked requirements file (`requirements.locked.txt`) contains all transitive
 
 ```bash
 # Install with hash verification (prevents package substitution attacks)
-pip install --require-hashes -r ml/requirements.locked.txt
+python -m pip install --require-hashes -r ml/requirements.locked.txt
 
-# Or use pip-tools for updates
-pip-compile --generate-hashes -o requirements.locked.txt requirements.in
+# Refresh the lock with the pinned pip-tools bootstrap used in CI
+python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
+python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in
 ```
 
 ### Why Hash Verification?
@@ -30,10 +31,21 @@ pip-compile --generate-hashes -o requirements.locked.txt requirements.in
 
 ### Generating/Updating Locks
 
-1. Edit `requirements.in` with version constraints
-2. Run `pip-compile --generate-hashes -o requirements.locked.txt requirements.in`
-3. Commit the new `requirements.locked.txt` with a detailed commit message
-4. Review all transitive dependencies added/removed
+1. Edit `ml/requirements.in` with version constraints
+2. Install the pinned pip-tools bootstrap from `.github/requirements/pip-tools.locked.txt`
+3. Run `python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in`
+4. Commit the new `ml/requirements.locked.txt` with a detailed commit message
+5. Review all transitive dependencies added/removed
+
+### Platform Nuance: Linux-only Torch Dependencies
+
+PyTorch 2.11 introduces Linux-only sidecar dependencies that may not materialize when a lock is regenerated on Windows alone. To keep GitHub Actions reproducible, the Ubuntu workflows refresh `ml/requirements.locked.txt` before installation using the pinned pip-tools bootstrap in `.github/requirements/pip-tools.locked.txt`.
+
+Operational rule:
+
+- keep `ml/requirements.in` as the declarative source of truth,
+- keep `ml/requirements.locked.txt` committed for reviewability,
+- let Ubuntu CI regenerate the lock before install so Linux-only dependency hashes are present.
 
 ## 2. Model Checkpoint Verification
 
@@ -114,9 +126,9 @@ Example CI step (add to `.github/workflows/ci.yml`):
 ```yaml
 - name: Verify ML dependencies
   run: |
-    pip install pip-tools
-    pip-compile --generate-hashes requirements.in --dry-run
-    pip install --require-hashes -r ml/requirements.locked.txt --dry-run
+    python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
+    python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in
+    python -m pip install --require-hashes -r ml/requirements.locked.txt --dry-run
 
 - name: Validate model manifest
   run: |
@@ -142,8 +154,8 @@ jobs:
       
       - name: Update requirements.locked.txt
         run: |
-          pip install pip-tools
-          pip-compile --generate-hashes -U requirements.in -o requirements.locked.txt
+          python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
+          python -m piptools compile --allow-unsafe --generate-hashes -U --output-file=ml/requirements.locked.txt ml/requirements.in
       
       - name: Create PR with updated dependencies
         uses: peter-evans/create-pull-request@v5
@@ -158,9 +170,10 @@ jobs:
 ### Adding a New Dependency
 
 1. Add to `requirements.in` with version constraint
-2. Run `pip-compile --generate-hashes -o requirements.locked.txt requirements.in`
-3. Review the transitive dependencies added
-4. Commit both files with explanation of why dependency was added
+2. Run `python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt`
+3. Run `python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in`
+4. Review the transitive dependencies added
+5. Commit both files with explanation of why dependency was added
 
 ### Adding a New Model
 
@@ -182,7 +195,7 @@ jobs:
 | Practice | Implementation |
 |----------|-----------------|
 | Pinned versions | All in `requirements.locked.txt` with hashes |
-| Transitive lock | `pip-compile` captures all dependencies |
+| Transitive lock | pinned `pip-tools` bootstrap + `python -m piptools compile` captures all dependencies |
 | Hash verification | `pip install --require-hashes` enforces verification |
 | Model provenance | `MANIFEST.json` tracks training date, framework, metrics |
 | Audit trail | Git commit history shows all dependency changes |
@@ -198,7 +211,7 @@ jobs:
 **Solution**:
 ```bash
 pip cache purge
-pip install --require-hashes --no-cache-dir -r requirements.locked.txt
+python -m pip install --require-hashes --no-cache-dir -r requirements.locked.txt
 ```
 
 ### `pip-compile` fails

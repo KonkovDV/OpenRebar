@@ -185,10 +185,11 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 
 ## Документация
 
+- Роутер документации: [docs/README.md](docs/README.md)
 - Архитектурные заметки: [docs/architecture.md](docs/architecture.md)
 - Комплексный аудит: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Audit и roadmap: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
+- Audit и roadmap archive: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
@@ -215,6 +216,14 @@ dotnet test OpenRebar.sln --configuration Release
 cd ml
 python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q
+```
+
+Если менялись ML-зависимости или workflow-логика, дополнительно проверьте pinned lock-refresh path, который используется в Ubuntu CI:
+
+```bash
+cd ml
+python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
+python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in
 ```
 
 Для утверждений на основе отчётов указывайте путь к report-файлу, версию schema-контракта и commit SHA.

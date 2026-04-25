@@ -191,11 +191,12 @@ The repository includes:
 
 ## Project Docs
 
+- Documentation router: [docs/README.md](docs/README.md)
 - **Normative Traceability**: [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — mapping of SP 63 clauses to code and tests
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
 - Comprehensive audit: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
+- Audit and roadmap archive: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Audit and roadmap: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
@@ -222,6 +223,14 @@ dotnet test OpenRebar.sln --configuration Release
 cd ml
 python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q
+```
+
+If you changed ML dependency governance or workflow behavior, also verify the pinned lock-refresh path used on Ubuntu CI runners:
+
+```bash
+cd ml
+python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
+python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in
 ```
 
 For report-derived claims, include the report file path, schema contract version, and commit SHA.
