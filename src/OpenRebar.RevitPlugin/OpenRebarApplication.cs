@@ -53,6 +53,6 @@ public sealed class OpenRebarApplication : IExternalApplication
 #else
 internal static class OpenRebarApplicationPlaceholder
 {
-    public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the Revit application entry point.";
+  public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the Revit application entry point.";
 }
 #endif

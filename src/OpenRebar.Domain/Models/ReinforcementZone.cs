@@ -5,10 +5,10 @@ namespace OpenRebar.Domain.Models;
 /// </summary>
 public enum RebarDirection
 {
-    /// <summary>Primary direction (along X axis).</summary>
-    X,
-    /// <summary>Secondary direction (along Y axis).</summary>
-    Y
+  /// <summary>Primary direction (along X axis).</summary>
+  X,
+  /// <summary>Secondary direction (along Y axis).</summary>
+  Y
 }
 
 /// <summary>
@@ -16,10 +16,10 @@ public enum RebarDirection
 /// </summary>
 public enum RebarLayer
 {
-    /// <summary>Bottom reinforcement (lower face, tension in span).</summary>
-    Bottom,
-    /// <summary>Top reinforcement (upper face, tension over supports).</summary>
-    Top
+  /// <summary>Bottom reinforcement (lower face, tension in span).</summary>
+  Bottom,
+  /// <summary>Top reinforcement (upper face, tension over supports).</summary>
+  Top
 }
 
 /// <summary>
@@ -27,12 +27,12 @@ public enum RebarLayer
 /// </summary>
 public enum ZoneType
 {
-    /// <summary>Simple rectangular zone.</summary>
-    Simple,
-    /// <summary>Complex non-rectangular zone requiring decomposition.</summary>
-    Complex,
-    /// <summary>Special zone (elevator shafts, openings).</summary>
-    Special
+  /// <summary>Simple rectangular zone.</summary>
+  Simple,
+  /// <summary>Complex non-rectangular zone requiring decomposition.</summary>
+  Complex,
+  /// <summary>Special zone (elevator shafts, openings).</summary>
+  Special
 }
 
 /// <summary>
@@ -40,28 +40,28 @@ public enum ZoneType
 /// </summary>
 public sealed class ReinforcementZone
 {
-    public required string Id { get; init; }
-    public required Polygon Boundary { get; init; }
-    public required ReinforcementSpec Spec { get; init; }
-    public required RebarDirection Direction { get; init; }
-    public required ZoneType ZoneType { get; init; }
-    public RebarLayer Layer { get; init; } = RebarLayer.Bottom;
+  public required string Id { get; init; }
+  public required Polygon Boundary { get; init; }
+  public required ReinforcementSpec Spec { get; init; }
+  public required RebarDirection Direction { get; init; }
+  public required ZoneType ZoneType { get; init; }
+  public RebarLayer Layer { get; init; } = RebarLayer.Bottom;
 
-    /// <summary>
-    /// If complex zone was decomposed, the resulting sub-rectangles.
-    /// </summary>
-    public IReadOnlyList<BoundingBox>? SubRectangles { get; init; }
+  /// <summary>
+  /// If complex zone was decomposed, the resulting sub-rectangles.
+  /// </summary>
+  public IReadOnlyList<BoundingBox>? SubRectangles { get; init; }
 
-    /// <summary>
-    /// Approximate coverage and over-coverage metrics for complex zone decomposition.
-    /// Present only when the boundary was decomposed into sub-rectangles.
-    /// </summary>
-    public PolygonDecompositionMetrics? DecompositionMetrics { get; init; }
+  /// <summary>
+  /// Approximate coverage and over-coverage metrics for complex zone decomposition.
+  /// Present only when the boundary was decomposed into sub-rectangles.
+  /// </summary>
+  public PolygonDecompositionMetrics? DecompositionMetrics { get; init; }
 
-    /// <summary>
-    /// Computed individual rebar segments for this zone.
-    /// </summary>
-    public IReadOnlyList<RebarSegment> Rebars { get; set; } = [];
+  /// <summary>
+  /// Computed individual rebar segments for this zone.
+  /// </summary>
+  public IReadOnlyList<RebarSegment> Rebars { get; set; } = [];
 }
 
 /// <summary>
@@ -70,13 +70,13 @@ public sealed class ReinforcementZone
 /// </summary>
 public sealed record PolygonDecompositionMetrics
 {
-    public required double PolygonAreaMm2 { get; init; }
-    public required double RectangleCoverAreaMm2 { get; init; }
-    public required double CoverageRatio { get; init; }
-    public required double OverCoverageRatio { get; init; }
-    public required double CellSizeMm { get; init; }
-    public required int RectangleCount { get; init; }
-    public required bool UsedRectangularShortcut { get; init; }
+  public required double PolygonAreaMm2 { get; init; }
+  public required double RectangleCoverAreaMm2 { get; init; }
+  public required double CoverageRatio { get; init; }
+  public required double OverCoverageRatio { get; init; }
+  public required double CellSizeMm { get; init; }
+  public required int RectangleCount { get; init; }
+  public required bool UsedRectangularShortcut { get; init; }
 }
 
 /// <summary>
@@ -84,27 +84,27 @@ public sealed record PolygonDecompositionMetrics
 /// </summary>
 public sealed record RebarSegment
 {
-    /// <summary>Start point of the rebar (mm).</summary>
-    public required Point2D Start { get; init; }
+  /// <summary>Start point of the rebar (mm).</summary>
+  public required Point2D Start { get; init; }
 
-    /// <summary>End point of the rebar (mm).</summary>
-    public required Point2D End { get; init; }
+  /// <summary>End point of the rebar (mm).</summary>
+  public required Point2D End { get; init; }
 
-    /// <summary>Rebar diameter (mm).</summary>
-    public required int DiameterMm { get; init; }
+  /// <summary>Rebar diameter (mm).</summary>
+  public required int DiameterMm { get; init; }
 
-    /// <summary>Required anchorage length at start (mm).</summary>
-    public required double AnchorageLengthStart { get; init; }
+  /// <summary>Required anchorage length at start (mm).</summary>
+  public required double AnchorageLengthStart { get; init; }
 
-    /// <summary>Required anchorage length at end (mm).</summary>
-    public required double AnchorageLengthEnd { get; init; }
+  /// <summary>Required anchorage length at end (mm).</summary>
+  public required double AnchorageLengthEnd { get; init; }
 
-    /// <summary>Rebar mark/part number for specification (e.g. "1", "2a").</summary>
-    public string? Mark { get; init; }
+  /// <summary>Rebar mark/part number for specification (e.g. "1", "2a").</summary>
+  public string? Mark { get; init; }
 
-    /// <summary>Total length including anchorage (mm).</summary>
-    public double TotalLength => Start.DistanceTo(End) + AnchorageLengthStart + AnchorageLengthEnd;
+  /// <summary>Total length including anchorage (mm).</summary>
+  public double TotalLength => Start.DistanceTo(End) + AnchorageLengthStart + AnchorageLengthEnd;
 
-    /// <summary>Clear span between anchorage zones (mm).</summary>
-    public double ClearSpan => Start.DistanceTo(End);
+  /// <summary>Clear span between anchorage zones (mm).</summary>
+  public double ClearSpan => Start.DistanceTo(End);
 }

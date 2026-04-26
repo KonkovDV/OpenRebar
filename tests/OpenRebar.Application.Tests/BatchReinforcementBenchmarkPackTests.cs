@@ -18,96 +18,96 @@ namespace OpenRebar.Application.Tests;
 
 public class BatchReinforcementBenchmarkPackTests
 {
-    private static readonly OptimizationSettings BenchmarkOptimizationSettings = new()
+  private static readonly OptimizationSettings BenchmarkOptimizationSettings = new()
+  {
+    SawCutWidthMm = 3,
+    MinScrapLengthMm = 300
+  };
+
+  [Fact]
+  public async Task ExecuteAsync_WithRealAdapters_ShouldStayWithinBatchQualityEnvelope()
+  {
+    var tempDirectory = Path.Combine(Path.GetTempPath(), $"OpenRebar-batch-bench-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(tempDirectory);
+
+    try
     {
-        SawCutWidthMm = 3,
-        MinScrapLengthMm = 300
-    };
+      var logger = new ConsoleStructuredLogger();
+      var catalogLoader = new FileSupplierCatalogLoader();
+      var pipeline = new GenerateReinforcementPipeline(
+          dxfParser: new DxfIsolineParser(),
+          pngParser: new PngIsolineParser(),
+          zoneDetector: new StandardZoneDetector(),
+          calculator: new StandardReinforcementCalculator(logger),
+          optimizer: new ColumnGenerationOptimizer(),
+          catalogLoader: catalogLoader,
+          placer: new StubRevitPlacer(),
+          reportStore: new JsonFileReportStore(),
+          logger: logger);
 
-    [Fact]
-    public async Task ExecuteAsync_WithRealAdapters_ShouldStayWithinBatchQualityEnvelope()
-    {
-        var tempDirectory = Path.Combine(Path.GetTempPath(), $"OpenRebar-batch-bench-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDirectory);
+      var batchPipeline = new BatchReinforcementPipeline(pipeline);
+      var inputs = CreateBenchmarkInputs(tempDirectory);
+      var defaultCatalog = catalogLoader.GetDefaultCatalog();
+      var ffdOptimizer = new FirstFitDecreasingOptimizer();
 
-        try
-        {
-            var logger = new ConsoleStructuredLogger();
-            var catalogLoader = new FileSupplierCatalogLoader();
-            var pipeline = new GenerateReinforcementPipeline(
-                dxfParser: new DxfIsolineParser(),
-                pngParser: new PngIsolineParser(),
-                zoneDetector: new StandardZoneDetector(),
-                calculator: new StandardReinforcementCalculator(logger),
-                optimizer: new ColumnGenerationOptimizer(),
-                catalogLoader: catalogLoader,
-                placer: new StubRevitPlacer(),
-                reportStore: new JsonFileReportStore(),
-                logger: logger);
+      var result = await batchPipeline.ExecuteAsync(inputs);
 
-            var batchPipeline = new BatchReinforcementPipeline(pipeline);
-            var inputs = CreateBenchmarkInputs(tempDirectory);
-            var defaultCatalog = catalogLoader.GetDefaultCatalog();
-            var ffdOptimizer = new FirstFitDecreasingOptimizer();
+      result.Failures.Should().BeEmpty();
+      result.SlabResults.Should().HaveCount(inputs.Count);
+      result.TotalStockBars.Should().Be(result.SlabResults.Sum(slab =>
+          slab.Result.OptimizationResults.Values.Sum(opt => opt.TotalStockBarsNeeded)));
+      result.TotalMassKg.Should().BeApproximately(
+          result.SlabResults.Sum(slab => slab.Result.TotalMassKg),
+          0.001);
+      result.AverageWastePercent.Should().BeApproximately(
+          CalculateWeightedWastePercent(result.SlabResults),
+          0.0001);
 
-            var result = await batchPipeline.ExecuteAsync(inputs);
+      foreach (var slabResult in result.SlabResults)
+      {
+        slabResult.Result.StoredReport.Should().NotBeNull();
+        File.Exists(slabResult.Result.StoredReport!.OutputPath).Should().BeTrue();
+        slabResult.Result.Report.Should().NotBeNull();
+        slabResult.Result.Report!.AnalysisProvenance.Optimization.OptimizerId
+            .Should().BeOneOf(
+                "column-generation-relaxation-v1",
+                "first-fit-decreasing-v1",
+                "exact-small-instance-search-v1");
 
-            result.Failures.Should().BeEmpty();
-            result.SlabResults.Should().HaveCount(inputs.Count);
-            result.TotalStockBars.Should().Be(result.SlabResults.Sum(slab =>
-                slab.Result.OptimizationResults.Values.Sum(opt => opt.TotalStockBarsNeeded)));
-            result.TotalMassKg.Should().BeApproximately(
-                result.SlabResults.Sum(slab => slab.Result.TotalMassKg),
-                0.001);
-            result.AverageWastePercent.Should().BeApproximately(
-                CalculateWeightedWastePercent(result.SlabResults),
-                0.0001);
+        var requiredLengths = slabResult.Result.ClassifiedZones
+            .SelectMany(zone => zone.Rebars)
+            .Select(rebar => rebar.TotalLength)
+            .ToList();
 
-            foreach (var slabResult in result.SlabResults)
-            {
-                slabResult.Result.StoredReport.Should().NotBeNull();
-                File.Exists(slabResult.Result.StoredReport!.OutputPath).Should().BeTrue();
-                slabResult.Result.Report.Should().NotBeNull();
-                slabResult.Result.Report!.AnalysisProvenance.Optimization.OptimizerId
-                    .Should().BeOneOf(
-                        "column-generation-relaxation-v1",
-                        "first-fit-decreasing-v1",
-                        "exact-small-instance-search-v1");
+        requiredLengths.Should().NotBeEmpty();
 
-                var requiredLengths = slabResult.Result.ClassifiedZones
-                    .SelectMany(zone => zone.Rebars)
-                    .Select(rebar => rebar.TotalLength)
-                    .ToList();
+        var actual = slabResult.Result.OptimizationResults.Values.Single();
+        var baseline = ffdOptimizer.Optimize(
+            requiredLengths,
+            defaultCatalog.AvailableLengths,
+            BenchmarkOptimizationSettings);
 
-                requiredLengths.Should().NotBeEmpty();
-
-                var actual = slabResult.Result.OptimizationResults.Values.Single();
-                var baseline = ffdOptimizer.Optimize(
-                    requiredLengths,
-                    defaultCatalog.AvailableLengths,
-                    BenchmarkOptimizationSettings);
-
-                actual.TotalStockBarsNeeded.Should().BeLessThanOrEqualTo(
-                    baseline.TotalStockBarsNeeded,
-                    "column generation should not use more bars than the FFD baseline for slab {0}",
-                    slabResult.SlabId);
-                actual.TotalWastePercent.Should().BeLessThanOrEqualTo(
-                    baseline.TotalWastePercent + 0.01,
-                    "column generation should not regress waste versus FFD for slab {0}",
-                    slabResult.SlabId);
-            }
-        }
-        finally
-        {
-            if (Directory.Exists(tempDirectory))
-                Directory.Delete(tempDirectory, recursive: true);
-        }
+        actual.TotalStockBarsNeeded.Should().BeLessThanOrEqualTo(
+            baseline.TotalStockBarsNeeded,
+            "column generation should not use more bars than the FFD baseline for slab {0}",
+            slabResult.SlabId);
+        actual.TotalWastePercent.Should().BeLessThanOrEqualTo(
+            baseline.TotalWastePercent + 0.01,
+            "column generation should not regress waste versus FFD for slab {0}",
+            slabResult.SlabId);
+      }
     }
-
-    private static List<PipelineInput> CreateBenchmarkInputs(string tempDirectory)
+    finally
     {
-        var cases = new[]
-        {
+      if (Directory.Exists(tempDirectory))
+        Directory.Delete(tempDirectory, recursive: true);
+    }
+  }
+
+  private static List<PipelineInput> CreateBenchmarkInputs(string tempDirectory)
+  {
+    var cases = new[]
+    {
             new BenchmarkCase(
                 FileName: "floor-batch-a.dxf",
                 SlabId: "BATCH-A",
@@ -140,72 +140,72 @@ public class BatchReinforcementBenchmarkPackTests
                 ])
         };
 
-        return cases.Select(@case =>
-        {
-            var dxfPath = Path.Combine(tempDirectory, @case.FileName);
-            var reportPath = Path.ChangeExtension(dxfPath, ".result.json");
-            CreateSampleDxf(dxfPath, @case.Zones);
-
-            return new PipelineInput
-            {
-                IsolineFilePath = dxfPath,
-                Legend = CreateLegend(),
-                Slab = CreateSlab(@case.SlabWidthMm, @case.SlabHeightMm),
-                Metadata = new PipelineExecutionMetadata
-                {
-                    ProjectCode = "OpenRebar-BATCH-BENCH",
-                    SlabId = @case.SlabId,
-                    LevelName = "Benchmark"
-                },
-                OptimizationSettings = BenchmarkOptimizationSettings,
-                PlaceInRevit = false,
-                PersistReport = true,
-                ReportOutputPath = reportPath
-            };
-        }).ToList();
-    }
-
-    private static double CalculateWeightedWastePercent(IReadOnlyList<BatchSlabResult> slabResults)
+    return cases.Select(@case =>
     {
-        double totalWaste = slabResults.Sum(result =>
-            result.Result.OptimizationResults.Values.Sum(optimization => optimization.TotalWasteMm));
+      var dxfPath = Path.Combine(tempDirectory, @case.FileName);
+      var reportPath = Path.ChangeExtension(dxfPath, ".result.json");
+      CreateSampleDxf(dxfPath, @case.Zones);
 
-        double totalPurchasedLength = slabResults.Sum(result =>
-            result.Result.OptimizationResults.Values
-                .SelectMany(optimization => optimization.CuttingPlans)
-                .Sum(plan => plan.StockLengthMm));
-
-        return totalPurchasedLength > 0
-            ? totalWaste / totalPurchasedLength * 100.0
-            : 0;
-    }
-
-    private static void CreateSampleDxf(string outputPath, IReadOnlyList<RectangleSpec> zones)
-    {
-        var dxfFile = new DxfFile();
-        dxfFile.Header.Version = DxfAcadVersion.R2000;
-
-        foreach (var zone in zones)
+      return new PipelineInput
+      {
+        IsolineFilePath = dxfPath,
+        Legend = CreateLegend(),
+        Slab = CreateSlab(@case.SlabWidthMm, @case.SlabHeightMm),
+        Metadata = new PipelineExecutionMetadata
         {
-            dxfFile.Entities.Add(new DxfLwPolyline(
-            [
-                new DxfLwPolylineVertex { X = zone.X, Y = zone.Y },
+          ProjectCode = "OpenRebar-BATCH-BENCH",
+          SlabId = @case.SlabId,
+          LevelName = "Benchmark"
+        },
+        OptimizationSettings = BenchmarkOptimizationSettings,
+        PlaceInRevit = false,
+        PersistReport = true,
+        ReportOutputPath = reportPath
+      };
+    }).ToList();
+  }
+
+  private static double CalculateWeightedWastePercent(IReadOnlyList<BatchSlabResult> slabResults)
+  {
+    double totalWaste = slabResults.Sum(result =>
+        result.Result.OptimizationResults.Values.Sum(optimization => optimization.TotalWasteMm));
+
+    double totalPurchasedLength = slabResults.Sum(result =>
+        result.Result.OptimizationResults.Values
+            .SelectMany(optimization => optimization.CuttingPlans)
+            .Sum(plan => plan.StockLengthMm));
+
+    return totalPurchasedLength > 0
+        ? totalWaste / totalPurchasedLength * 100.0
+        : 0;
+  }
+
+  private static void CreateSampleDxf(string outputPath, IReadOnlyList<RectangleSpec> zones)
+  {
+    var dxfFile = new DxfFile();
+    dxfFile.Header.Version = DxfAcadVersion.R2000;
+
+    foreach (var zone in zones)
+    {
+      dxfFile.Entities.Add(new DxfLwPolyline(
+      [
+          new DxfLwPolylineVertex { X = zone.X, Y = zone.Y },
                 new DxfLwPolylineVertex { X = zone.X + zone.Width, Y = zone.Y },
                 new DxfLwPolylineVertex { X = zone.X + zone.Width, Y = zone.Y + zone.Height },
                 new DxfLwPolylineVertex { X = zone.X, Y = zone.Y + zone.Height }
-            ])
-            {
-                IsClosed = true,
-                Color = DxfColor.FromIndex(1)
-            });
-        }
-
-        dxfFile.Save(outputPath);
+      ])
+      {
+        IsClosed = true,
+        Color = DxfColor.FromIndex(1)
+      });
     }
 
-    private static ColorLegend CreateLegend() => new(
-    [
-        new LegendEntry(
+    dxfFile.Save(outputPath);
+  }
+
+  private static ColorLegend CreateLegend() => new(
+  [
+      new LegendEntry(
             new IsolineColor(255, 0, 0),
             new ReinforcementSpec
             {
@@ -213,28 +213,28 @@ public class BatchReinforcementBenchmarkPackTests
                 SpacingMm = 200,
                 SteelClass = "A500C"
             })
-    ]);
+  ]);
 
-    private static SlabGeometry CreateSlab(double widthMm, double heightMm) => new()
-    {
-        OuterBoundary = new Polygon(
-        [
-            new Point2D(0, 0),
+  private static SlabGeometry CreateSlab(double widthMm, double heightMm) => new()
+  {
+    OuterBoundary = new Polygon(
+      [
+          new Point2D(0, 0),
             new Point2D(widthMm, 0),
             new Point2D(widthMm, heightMm),
             new Point2D(0, heightMm)
-        ]),
-        ThicknessMm = 200,
-        CoverMm = 25,
-        ConcreteClass = "B25"
-    };
+      ]),
+    ThicknessMm = 200,
+    CoverMm = 25,
+    ConcreteClass = "B25"
+  };
 
-    private sealed record BenchmarkCase(
-        string FileName,
-        string SlabId,
-        double SlabWidthMm,
-        double SlabHeightMm,
-        IReadOnlyList<RectangleSpec> Zones);
+  private sealed record BenchmarkCase(
+      string FileName,
+      string SlabId,
+      double SlabWidthMm,
+      double SlabHeightMm,
+      IReadOnlyList<RectangleSpec> Zones);
 
-    private sealed record RectangleSpec(double X, double Y, double Width, double Height);
+  private sealed record RectangleSpec(double X, double Y, double Width, double Height);
 }

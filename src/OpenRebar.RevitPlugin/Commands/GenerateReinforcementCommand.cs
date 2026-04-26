@@ -68,6 +68,6 @@ public sealed class GenerateReinforcementCommand : IExternalCommand
 #else
 internal static class GenerateReinforcementCommandPlaceholder
 {
-    public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real external command.";
+  public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real external command.";
 }
 #endif

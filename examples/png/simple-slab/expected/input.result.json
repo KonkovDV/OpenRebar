@@ -1,0 +1,84 @@
+{
+  "contractId": "OpenRebar.reinforcement.report.v1",
+  "schemaVersion": "1.2.0",
+  "generatedAtUtc": "2026-04-26T09:23:11.7012388+00:00",
+  "metadata": {
+    "projectCode": "OpenRebar-CLI",
+    "slabId": "input",
+    "levelName": "Standalone",
+    "sourceSystem": "OpenRebar.Reinforcement",
+    "targetSystem": "AeroBIM",
+    "countryCode": "RU",
+    "designCode": "SP 63.13330.2018",
+    "normativeProfileId": "ru.sp63.2018",
+    "normativeTablesVersion": "ru.sp63.2018.tables.v1"
+  },
+  "normativeProfile": {
+    "profileId": "ru.sp63.2018",
+    "jurisdiction": "RU",
+    "designCode": "SP 63.13330.2018",
+    "tablesVersion": "ru.sp63.2018.tables.v1"
+  },
+  "analysisProvenance": {
+    "geometry": {
+      "decompositionAlgorithm": "adaptive-orthogonal-strip-or-grid/v3",
+      "rectangularShortcutFillRatio": 0.85,
+      "minRectangleAreaMm2": 10000,
+      "samplingResolutionPerAxis": 4,
+      "cellCoverageInclusionThreshold": 0.35,
+      "minCoverageRatioAcrossComplexZones": null,
+      "maxOverCoverageRatioAcrossComplexZones": null
+    },
+    "optimization": {
+      "optimizerId": "none",
+      "masterProblemStrategy": "none",
+      "pricingStrategy": "none",
+      "integerizationStrategy": "none",
+      "demandAggregationPrecisionMm": 0,
+      "qualityFloor": "none",
+      "anyFallbackMasterSolverUsed": false
+    }
+  },
+  "isolineFileName": "input.png",
+  "isolineFileFormat": "png",
+  "slab": {
+    "concreteClass": "B25",
+    "thicknessMm": 220,
+    "coverMm": 30,
+    "effectiveDepthMm": 190,
+    "areaMm2": 24000000,
+    "openingCount": 0,
+    "boundingBox": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 6000,
+      "maxY": 4000,
+      "width": 6000,
+      "height": 4000
+    }
+  },
+  "zones": [],
+  "optimizationByDiameter": [],
+  "placement": {
+    "requested": false,
+    "executed": false,
+    "success": true,
+    "totalRebarsPlaced": 0,
+    "totalTagsCreated": 0,
+    "totalBendingDetails": 0,
+    "warnings": [],
+    "errors": []
+  },
+  "summary": {
+    "parsedZoneCount": 0,
+    "classifiedZoneCount": 0,
+    "totalRebarSegments": 0,
+    "totalWastePercent": 0,
+    "totalWasteMm": 0,
+    "totalMassKg": 0,
+    "estimatedCost": null
+  },
+  "warnings": [],
+  "errors": [],
+  "partialResult": false
+}

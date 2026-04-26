@@ -120,7 +120,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **191/191 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **193/193 тестов проходят**.
 
 ## Комплексный аудит (2026-04-25)
 
@@ -152,6 +152,30 @@ dotnet run --project src/OpenRebar.Cli -- <isoline-file> [options]
 - --slab-width <mm> / --slab-height <mm> / --thickness <mm> / --cover <mm>
 
 CLI пишет канонический отчёт рядом со входным файлом (`.result.json`), а также формирует `.schedule.csv`, `.aerobim.json` и `.reinforcement.ifc`.
+
+## Канонические примеры и снапшоты
+
+В репозитории добавлены воспроизводимые примеры в `examples/`:
+
+- `examples/dxf/simple-slab/input.dxf`
+- `examples/png/simple-slab/input.png`
+
+Для каждого примера зафиксированы эталонные снапшоты:
+
+- `expected/input.result.json`
+- `expected/input.schedule.csv`
+
+Скрипты пересборки эталонов:
+
+```bash
+# Linux/macOS
+bash tools/examples/generate_expected_outputs.sh
+
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -File tools/examples/generate_expected_outputs.ps1
+```
+
+Проверка снапшотов выполняется тестами `ExamplesSnapshotTests` (`tests/OpenRebar.Application.Tests`).
 
 ## Python ML модуль (опционально)
 

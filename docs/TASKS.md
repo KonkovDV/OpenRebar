@@ -4,6 +4,28 @@
 > **Дата:** 2026-04-12
 > **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. 160/160 .NET тестов проходят. Добавлены real-adapter batch benchmark harness на generated DXF fixtures и corpus-ready manifest rail для production slab batches. В апреле 2026 стабилизированы CI-ветки Linux и python-smoke (imports/dependencies/action pins). Дальше: Revit SDK live validation, production slab-batch corpora для cutting-quality benchmarks, ML training на реальных данных.
 
+## Update 2026-04-26 — Audit Execution Wave (CI Claims + Examples + Benchmark Artifacts)
+
+### Что закрыто в этом wave
+
+- CI now enforces README regression claim parity via `tools/ci/verify_readme_regression_claim.py`.
+- Formatter normalization wave executed; `dotnet format OpenRebar.sln --verify-no-changes` is restored.
+- Added repository EOL policy via `.gitattributes` to reduce recurrent line-ending drift.
+- Added dependency-governance artifact publication in CI:
+    - `dotnet list ... --include-transitive --vulnerable`
+    - `dotnet list ... --outdated`
+- Added canonical examples and committed snapshots:
+    - `examples/dxf/simple-slab/`
+    - `examples/png/simple-slab/`
+- Added snapshot integration verification (`ExamplesSnapshotTests`) for `input -> expected result/schedule`.
+- Added benchmark summary export + CI artifact publication (`OPENREBAR_BENCH_SUMMARY_PATH`, `benchmark-summary`).
+
+### Текущий фокус после wave
+
+- P0 GitHub admin enablement (rulesets/security toggles) — outside repository code changes.
+- P1 Revit 2025 live boundary validation on real model.
+- Optional IFC external validator lane (nightly or workflow_dispatch).
+
 ## Update 2026-04-16 — CI Stabilization (Linux + Python smoke)
 
 ### Что закрыто в этом wave

@@ -10,19 +10,19 @@ namespace OpenRebar.Infrastructure.Stubs;
 /// </summary>
 public sealed class StubRevitPlacer : IRevitPlacer
 {
-    public Task<PlacementResult> PlaceReinforcementAsync(
-        IReadOnlyList<ReinforcementZone> zones,
-        PlacementSettings settings,
-        CancellationToken cancellationToken = default)
-    {
-        int totalRebars = zones.Sum(z => z.Rebars.Count);
+  public Task<PlacementResult> PlaceReinforcementAsync(
+      IReadOnlyList<ReinforcementZone> zones,
+      PlacementSettings settings,
+      CancellationToken cancellationToken = default)
+  {
+    int totalRebars = zones.Sum(z => z.Rebars.Count);
 
-        return Task.FromResult(new PlacementResult
-        {
-            TotalRebarsPlaced = totalRebars,
-            TotalTagsCreated = settings.CreateTags ? totalRebars : 0,
-            TotalBendingDetails = settings.CreateBendingDetails ? zones.Count : 0,
-            Warnings = ["StubRevitPlacer: elements logged but not placed in Revit model."]
-        });
-    }
+    return Task.FromResult(new PlacementResult
+    {
+      TotalRebarsPlaced = totalRebars,
+      TotalTagsCreated = settings.CreateTags ? totalRebars : 0,
+      TotalBendingDetails = settings.CreateBendingDetails ? zones.Count : 0,
+      Warnings = ["StubRevitPlacer: elements logged but not placed in Revit model."]
+    });
+  }
 }

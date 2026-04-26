@@ -16,6 +16,6 @@ public sealed class FloorSelectionFilter : ISelectionFilter
 #else
 internal static class FloorSelectionFilterPlaceholder
 {
-    public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the floor selection filter.";
+  public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the floor selection filter.";
 }
 #endif

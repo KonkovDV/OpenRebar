@@ -9,11 +9,11 @@ namespace OpenRebar.RevitPlugin.Revit;
 /// </summary>
 public sealed class StubRevitPlacer : IRevitPlacer
 {
-    private readonly Infrastructure.Stubs.StubRevitPlacer _inner = new();
+  private readonly Infrastructure.Stubs.StubRevitPlacer _inner = new();
 
-    public Task<PlacementResult> PlaceReinforcementAsync(
-        IReadOnlyList<ReinforcementZone> zones,
-        PlacementSettings settings,
-        CancellationToken cancellationToken = default)
-        => _inner.PlaceReinforcementAsync(zones, settings, cancellationToken);
+  public Task<PlacementResult> PlaceReinforcementAsync(
+      IReadOnlyList<ReinforcementZone> zones,
+      PlacementSettings settings,
+      CancellationToken cancellationToken = default)
+      => _inner.PlaceReinforcementAsync(zones, settings, cancellationToken);
 }

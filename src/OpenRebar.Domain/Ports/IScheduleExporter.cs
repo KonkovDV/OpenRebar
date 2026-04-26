@@ -7,8 +7,8 @@ namespace OpenRebar.Domain.Ports;
 /// </summary>
 public interface IScheduleExporter
 {
-    Task ExportAsync(
-        IReadOnlyList<ReinforcementZone> zones,
-        string outputPath,
-        CancellationToken ct = default);
+  Task ExportAsync(
+      IReadOnlyList<ReinforcementZone> zones,
+      string outputPath,
+      CancellationToken ct = default);
 }

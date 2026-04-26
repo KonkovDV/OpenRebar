@@ -400,6 +400,6 @@ public sealed class RevitRebarPlacer : IRevitPlacer
 #else
 internal static class RevitRebarPlacerPlaceholder
 {
-    public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real Revit placer.";
+  public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real Revit placer.";
 }
 #endif

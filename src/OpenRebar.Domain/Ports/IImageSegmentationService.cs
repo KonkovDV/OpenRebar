@@ -8,13 +8,13 @@ namespace OpenRebar.Domain.Ports;
 /// </summary>
 public interface IImageSegmentationService
 {
-    /// <summary>
-    /// Segment a PNG isoline image into zone polygons.
-    /// </summary>
-    /// <param name="imagePath">Path to the PNG file.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>List of polygons with associated colors.</returns>
-    Task<IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)>> SegmentAsync(
-        string imagePath,
-        CancellationToken cancellationToken = default);
+  /// <summary>
+  /// Segment a PNG isoline image into zone polygons.
+  /// </summary>
+  /// <param name="imagePath">Path to the PNG file.</param>
+  /// <param name="cancellationToken">Cancellation token.</param>
+  /// <returns>List of polygons with associated colors.</returns>
+  Task<IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)>> SegmentAsync(
+      string imagePath,
+      CancellationToken cancellationToken = default);
 }

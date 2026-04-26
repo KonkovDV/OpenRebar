@@ -6,22 +6,22 @@ namespace OpenRebar.Infrastructure.DxfProcessing;
 /// </summary>
 internal static class AciPalette
 {
-    /// <summary>
-    /// Get RGB tuple for an ACI color index.
-    /// Index 7 returns white (255,255,255); index 0 or out-of-range returns (128,128,128).
-    /// </summary>
-    public static (byte R, byte G, byte B) GetRgb(short aci)
-    {
-        if (aci is >= 1 and <= 255)
-            return Palette[aci - 1];
-        return (128, 128, 128); // Fallback gray
-    }
+  /// <summary>
+  /// Get RGB tuple for an ACI color index.
+  /// Index 7 returns white (255,255,255); index 0 or out-of-range returns (128,128,128).
+  /// </summary>
+  public static (byte R, byte G, byte B) GetRgb(short aci)
+  {
+    if (aci is >= 1 and <= 255)
+      return Palette[aci - 1];
+    return (128, 128, 128); // Fallback gray
+  }
 
-    // Full 255-entry ACI palette (AutoCAD standard)
-    private static readonly (byte R, byte G, byte B)[] Palette =
-    [
-        // 1–9: standard colors
-        (255, 0, 0),       // 1 Red
+  // Full 255-entry ACI palette (AutoCAD standard)
+  private static readonly (byte R, byte G, byte B)[] Palette =
+  [
+      // 1–9: standard colors
+      (255, 0, 0),       // 1 Red
         (255, 255, 0),     // 2 Yellow
         (0, 255, 0),       // 3 Green
         (0, 255, 255),     // 4 Cyan

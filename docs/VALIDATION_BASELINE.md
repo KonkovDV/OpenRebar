@@ -18,6 +18,10 @@ Run these commands from the repository root unless noted otherwise:
 ```bash
 dotnet build OpenRebar.sln --configuration Release
 dotnet test OpenRebar.sln --configuration Release
+
+# Optional benchmark summary gate (same thresholds as CI)
+$env:OPENREBAR_BENCH_SUMMARY_PATH="artifacts/benchmark/column-generation-summary.json"
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --configuration Release --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests
 ```
 
 Expected interpretation:
@@ -80,6 +84,16 @@ GitHub workflow and dependency-governance audit checks:
 dotnet list OpenRebar.sln package --include-transitive --vulnerable
 dotnet list OpenRebar.sln package --outdated
 ```
+
+The CI workflow exports these command outputs as artifacts:
+
+- `dependency-audit/deps-vulnerable.txt`
+- `dependency-audit/deps-outdated.txt`
+
+CI also exports benchmark evidence:
+
+- `benchmark-summary/column-generation-summary.json`
+- `benchmark-results.trx`
 
 Review these control-plane files when claim scope includes CI/CD security posture:
 

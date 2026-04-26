@@ -7,9 +7,9 @@ namespace OpenRebar.Domain.Ports;
 /// </summary>
 public interface IReportExporter
 {
-    Task ExportAsync(
-        ReinforcementExecutionReport report,
-        IReadOnlyList<ReinforcementZone> zones,
-        string outputPath,
-        CancellationToken ct = default);
+  Task ExportAsync(
+      ReinforcementExecutionReport report,
+      IReadOnlyList<ReinforcementZone> zones,
+      string outputPath,
+      CancellationToken ct = default);
 }

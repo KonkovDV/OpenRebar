@@ -135,6 +135,6 @@ public static class RevitSlabExtractor
 #else
 internal static class RevitSlabExtractorPlaceholder
 {
-    public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real slab extractor.";
+  public const string Message = "Define REVIT_SDK and provide Autodesk Revit references to build the real slab extractor.";
 }
 #endif

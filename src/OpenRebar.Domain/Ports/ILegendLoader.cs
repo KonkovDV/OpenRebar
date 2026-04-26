@@ -7,6 +7,6 @@ namespace OpenRebar.Domain.Ports;
 /// </summary>
 public interface ILegendLoader
 {
-    Task<ColorLegend> LoadAsync(string path, CancellationToken ct = default);
-    ColorLegend GetDefaultLegend(string steelClass);
+  Task<ColorLegend> LoadAsync(string path, CancellationToken ct = default);
+  ColorLegend GetDefaultLegend(string steelClass);
 }

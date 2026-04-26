@@ -1,0 +1,375 @@
+{
+  "contractId": "OpenRebar.reinforcement.report.v1",
+  "schemaVersion": "1.2.0",
+  "generatedAtUtc": "2026-04-26T09:22:18.5963472+00:00",
+  "metadata": {
+    "projectCode": "OpenRebar-CLI",
+    "slabId": "input",
+    "levelName": "Standalone",
+    "sourceSystem": "OpenRebar.Reinforcement",
+    "targetSystem": "AeroBIM",
+    "countryCode": "RU",
+    "designCode": "SP 63.13330.2018",
+    "normativeProfileId": "ru.sp63.2018",
+    "normativeTablesVersion": "ru.sp63.2018.tables.v1"
+  },
+  "normativeProfile": {
+    "profileId": "ru.sp63.2018",
+    "jurisdiction": "RU",
+    "designCode": "SP 63.13330.2018",
+    "tablesVersion": "ru.sp63.2018.tables.v1"
+  },
+  "analysisProvenance": {
+    "geometry": {
+      "decompositionAlgorithm": "adaptive-orthogonal-strip-or-grid/v3",
+      "rectangularShortcutFillRatio": 0.85,
+      "minRectangleAreaMm2": 10000,
+      "samplingResolutionPerAxis": 4,
+      "cellCoverageInclusionThreshold": 0.35,
+      "minCoverageRatioAcrossComplexZones": null,
+      "maxOverCoverageRatioAcrossComplexZones": null
+    },
+    "optimization": {
+      "optimizerId": "none",
+      "masterProblemStrategy": "none",
+      "pricingStrategy": "none",
+      "integerizationStrategy": "none",
+      "demandAggregationPrecisionMm": 0,
+      "qualityFloor": "none",
+      "anyFallbackMasterSolverUsed": false
+    }
+  },
+  "isolineFileName": "input.dxf",
+  "isolineFileFormat": "dxf",
+  "slab": {
+    "concreteClass": "B25",
+    "thicknessMm": 220,
+    "coverMm": 30,
+    "effectiveDepthMm": 190,
+    "areaMm2": 24000000,
+    "openingCount": 0,
+    "boundingBox": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 6000,
+      "maxY": 4000,
+      "width": 6000,
+      "height": 4000
+    }
+  },
+  "zones": [
+    {
+      "zoneId": "DXF-0001",
+      "zoneType": "Simple",
+      "direction": "X",
+      "layer": "Bottom",
+      "diameterMm": 20,
+      "spacingMm": 150,
+      "rebarCount": 27,
+      "totalClearSpanMm": 162000,
+      "totalLengthMm": 206820,
+      "boundingBox": {
+        "minX": 0,
+        "minY": 0,
+        "maxX": 6000,
+        "maxY": 4000,
+        "width": 6000,
+        "height": 4000
+      },
+      "subRectangleCount": null,
+      "decompositionCoverageRatio": null,
+      "decompositionOverCoverageRatio": null
+    }
+  ],
+  "optimizationByDiameter": [
+    {
+      "diameterMm": 20,
+      "supplierName": "Default (Russian market)",
+      "rebarCount": 27,
+      "stockBarsNeeded": 27,
+      "totalWasteMm": 117099,
+      "totalWastePercent": 36.141666666666666,
+      "totalRebarLengthMm": 206820,
+      "totalMassKg": null,
+      "estimatedCost": null,
+      "dualBound": null,
+      "gap": null,
+      "cuttingPlans": [
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        },
+        {
+          "stockLengthMm": 12000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 4337,
+          "wastePercent": 36.141666666666666
+        }
+      ]
+    }
+  ],
+  "placement": {
+    "requested": false,
+    "executed": false,
+    "success": true,
+    "totalRebarsPlaced": 0,
+    "totalTagsCreated": 0,
+    "totalBendingDetails": 0,
+    "warnings": [],
+    "errors": []
+  },
+  "summary": {
+    "parsedZoneCount": 1,
+    "classifiedZoneCount": 1,
+    "totalRebarSegments": 27,
+    "totalWastePercent": 36.141666666666666,
+    "totalWasteMm": 117099,
+    "totalMassKg": 0,
+    "estimatedCost": null
+  },
+  "warnings": [],
+  "errors": [
+    {
+      "stage": "Optimization(d20mm)",
+      "errorMessage": "Column-generation produced physically infeasible plan: consumed 7663.000mm > stock 6000.000mm.",
+      "exceptionType": "OptimizationException",
+      "occurredAtUtc": "2026-04-26T09:22:18.5791201+00:00",
+      "stackTrace": "   at OpenRebar.Infrastructure.Optimization.ColumnGenerationOptimizer.BuildResult(Int32[] integerSolution, List`1 patterns, List`1 demand, Double stockLength, Double sawCutWidthMm, IReadOnlyList`1 originalLengths, Boolean usedFallbackMasterSolver, Nullable`1 lpObjectiveValue) in C:\\plans\\OpenRebar_clean\\src\\OpenRebar.Infrastructure\\Optimization\\ColumnGenerationOptimizer.cs:line 755\r\n   at OpenRebar.Infrastructure.Optimization.ColumnGenerationOptimizer.OptimizeForStockLength(IReadOnlyList`1 requiredLengths, List`1 demand, Double[] itemLengths, Int32[] itemDemand, Double stockLength, Double sawCutWidthMm) in C:\\plans\\OpenRebar_clean\\src\\OpenRebar.Infrastructure\\Optimization\\ColumnGenerationOptimizer.cs:line 179\r\n   at OpenRebar.Infrastructure.Optimization.ColumnGenerationOptimizer.<>c__DisplayClass6_0.<Optimize>b__4(StockLength stock) in C:\\plans\\OpenRebar_clean\\src\\OpenRebar.Infrastructure\\Optimization\\ColumnGenerationOptimizer.cs:line 89\r\n   at System.Linq.Enumerable.SelectListIterator`2.Fill(ReadOnlySpan`1 source, Span`1 destination, Func`2 func)\r\n   at System.Linq.Enumerable.SelectListIterator`2.ToList()\r\n   at OpenRebar.Infrastructure.Optimization.ColumnGenerationOptimizer.Optimize(IReadOnlyList`1 requiredLengths, IReadOnlyList`1 stockLengths, OptimizationSettings settings) in C:\\plans\\OpenRebar_clean\\src\\OpenRebar.Infrastructure\\Optimization\\ColumnGenerationOptimizer.cs:line 86\r\n   at OpenRebar.Application.UseCases.GenerateReinforcementPipeline.ExecuteAsync(PipelineInput input, CancellationToken cancellationToken) in C:\\plans\\OpenRebar_clean\\src\\OpenRebar.Application\\UseCases\\GenerateReinforcementPipeline.cs:line 217",
+      "isCritical": false
+    }
+  ],
+  "partialResult": false
+}

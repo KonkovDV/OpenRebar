@@ -5,16 +5,16 @@ namespace OpenRebar.Domain.Exceptions;
 /// </summary>
 public abstract class OpenRebarDomainException : Exception
 {
-    public string ErrorCode { get; }
+  public string ErrorCode { get; }
 
-    protected OpenRebarDomainException(string errorCode, string message)
-        : this(errorCode, message, null)
-    {
-    }
+  protected OpenRebarDomainException(string errorCode, string message)
+      : this(errorCode, message, null)
+  {
+  }
 
-    protected OpenRebarDomainException(string errorCode, string message, Exception? innerException)
-        : base(message, innerException)
-    {
-        ErrorCode = errorCode;
-    }
+  protected OpenRebarDomainException(string errorCode, string message, Exception? innerException)
+      : base(message, innerException)
+  {
+    ErrorCode = errorCode;
+  }
 }

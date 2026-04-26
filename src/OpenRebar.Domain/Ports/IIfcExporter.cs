@@ -7,9 +7,9 @@ namespace OpenRebar.Domain.Ports;
 /// </summary>
 public interface IIfcExporter
 {
-    Task ExportAsync(
-        IReadOnlyList<ReinforcementZone> zones,
-        SlabGeometry slab,
-        string outputPath,
-        CancellationToken ct = default);
+  Task ExportAsync(
+      IReadOnlyList<ReinforcementZone> zones,
+      SlabGeometry slab,
+      string outputPath,
+      CancellationToken ct = default);
 }

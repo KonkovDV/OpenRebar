@@ -10,7 +10,7 @@ OpenRebar distinguishes between three documentation classes:
 |---|---|---|
 | Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md`, `VALIDATION_BASELINE.md` |
 | Evidence and audits | Time-bounded verification snapshots, findings, and remediation evidence | `COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md`, `HYPER_DEEP_AUDIT_REPORT.md` |
-| Roadmaps and execution plans | Planned work, historical execution intent, and backlog framing | `ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md`, `TASKS.md` |
+| Roadmaps and execution plans | Planned work, historical execution intent, and backlog framing | `ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md`, `OPENREBAR_EXECUTION_PLAN_2026_04_26.md`, `TASKS.md` |
 
 ## Read By Goal
 
@@ -29,6 +29,7 @@ OpenRebar distinguishes between three documentation classes:
 ### Understand roadmap and planned work
 
 - [ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md](ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md): review-driven execution framing and phased recommendations
+- [OPENREBAR_EXECUTION_PLAN_2026_04_26.md](OPENREBAR_EXECUTION_PLAN_2026_04_26.md): active April 2026 execution wave (CI claim gate, examples/snapshots, benchmark/dependency artifacts)
 - [TASKS.md](TASKS.md): detailed work backlog, implementation notes, and historical execution plan
 
 ## Scope Rules

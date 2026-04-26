@@ -40,12 +40,41 @@ jobs:
       - name: Verify README regression claim
         run: python tools/ci/verify_readme_regression_claim.py
 
+      - name: Generate dependency governance reports
+        run: |
+          mkdir -p artifacts/dependency-audit
+          dotnet list OpenRebar.sln package --include-transitive --vulnerable > artifacts/dependency-audit/deps-vulnerable.txt || true
+          dotnet list OpenRebar.sln package --outdated > artifacts/dependency-audit/deps-outdated.txt || true
+
+      - name: Run benchmark gate and export summary
+        env:
+          OPENREBAR_BENCH_SUMMARY_PATH: artifacts/benchmark/column-generation-summary.json
+        run: |
+          mkdir -p artifacts/benchmark
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
+
       - name: Upload test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: test-results
           path: "**/test-results.trx"
+
+      - name: Upload dependency governance reports
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: dependency-audit
+          path: artifacts/dependency-audit/
+
+      - name: Upload benchmark summary
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: benchmark-summary
+          path: |
+            artifacts/benchmark/column-generation-summary.json
+            **/benchmark-results.trx
 
       - name: Publish CLI
         run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release --output ./publish/cli
@@ -98,3 +127,33 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/ml
         working-directory: ml
         run: pytest tests -q
+
+  ifc-validation:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+
+      - name: Build
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+
+      - name: Validate IFC examples
+        run: python3 tools/ci/validate_ifc_examples.py
+
+      - name: Upload IFC validation artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ifc-validation
+          path: artifacts/ifc-validation/

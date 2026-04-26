@@ -5,7 +5,7 @@ namespace OpenRebar.Domain.Ports;
 /// </summary>
 public interface IStructuredLogger
 {
-    void Info(string message, params (string Key, object? Value)[] context);
-    void Warn(string message, params (string Key, object? Value)[] context);
-    void Error(string message, Exception? ex = null, params (string Key, object? Value)[] context);
+  void Info(string message, params (string Key, object? Value)[] context);
+  void Warn(string message, params (string Key, object? Value)[] context);
+  void Error(string message, Exception? ex = null, params (string Key, object? Value)[] context);
 }

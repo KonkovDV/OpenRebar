@@ -120,7 +120,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **191/191 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **193/193 tests passing**.
 
 ## Comprehensive Audit (2026-04-25)
 
@@ -152,6 +152,30 @@ Common options:
 - `--slab-width <mm>` / `--slab-height <mm>` / `--thickness <mm>` / `--cover <mm>`
 
 The CLI writes the canonical report next to the input file (`.result.json`) and also emits `.schedule.csv`, `.aerobim.json`, and `.reinforcement.ifc` exports.
+
+## Canonical Examples and Snapshots
+
+The repository now ships canonical reproducible examples under `examples/`:
+
+- `examples/dxf/simple-slab/input.dxf`
+- `examples/png/simple-slab/input.png`
+
+Each example has committed expected snapshots:
+
+- `expected/input.result.json`
+- `expected/input.schedule.csv`
+
+Regeneration scripts:
+
+```bash
+# Linux/macOS
+bash tools/examples/generate_expected_outputs.sh
+
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -File tools/examples/generate_expected_outputs.ps1
+```
+
+Snapshot verification is executed in `ExamplesSnapshotTests` (`tests/OpenRebar.Application.Tests`).
 
 ## Python ML Module (Optional)
 

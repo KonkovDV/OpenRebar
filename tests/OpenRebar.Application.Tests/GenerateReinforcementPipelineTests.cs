@@ -10,121 +10,121 @@ namespace OpenRebar.Application.Tests;
 
 public class GenerateReinforcementPipelineTests
 {
-    private readonly IIsolineParser _dxfParser = Substitute.For<IIsolineParser>();
-    private readonly IIsolineParser _pngParser = Substitute.For<IIsolineParser>();
-    private readonly IZoneDetector _zoneDetector = Substitute.For<IZoneDetector>();
-    private readonly IReinforcementCalculator _calculator = Substitute.For<IReinforcementCalculator>();
-    private readonly IRebarOptimizer _optimizer = Substitute.For<IRebarOptimizer>();
-    private readonly ISupplierCatalogLoader _catalogLoader = Substitute.For<ISupplierCatalogLoader>();
-    private readonly IRevitPlacer _placer = Substitute.For<IRevitPlacer>();
-    private readonly IReportStore _reportStore = Substitute.For<IReportStore>();
-    private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
+  private readonly IIsolineParser _dxfParser = Substitute.For<IIsolineParser>();
+  private readonly IIsolineParser _pngParser = Substitute.For<IIsolineParser>();
+  private readonly IZoneDetector _zoneDetector = Substitute.For<IZoneDetector>();
+  private readonly IReinforcementCalculator _calculator = Substitute.For<IReinforcementCalculator>();
+  private readonly IRebarOptimizer _optimizer = Substitute.For<IRebarOptimizer>();
+  private readonly ISupplierCatalogLoader _catalogLoader = Substitute.For<ISupplierCatalogLoader>();
+  private readonly IRevitPlacer _placer = Substitute.For<IRevitPlacer>();
+  private readonly IReportStore _reportStore = Substitute.For<IReportStore>();
+  private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
 
-    public GenerateReinforcementPipelineTests()
+  public GenerateReinforcementPipelineTests()
+  {
+    _dxfParser.SupportedExtensions.Returns([".dxf"]);
+    _pngParser.SupportedExtensions.Returns([".png", ".jpg", ".jpeg", ".bmp", ".tiff"]);
+  }
+
+  private GenerateReinforcementPipeline CreateSut() => new(
+      _dxfParser,
+      _pngParser,
+      _zoneDetector,
+      _calculator,
+      _optimizer,
+      _catalogLoader,
+      _placer,
+      _reportStore,
+      _logger);
+
+  [Fact]
+  public async Task ExecuteAsync_DxfInput_ShouldUseDxfParser()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var rawZone = CreateZone("Z-1");
+    var classifiedZones = new[] { rawZone };
+    var optimized = CreateOptimizationResult();
+
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns([rawZone]);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(classifiedZones);
+    _calculator.CalculateRebars(classifiedZones, input.Slab)
+        .Returns(classifiedZones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        _dxfParser.SupportedExtensions.Returns([".dxf"]);
-        _pngParser.SupportedExtensions.Returns([".png", ".jpg", ".jpeg", ".bmp", ".tiff"]);
-    }
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(optimized);
 
-    private GenerateReinforcementPipeline CreateSut() => new(
-        _dxfParser,
-        _pngParser,
-        _zoneDetector,
-        _calculator,
-        _optimizer,
-        _catalogLoader,
-        _placer,
-        _reportStore,
-        _logger);
+    var result = await sut.ExecuteAsync(input);
 
-    [Fact]
-    public async Task ExecuteAsync_DxfInput_ShouldUseDxfParser()
+    result.ParsedZoneCount.Should().Be(1);
+    result.Report.Should().NotBeNull();
+    await _dxfParser.Received(1).ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>());
+    await _pngParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
+    await _reportStore.DidNotReceive().SaveAsync(Arg.Any<ReinforcementExecutionReport>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    _logger.Received().Info("Starting reinforcement pipeline", Arg.Any<(string Key, object? Value)[]>());
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_PngInput_ShouldUsePngParser()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.png", placeInRevit: false);
+    var rawZone = CreateZone("Z-1");
+    var classifiedZones = new[] { rawZone };
+
+    _pngParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns([rawZone]);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(classifiedZones);
+    _calculator.CalculateRebars(classifiedZones, input.Slab)
+        .Returns(classifiedZones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var rawZone = CreateZone("Z-1");
-        var classifiedZones = new[] { rawZone };
-        var optimized = CreateOptimizationResult();
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(CreateOptimizationResult());
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns([rawZone]);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(classifiedZones);
-        _calculator.CalculateRebars(classifiedZones, input.Slab)
-            .Returns(classifiedZones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(optimized);
+    await sut.ExecuteAsync(input);
 
-        var result = await sut.ExecuteAsync(input);
+    await _pngParser.Received(1).ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>());
+    await _dxfParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
+  }
 
-        result.ParsedZoneCount.Should().Be(1);
-        result.Report.Should().NotBeNull();
-        await _dxfParser.Received(1).ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>());
-        await _pngParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
-        await _reportStore.DidNotReceive().SaveAsync(Arg.Any<ReinforcementExecutionReport>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
-        _logger.Received().Info("Starting reinforcement pipeline", Arg.Any<(string Key, object? Value)[]>());
-    }
+  [Fact]
+  public async Task ExecuteAsync_UnsupportedInputFormat_ShouldReturnPartialResultWithError()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.gif", placeInRevit: false);
 
-    [Fact]
-    public async Task ExecuteAsync_PngInput_ShouldUsePngParser()
-    {
-        var sut = CreateSut();
-        var input = CreateInput("plan.png", placeInRevit: false);
-        var rawZone = CreateZone("Z-1");
-        var classifiedZones = new[] { rawZone };
+    var result = await sut.ExecuteAsync(input);
 
-        _pngParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns([rawZone]);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(classifiedZones);
-        _calculator.CalculateRebars(classifiedZones, input.Slab)
-            .Returns(classifiedZones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(CreateOptimizationResult());
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeTrue();
+    result.Report.Errors.Should().ContainSingle();
+    result.Report.Errors[0].Stage.Should().Be("Parse");
+    result.Report.Errors[0].IsCritical.Should().BeTrue();
+    result.Report.Errors[0].ErrorMessage.Should().Contain("Unsupported isoline file format");
+    result.Report.AnalysisProvenance.Geometry.MinRectangleAreaMm2.Should().BeGreaterThan(0);
+    result.Report.AnalysisProvenance.Geometry.SamplingResolutionPerAxis.Should().BeGreaterOrEqualTo(1);
+  }
 
-        await sut.ExecuteAsync(input);
-
-        await _pngParser.Received(1).ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>());
-        await _dxfParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_UnsupportedInputFormat_ShouldReturnPartialResultWithError()
-    {
-        var sut = CreateSut();
-        var input = CreateInput("plan.gif", placeInRevit: false);
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.Report.Should().NotBeNull();
-        result.Report!.PartialResult.Should().BeTrue();
-        result.Report.Errors.Should().ContainSingle();
-        result.Report.Errors[0].Stage.Should().Be("Parse");
-        result.Report.Errors[0].IsCritical.Should().BeTrue();
-        result.Report.Errors[0].ErrorMessage.Should().Contain("Unsupported isoline file format");
-        result.Report.AnalysisProvenance.Geometry.MinRectangleAreaMm2.Should().BeGreaterThan(0);
-        result.Report.AnalysisProvenance.Geometry.SamplingResolutionPerAxis.Should().BeGreaterOrEqualTo(1);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenPlacementDisabled_ShouldNotCallRevitPlacer()
-    {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+  [Fact]
+  public async Task ExecuteAsync_WhenPlacementDisabled_ShouldNotCallRevitPlacer()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -133,51 +133,51 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(CreateOptimizationResult());
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.PlacementResult.Should().BeNull();
-        await _placer.DidNotReceive().PlaceReinforcementAsync(
-            Arg.Any<IReadOnlyList<ReinforcementZone>>(),
-            Arg.Any<PlacementSettings>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenReportPersistenceEnabled_ShouldPersistCanonicalReport()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false) with
-        {
-            PersistReport = true,
-            ReportOutputPath = "reports/plan.result.json",
-            Metadata = new PipelineExecutionMetadata
-            {
-                ProjectCode = "OpenRebar-TST",
-                SlabId = "SLAB-42",
-                LevelName = "Level 12"
-            }
-        };
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(CreateOptimizationResult());
 
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+    var result = await sut.ExecuteAsync(input);
+
+    result.PlacementResult.Should().BeNull();
+    await _placer.DidNotReceive().PlaceReinforcementAsync(
+        Arg.Any<IReadOnlyList<ReinforcementZone>>(),
+        Arg.Any<PlacementSettings>(),
+        Arg.Any<CancellationToken>());
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_WhenReportPersistenceEnabled_ShouldPersistCanonicalReport()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false) with
+    {
+      PersistReport = true,
+      ReportOutputPath = "reports/plan.result.json",
+      Metadata = new PipelineExecutionMetadata
+      {
+        ProjectCode = "OpenRebar-TST",
+        SlabId = "SLAB-42",
+        LevelName = "Level 12"
+      }
+    };
+
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -186,57 +186,57 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(CreateOptimizationResult());
-        _reportStore.SaveAsync(Arg.Any<ReinforcementExecutionReport>(), input.ReportOutputPath!, Arg.Any<CancellationToken>())
-            .Returns(new StoredReportReference
-            {
-                OutputPath = input.ReportOutputPath!,
-                MediaType = "application/json",
-                Sha256 = "ABC123",
-                ByteCount = 128
-            });
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.StoredReport.Should().NotBeNull();
-        result.StoredReport!.OutputPath.Should().Be(input.ReportOutputPath);
-        result.Report!.Metadata.ProjectCode.Should().Be("OpenRebar-TST");
-
-        await _reportStore.Received(1).SaveAsync(
-            Arg.Is<ReinforcementExecutionReport>(report =>
-                report.Metadata.SlabId == "SLAB-42" &&
-                report.Zones.Count == 1 &&
-                report.Summary.TotalRebarSegments == 1 &&
-                report.OptimizationByDiameter.Single().CuttingPlans.Single().SawCutWidthMm == input.OptimizationSettings.SawCutWidthMm &&
-                report.OptimizationByDiameter.Single().DualBound == 0.95 &&
-                report.OptimizationByDiameter.Single().Gap == 5.26),
-            input.ReportOutputPath!,
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenPlacementEnabled_ShouldCallRevitPlacer()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: true);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(CreateOptimizationResult());
+    _reportStore.SaveAsync(Arg.Any<ReinforcementExecutionReport>(), input.ReportOutputPath!, Arg.Any<CancellationToken>())
+        .Returns(new StoredReportReference
+        {
+          OutputPath = input.ReportOutputPath!,
+          MediaType = "application/json",
+          Sha256 = "ABC123",
+          ByteCount = 128
+        });
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.StoredReport.Should().NotBeNull();
+    result.StoredReport!.OutputPath.Should().Be(input.ReportOutputPath);
+    result.Report!.Metadata.ProjectCode.Should().Be("OpenRebar-TST");
+
+    await _reportStore.Received(1).SaveAsync(
+        Arg.Is<ReinforcementExecutionReport>(report =>
+            report.Metadata.SlabId == "SLAB-42" &&
+            report.Zones.Count == 1 &&
+            report.Summary.TotalRebarSegments == 1 &&
+            report.OptimizationByDiameter.Single().CuttingPlans.Single().SawCutWidthMm == input.OptimizationSettings.SawCutWidthMm &&
+            report.OptimizationByDiameter.Single().DualBound == 0.95 &&
+            report.OptimizationByDiameter.Single().Gap == 5.26),
+        input.ReportOutputPath!,
+        Arg.Any<CancellationToken>());
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_WhenPlacementEnabled_ShouldCallRevitPlacer()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: true);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -245,53 +245,53 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
-        var placement = new PlacementResult
-        {
-            TotalRebarsPlaced = 1,
-            TotalTagsCreated = 1,
-            TotalBendingDetails = 1
-        };
-
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(CreateOptimizationResult());
-        _placer.PlaceReinforcementAsync(zones, input.PlacementSettings, Arg.Any<CancellationToken>())
-            .Returns(placement);
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.PlacementResult.Should().NotBeNull();
-        result.PlacementResult!.TotalRebarsPlaced.Should().Be(1);
-        await _placer.Received(1).PlaceReinforcementAsync(
-            zones,
-            input.PlacementSettings,
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenRevitPlacementThrows_ShouldStillPersistReport()
+    ];
+    var zones = new[] { zone };
+    var placement = new PlacementResult
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: true) with
-        {
-            PersistReport = true,
-            ReportOutputPath = "reports/plan.result.json"
-        };
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+      TotalRebarsPlaced = 1,
+      TotalTagsCreated = 1,
+      TotalBendingDetails = 1
+    };
+
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    {
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(CreateOptimizationResult());
+    _placer.PlaceReinforcementAsync(zones, input.PlacementSettings, Arg.Any<CancellationToken>())
+        .Returns(placement);
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.PlacementResult.Should().NotBeNull();
+    result.PlacementResult!.TotalRebarsPlaced.Should().Be(1);
+    await _placer.Received(1).PlaceReinforcementAsync(
+        zones,
+        input.PlacementSettings,
+        Arg.Any<CancellationToken>());
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_WhenRevitPlacementThrows_ShouldStillPersistReport()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: true) with
+    {
+      PersistReport = true,
+      ReportOutputPath = "reports/plan.result.json"
+    };
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -300,53 +300,53 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(CreateOptimizationResult());
-        _placer.PlaceReinforcementAsync(zones, input.PlacementSettings, Arg.Any<CancellationToken>())
-            .Returns<Task<PlacementResult>>(_ => throw new InvalidOperationException("Revit refused transaction"));
-        _reportStore.SaveAsync(Arg.Any<ReinforcementExecutionReport>(), input.ReportOutputPath!, Arg.Any<CancellationToken>())
-            .Returns(new StoredReportReference
-            {
-                OutputPath = input.ReportOutputPath!,
-                MediaType = "application/json",
-                Sha256 = "ABC123",
-                ByteCount = 128
-            });
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.StoredReport.Should().NotBeNull();
-        result.PlacementResult.Should().NotBeNull();
-        result.PlacementResult!.Success.Should().BeFalse();
-        result.PlacementResult.Errors.Should().ContainSingle(error => error.Contains("Revit refused transaction"));
-        await _reportStore.Received(1).SaveAsync(
-            Arg.Any<ReinforcementExecutionReport>(),
-            input.ReportOutputPath!,
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenNoEstimatedCostExists_ShouldKeepSummaryEstimatedCostNull()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(CreateOptimizationResult());
+    _placer.PlaceReinforcementAsync(zones, input.PlacementSettings, Arg.Any<CancellationToken>())
+        .Returns<Task<PlacementResult>>(_ => throw new InvalidOperationException("Revit refused transaction"));
+    _reportStore.SaveAsync(Arg.Any<ReinforcementExecutionReport>(), input.ReportOutputPath!, Arg.Any<CancellationToken>())
+        .Returns(new StoredReportReference
+        {
+          OutputPath = input.ReportOutputPath!,
+          MediaType = "application/json",
+          Sha256 = "ABC123",
+          ByteCount = 128
+        });
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.StoredReport.Should().NotBeNull();
+    result.PlacementResult.Should().NotBeNull();
+    result.PlacementResult!.Success.Should().BeFalse();
+    result.PlacementResult.Errors.Should().ContainSingle(error => error.Contains("Revit refused transaction"));
+    await _reportStore.Received(1).SaveAsync(
+        Arg.Any<ReinforcementExecutionReport>(),
+        input.ReportOutputPath!,
+        Arg.Any<CancellationToken>());
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_WhenNoEstimatedCostExists_ShouldKeepSummaryEstimatedCostNull()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -355,53 +355,53 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    {
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(new OptimizationResult
         {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(new OptimizationResult
-            {
-                CuttingPlans =
-                [
-                    new CuttingPlan
+          CuttingPlans =
+            [
+                new CuttingPlan
                     {
                         StockLengthMm = 11700,
                         Cuts = [2400, 2400, 2400]
                     }
-                ],
-                TotalStockBarsNeeded = 1,
-                TotalWasteMm = 4500,
-                TotalWastePercent = 38.46,
-                TotalRebarLengthMm = 7200,
-                TotalMassKg = 6.39,
-                EstimatedCost = null
-            });
+            ],
+          TotalStockBarsNeeded = 1,
+          TotalWasteMm = 4500,
+          TotalWastePercent = 38.46,
+          TotalRebarLengthMm = 7200,
+          TotalMassKg = 6.39,
+          EstimatedCost = null
+        });
 
-        var result = await sut.ExecuteAsync(input);
+    var result = await sut.ExecuteAsync(input);
 
-        result.Report.Should().NotBeNull();
-        result.Report!.Summary.EstimatedCost.Should().BeNull();
-    }
+    result.Report.Should().NotBeNull();
+    result.Report!.Summary.EstimatedCost.Should().BeNull();
+  }
 
-    [Fact]
-    public async Task ExecuteAsync_WhenOptimizerReturnsRawResult_ShouldEnrichMassAndCostFromCatalog()
-    {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+  [Fact]
+  public async Task ExecuteAsync_WhenOptimizerReturnsRawResult_ShouldEnrichMassAndCostFromCatalog()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -410,68 +410,68 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    {
+      SupplierName = "Default",
+      AvailableLengths =
+        [
+            new StockLength { LengthMm = 6000, InStock = true, PricePerTon = 50000 }
+        ]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(new OptimizationResult
         {
-            SupplierName = "Default",
-            AvailableLengths =
+          CuttingPlans =
             [
-                new StockLength { LengthMm = 6000, InStock = true, PricePerTon = 50000 }
-            ]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(new OptimizationResult
-            {
-                CuttingPlans =
-                [
-                    new CuttingPlan
+                new CuttingPlan
                     {
                         StockLengthMm = 6000,
                         Cuts = [1400],
                         SawCutWidthMm = 3
                     }
-                ],
-                TotalStockBarsNeeded = 1,
-                TotalWasteMm = 4597,
-                TotalWastePercent = 76.62,
-                TotalRebarLengthMm = 1400,
-                TotalMassKg = null,
-                EstimatedCost = null
-            });
+            ],
+          TotalStockBarsNeeded = 1,
+          TotalWasteMm = 4597,
+          TotalWastePercent = 76.62,
+          TotalRebarLengthMm = 1400,
+          TotalMassKg = null,
+          EstimatedCost = null
+        });
 
-        var result = await sut.ExecuteAsync(input);
+    var result = await sut.ExecuteAsync(input);
 
-        result.TotalMassKg.Should().BeGreaterThan(0);
-        result.OptimizationResults.Should().ContainKey(12);
+    result.TotalMassKg.Should().BeGreaterThan(0);
+    result.OptimizationResults.Should().ContainKey(12);
 
-        var optimization = result.OptimizationResults[12];
-        var expectedMass = (optimization.TotalRebarLengthMm / 1000.0) * ReinforcementLimits.GetLinearMass(12);
+    var optimization = result.OptimizationResults[12];
+    var expectedMass = (optimization.TotalRebarLengthMm / 1000.0) * ReinforcementLimits.GetLinearMass(12);
 
-        optimization.TotalMassKg.Should().HaveValue();
-        optimization.TotalMassKg!.Value.Should().BeApproximately(expectedMass, 1e-6);
-        optimization.EstimatedCost.Should().HaveValue();
+    optimization.TotalMassKg.Should().HaveValue();
+    optimization.TotalMassKg!.Value.Should().BeApproximately(expectedMass, 1e-6);
+    optimization.EstimatedCost.Should().HaveValue();
 
-        result.Report.Should().NotBeNull();
-        result.Report!.Summary.TotalMassKg.Should().BeApproximately(expectedMass, 1e-6);
-        result.Report.Summary.EstimatedCost.Should().HaveValue();
-    }
+    result.Report.Should().NotBeNull();
+    result.Report!.Summary.TotalMassKg.Should().BeApproximately(expectedMass, 1e-6);
+    result.Report.Summary.EstimatedCost.Should().HaveValue();
+  }
 
-    [Fact]
-    public async Task ExecuteAsync_WhenAnyUsedStockLengthIsUnpriced_ShouldKeepEstimatedCostNull()
-    {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+  [Fact]
+  public async Task ExecuteAsync_WhenAnyUsedStockLengthIsUnpriced_ShouldKeepEstimatedCostNull()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1000, 0),
@@ -480,29 +480,29 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths =
-            [
-                new StockLength { LengthMm = 6000, InStock = true, PricePerTon = 50000 },
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    {
+      SupplierName = "Default",
+      AvailableLengths =
+        [
+            new StockLength { LengthMm = 6000, InStock = true, PricePerTon = 50000 },
                 new StockLength { LengthMm = 7000, InStock = true, PricePerTon = null }
-            ]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(new OptimizationResult
-            {
-                CuttingPlans =
-                [
-                    new CuttingPlan
+        ]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(new OptimizationResult
+        {
+          CuttingPlans =
+            [
+                new CuttingPlan
                     {
                         StockLengthMm = 6000,
                         Cuts = [1400],
@@ -514,33 +514,33 @@ public class GenerateReinforcementPipelineTests
                         Cuts = [1600],
                         SawCutWidthMm = 3
                     }
-                ],
-                TotalStockBarsNeeded = 2,
-                TotalWasteMm = 9994,
-                TotalWastePercent = 76.88,
-                TotalRebarLengthMm = 3000,
-                TotalMassKg = null,
-                EstimatedCost = null
-            });
+            ],
+          TotalStockBarsNeeded = 2,
+          TotalWasteMm = 9994,
+          TotalWastePercent = 76.88,
+          TotalRebarLengthMm = 3000,
+          TotalMassKg = null,
+          EstimatedCost = null
+        });
 
-        var result = await sut.ExecuteAsync(input);
+    var result = await sut.ExecuteAsync(input);
 
-        result.OptimizationResults.Should().ContainKey(12);
-        result.OptimizationResults[12].EstimatedCost.Should().BeNull(
-            "cost must stay undefined when any purchased stock length in the selected plan has no catalog price");
-        result.Report.Should().NotBeNull();
-        result.Report!.Summary.EstimatedCost.Should().BeNull();
-    }
+    result.OptimizationResults.Should().ContainKey(12);
+    result.OptimizationResults[12].EstimatedCost.Should().BeNull(
+        "cost must stay undefined when any purchased stock length in the selected plan has no catalog price");
+    result.Report.Should().NotBeNull();
+    result.Report!.Summary.EstimatedCost.Should().BeNull();
+  }
 
-    [Fact]
-    public async Task ExecuteAsync_WhenOptimizerThrows_ShouldBuildCapacitySafeFallbackPlans()
-    {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+  [Fact]
+  public async Task ExecuteAsync_WhenOptimizerThrows_ShouldBuildCapacitySafeFallbackPlans()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(4900, 0),
@@ -567,44 +567,44 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 0,
                 Mark = "3"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 5000, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(_ => throw new OptimizationException("solver failed"));
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.OptimizationResults.Should().ContainKey(12);
-        var fallback = result.OptimizationResults[12];
-        fallback.TotalStockBarsNeeded.Should().Be(3);
-        fallback.CuttingPlans.Should().HaveCount(3);
-        fallback.CuttingPlans.Should().OnlyContain(plan => plan.Cuts.Sum() <= plan.StockLengthMm);
-        result.Report.Should().NotBeNull();
-        result.Report!.Errors.Should().ContainSingle(error =>
-            error.Stage == "Optimization(d12mm)" &&
-            error.IsCritical == false);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenOptimizerThrowsAndFallbackIsInfeasible_ShouldReturnPartialReport()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 5000, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(_ => throw new OptimizationException("solver failed"));
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.OptimizationResults.Should().ContainKey(12);
+    var fallback = result.OptimizationResults[12];
+    fallback.TotalStockBarsNeeded.Should().Be(3);
+    fallback.CuttingPlans.Should().HaveCount(3);
+    fallback.CuttingPlans.Should().OnlyContain(plan => plan.Cuts.Sum() <= plan.StockLengthMm);
+    result.Report.Should().NotBeNull();
+    result.Report!.Errors.Should().ContainSingle(error =>
+        error.Stage == "Optimization(d12mm)" &&
+        error.IsCritical == false);
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_WhenOptimizerThrowsAndFallbackIsInfeasible_ShouldReturnPartialReport()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(6000, 0),
@@ -613,41 +613,41 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 0,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 5000, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(_ => throw new OptimizationException("solver failed"));
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.Report.Should().NotBeNull();
-        result.Report!.PartialResult.Should().BeTrue();
-        result.OptimizationResults.Should().NotContainKey(12);
-        result.Report.Errors.Should().Contain(error =>
-            error.Stage == "OptimizationFallback(d12mm)" &&
-            error.IsCritical);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenOptimizerThrowsAndNoInStockLengths_ShouldReturnPartialReport()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
-        var zone = CreateZone("Z-1");
-        zone.Rebars =
-        [
-            new RebarSegment
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 5000, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(_ => throw new OptimizationException("solver failed"));
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeTrue();
+    result.OptimizationResults.Should().NotContainKey(12);
+    result.Report.Errors.Should().Contain(error =>
+        error.Stage == "OptimizationFallback(d12mm)" &&
+        error.IsCritical);
+  }
+
+  [Fact]
+  public async Task ExecuteAsync_WhenOptimizerThrowsAndNoInStockLengths_ShouldReturnPartialReport()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
             {
                 Start = new Point2D(0, 0),
                 End = new Point2D(1500, 0),
@@ -656,205 +656,206 @@ public class GenerateReinforcementPipelineTests
                 AnchorageLengthEnd = 200,
                 Mark = "1"
             }
-        ];
-        var zones = new[] { zone };
+    ];
+    var zones = new[] { zone };
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns(zones);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns(zones);
-        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 6000, InStock = false }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(_ => throw new OptimizationException("solver failed"));
-
-        var result = await sut.ExecuteAsync(input);
-
-        result.Report.Should().NotBeNull();
-        result.Report!.PartialResult.Should().BeTrue();
-        result.OptimizationResults.Should().NotContainKey(12);
-        result.Report.Errors.Should().Contain(error =>
-            error.Stage == "OptimizationFallback(d12mm)" &&
-            error.IsCritical &&
-            error.ErrorMessage.Contains("in-stock", StringComparison.OrdinalIgnoreCase));
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenDecompositionQualityViolatesThreshold_ShouldRecordNonCriticalDiagnostic()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false);
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 6000, InStock = false }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(_ => throw new OptimizationException("solver failed"));
 
-        var complexZone = CreateComplexZoneWithPoorDecomposition("Z-COMPLEX");
+    var result = await sut.ExecuteAsync(input);
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns([complexZone]);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns([complexZone]);
-        _calculator.CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns([complexZone]);
-        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
-        {
-            SupplierName = "Default",
-            AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
-        });
-        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
-            .Returns(CreateOptimizationResult());
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeTrue();
+    result.OptimizationResults.Should().NotContainKey(12);
+    result.Report.Errors.Should().Contain(error =>
+        error.Stage == "OptimizationFallback(d12mm)" &&
+        error.IsCritical &&
+        error.ErrorMessage.Contains("in-stock", StringComparison.OrdinalIgnoreCase));
+  }
 
-        var result = await sut.ExecuteAsync(input);
+  [Fact]
+  public async Task ExecuteAsync_WhenDecompositionQualityViolatesThreshold_ShouldRecordNonCriticalDiagnostic()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
 
-        result.Report.Should().NotBeNull();
-        result.Report!.PartialResult.Should().BeFalse();
-        result.Report.Errors.Should().ContainSingle(e =>
-            e.Stage == "GeometryQualityGate" &&
-            e.ExceptionType == "DecompositionQualityViolation" &&
-            e.IsCritical == false);
-    }
+    var complexZone = CreateComplexZoneWithPoorDecomposition("Z-COMPLEX");
 
-    [Fact]
-    public async Task ExecuteAsync_WhenCriticalDecompositionQualityViolation_ShouldAbortBeforeRebarCalculation()
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns([complexZone]);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns([complexZone]);
+    _calculator.CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns([complexZone]);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
     {
-        var sut = CreateSut();
-        var input = CreateInput("plan.dxf", placeInRevit: false) with
-        {
-            DecompositionQualityGate = new DecompositionQualityGateSettings
-            {
-                Enabled = true,
-                MinCoverageRatio = 0.95,
-                MaxOverCoverageRatio = 0.10,
-                TreatViolationsAsCritical = true
-            }
-        };
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 11700, InStock = true }]
+    });
+    _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+        .Returns(CreateOptimizationResult());
 
-        var complexZone = CreateComplexZoneWithPoorDecomposition("Z-COMPLEX-CRITICAL");
+    var result = await sut.ExecuteAsync(input);
 
-        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
-            .Returns([complexZone]);
-        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
-            .Returns([complexZone]);
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeFalse();
+    result.Report.Errors.Should().ContainSingle(e =>
+        e.Stage == "GeometryQualityGate" &&
+        e.ExceptionType == "DecompositionQualityViolation" &&
+        e.IsCritical == false);
+  }
 
-        var result = await sut.ExecuteAsync(input);
-
-        result.Report.Should().NotBeNull();
-        result.Report!.PartialResult.Should().BeTrue();
-        result.Report.Errors.Should().ContainSingle(e =>
-            e.Stage == "GeometryQualityGate" &&
-            e.ExceptionType == "DecompositionQualityViolation" &&
-            e.IsCritical);
-
-        _calculator.DidNotReceive().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), Arg.Any<SlabGeometry>());
-    }
-
-    private static PipelineInput CreateInput(string filePath, bool placeInRevit)
+  [Fact]
+  public async Task ExecuteAsync_WhenCriticalDecompositionQualityViolation_ShouldAbortBeforeRebarCalculation()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false) with
     {
-        return new PipelineInput
-        {
-            IsolineFilePath = filePath,
-            Legend = new ColorLegend([
-                new LegendEntry(new IsolineColor(255, 0, 0), new ReinforcementSpec
+      DecompositionQualityGate = new DecompositionQualityGateSettings
+      {
+        Enabled = true,
+        MinCoverageRatio = 0.95,
+        MaxOverCoverageRatio = 0.10,
+        TreatViolationsAsCritical = true
+      }
+    };
+
+    var complexZone = CreateComplexZoneWithPoorDecomposition("Z-COMPLEX-CRITICAL");
+
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns([complexZone]);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+        .Returns([complexZone]);
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeTrue();
+    result.Report.Errors.Should().ContainSingle(e =>
+        e.Stage == "GeometryQualityGate" &&
+        e.ExceptionType == "DecompositionQualityViolation" &&
+        e.IsCritical);
+
+    _calculator.DidNotReceive().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), Arg.Any<SlabGeometry>());
+  }
+
+  private static PipelineInput CreateInput(string filePath, bool placeInRevit)
+  {
+    return new PipelineInput
+    {
+      IsolineFilePath = filePath,
+      Legend = new ColorLegend([
+            new LegendEntry(new IsolineColor(255, 0, 0), new ReinforcementSpec
                 {
                     DiameterMm = 12,
                     SpacingMm = 200,
                     SteelClass = "A500C"
                 })
-            ]),
-            Slab = new SlabGeometry
-            {
-                OuterBoundary = new Polygon([
-                    new Point2D(0, 0),
+        ]),
+      Slab = new SlabGeometry
+      {
+        OuterBoundary = new Polygon([
+                new Point2D(0, 0),
                     new Point2D(6000, 0),
                     new Point2D(6000, 6000),
                     new Point2D(0, 6000)
-                ]),
-                ThicknessMm = 200,
-                CoverMm = 25,
-                ConcreteClass = "B25"
-            },
-            PlaceInRevit = placeInRevit
-        };
-    }
+            ]),
+        ThicknessMm = 200,
+        CoverMm = 25,
+        ConcreteClass = "B25"
+      },
+      PlaceInRevit = placeInRevit
+    };
+  }
 
-    private static ReinforcementZone CreateZone(string id)
+  private static ReinforcementZone CreateZone(string id)
+  {
+    return new ReinforcementZone
     {
-        return new ReinforcementZone
-        {
-            Id = id,
-            Boundary = new Polygon([
-                new Point2D(0, 0),
+      Id = id,
+      Boundary = new Polygon([
+            new Point2D(0, 0),
                 new Point2D(3000, 0),
                 new Point2D(3000, 3000),
                 new Point2D(0, 3000)
-            ]),
-            Spec = new ReinforcementSpec
-            {
-                DiameterMm = 12,
-                SpacingMm = 200,
-                SteelClass = "A500C"
-            },
-            Direction = RebarDirection.X,
-            ZoneType = ZoneType.Simple
-        };
-    }
+        ]),
+      Spec = new ReinforcementSpec
+      {
+        DiameterMm = 12,
+        SpacingMm = 200,
+        SteelClass = "A500C"
+      },
+      Direction = RebarDirection.X,
+      ZoneType = ZoneType.Simple
+    };
+  }
 
-    private static OptimizationResult CreateOptimizationResult()
+  private static OptimizationResult CreateOptimizationResult()
+  {
+    return new OptimizationResult
     {
-        return new OptimizationResult
-        {
-            CuttingPlans =
-            [
-                new CuttingPlan
+      CuttingPlans =
+        [
+            new CuttingPlan
                 {
                     StockLengthMm = 11700,
                     Cuts = [2400, 2400, 2400],
                     SawCutWidthMm = 3
                 }
-            ],
-            TotalStockBarsNeeded = 1,
-            TotalWasteMm = 4491,
-            TotalWastePercent = 38.38,
-            TotalRebarLengthMm = 7200,
-            TotalMassKg = 6.39
-            ,DualBound = 0.95,
-            Gap = 5.26
-        };
-    }
+        ],
+      TotalStockBarsNeeded = 1,
+      TotalWasteMm = 4491,
+      TotalWastePercent = 38.38,
+      TotalRebarLengthMm = 7200,
+      TotalMassKg = 6.39
+        ,
+      DualBound = 0.95,
+      Gap = 5.26
+    };
+  }
 
-    private static ReinforcementZone CreateComplexZoneWithPoorDecomposition(string id)
+  private static ReinforcementZone CreateComplexZoneWithPoorDecomposition(string id)
+  {
+    return new ReinforcementZone
     {
-        return new ReinforcementZone
-        {
-            Id = id,
-            Boundary = new Polygon([
-                new Point2D(0, 0),
+      Id = id,
+      Boundary = new Polygon([
+            new Point2D(0, 0),
                 new Point2D(3000, 0),
                 new Point2D(3000, 3000),
                 new Point2D(0, 3000)
-            ]),
-            Spec = new ReinforcementSpec
-            {
-                DiameterMm = 12,
-                SpacingMm = 200,
-                SteelClass = "A500C"
-            },
-            Direction = RebarDirection.X,
-            ZoneType = ZoneType.Complex,
-            DecompositionMetrics = new PolygonDecompositionMetrics
-            {
-                PolygonAreaMm2 = 100_000,
-                RectangleCoverAreaMm2 = 140_000,
-                CoverageRatio = 0.90,
-                OverCoverageRatio = 0.40,
-                CellSizeMm = 500,
-                RectangleCount = 6,
-                UsedRectangularShortcut = false
-            },
-            Rebars =
-            [
-                new RebarSegment
+        ]),
+      Spec = new ReinforcementSpec
+      {
+        DiameterMm = 12,
+        SpacingMm = 200,
+        SteelClass = "A500C"
+      },
+      Direction = RebarDirection.X,
+      ZoneType = ZoneType.Complex,
+      DecompositionMetrics = new PolygonDecompositionMetrics
+      {
+        PolygonAreaMm2 = 100_000,
+        RectangleCoverAreaMm2 = 140_000,
+        CoverageRatio = 0.90,
+        OverCoverageRatio = 0.40,
+        CellSizeMm = 500,
+        RectangleCount = 6,
+        UsedRectangularShortcut = false
+      },
+      Rebars =
+        [
+            new RebarSegment
                 {
                     Start = new Point2D(0, 0),
                     End = new Point2D(1000, 0),
@@ -863,7 +864,7 @@ public class GenerateReinforcementPipelineTests
                     AnchorageLengthEnd = 200,
                     Mark = "1"
                 }
-            ]
-        };
-    }
+        ]
+    };
+  }
 }
