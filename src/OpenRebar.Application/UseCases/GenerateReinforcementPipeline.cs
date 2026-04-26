@@ -785,21 +785,22 @@ public sealed class GenerateReinforcementPipeline
         SupplierCatalog catalog,
         double linearMassKgPerM)
     {
+        if (result.CuttingPlans.Count == 0)
+            return null;
+
         double totalCost = 0;
-        bool hasPricing = false;
 
         foreach (var plan in result.CuttingPlans)
         {
             var stock = catalog.AvailableLengths.FirstOrDefault(s => Math.Abs(s.LengthMm - plan.StockLengthMm) < 0.1);
             if (stock?.PricePerTon is null)
-                continue;
+                return null;
 
-            hasPricing = true;
             double purchasedMassKg = (plan.StockLengthMm / 1000.0) * linearMassKgPerM;
             totalCost += purchasedMassKg / 1000.0 * stock.PricePerTon.Value;
         }
 
-        return hasPricing ? totalCost : null;
+        return totalCost;
     }
 
     private IIsolineParser GetParser(string filePath)

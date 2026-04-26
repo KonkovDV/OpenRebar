@@ -464,6 +464,75 @@ public class GenerateReinforcementPipelineTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WhenAnyUsedStockLengthIsUnpriced_ShouldKeepEstimatedCostNull()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false);
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(1000, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 200,
+                AnchorageLengthEnd = 200,
+                Mark = "1"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths =
+            [
+                new StockLength { LengthMm = 6000, InStock = true, PricePerTon = 50000 },
+                new StockLength { LengthMm = 7000, InStock = true, PricePerTon = null }
+            ]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(new OptimizationResult
+            {
+                CuttingPlans =
+                [
+                    new CuttingPlan
+                    {
+                        StockLengthMm = 6000,
+                        Cuts = [1400],
+                        SawCutWidthMm = 3
+                    },
+                    new CuttingPlan
+                    {
+                        StockLengthMm = 7000,
+                        Cuts = [1600],
+                        SawCutWidthMm = 3
+                    }
+                ],
+                TotalStockBarsNeeded = 2,
+                TotalWasteMm = 9994,
+                TotalWastePercent = 76.88,
+                TotalRebarLengthMm = 3000,
+                TotalMassKg = null,
+                EstimatedCost = null
+            });
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.OptimizationResults.Should().ContainKey(12);
+        result.OptimizationResults[12].EstimatedCost.Should().BeNull(
+            "cost must stay undefined when any purchased stock length in the selected plan has no catalog price");
+        result.Report.Should().NotBeNull();
+        result.Report!.Summary.EstimatedCost.Should().BeNull();
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WhenOptimizerThrows_ShouldBuildCapacitySafeFallbackPlans()
     {
         var sut = CreateSut();
