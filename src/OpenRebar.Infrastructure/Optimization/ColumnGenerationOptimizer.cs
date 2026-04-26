@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Domain.Exceptions;
@@ -35,6 +36,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     public const double DemandAggregationPrecisionMm = 0.1;
     private const int ExactSearchMaxItemCount = 8;
     private const int ExactSearchMaxStockVariants = 3;
+    private static readonly AsyncLocal<bool> ForceFallbackMasterSolverOverride = new();
 
     /// <summary>Reduced-cost tolerance for column generation convergence.</summary>
     private const double Epsilon = 1e-6;
@@ -110,6 +112,13 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             return baseline;
 
         return bestColumnGeneration;
+    }
+
+    internal static IDisposable PushForceFallbackMasterSolverOverrideForTesting()
+    {
+        bool previousValue = ForceFallbackMasterSolverOverride.Value;
+        ForceFallbackMasterSolverOverride.Value = true;
+        return new DisposeAction(() => ForceFallbackMasterSolverOverride.Value = previousValue);
     }
 
     private static void EnsureAllCutsFitStock(
@@ -393,6 +402,9 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         int[] demand,
         int m)
     {
+        if (ForceFallbackMasterSolverOverride.Value)
+            return null;
+
         try
         {
             int n = patterns.Count;
@@ -945,4 +957,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
     private sealed record ExactBinSnapshot(double StockLengthMm, IReadOnlyList<double> Cuts);
     private sealed record ExactSearchSolution(double Score, double TotalStockLengthMm, int BarCount, IReadOnlyList<ExactBinSnapshot> Bins);
+    private sealed class DisposeAction(Action onDispose) : IDisposable
+    {
+        public void Dispose() => onDispose();
+    }
 }
