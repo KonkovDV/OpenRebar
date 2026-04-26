@@ -2,6 +2,7 @@ using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Exceptions;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Domain.Rules;
 using FluentAssertions;
 using NSubstitute;
 
@@ -390,6 +391,76 @@ public class GenerateReinforcementPipelineTests
 
         result.Report.Should().NotBeNull();
         result.Report!.Summary.EstimatedCost.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WhenOptimizerReturnsRawResult_ShouldEnrichMassAndCostFromCatalog()
+    {
+        var sut = CreateSut();
+        var input = CreateInput("plan.dxf", placeInRevit: false);
+        var zone = CreateZone("Z-1");
+        zone.Rebars =
+        [
+            new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(1000, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 200,
+                AnchorageLengthEnd = 200,
+                Mark = "1"
+            }
+        ];
+        var zones = new[] { zone };
+
+        _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+            .Returns(zones);
+        _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab)
+            .Returns(zones);
+        _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+        _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+        {
+            SupplierName = "Default",
+            AvailableLengths =
+            [
+                new StockLength { LengthMm = 6000, InStock = true, PricePerTon = 50000 }
+            ]
+        });
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), input.OptimizationSettings)
+            .Returns(new OptimizationResult
+            {
+                CuttingPlans =
+                [
+                    new CuttingPlan
+                    {
+                        StockLengthMm = 6000,
+                        Cuts = [1400],
+                        SawCutWidthMm = 3
+                    }
+                ],
+                TotalStockBarsNeeded = 1,
+                TotalWasteMm = 4597,
+                TotalWastePercent = 76.62,
+                TotalRebarLengthMm = 1400,
+                TotalMassKg = null,
+                EstimatedCost = null
+            });
+
+        var result = await sut.ExecuteAsync(input);
+
+        result.TotalMassKg.Should().BeGreaterThan(0);
+        result.OptimizationResults.Should().ContainKey(12);
+
+        var optimization = result.OptimizationResults[12];
+        var expectedMass = (optimization.TotalRebarLengthMm / 1000.0) * ReinforcementLimits.GetLinearMass(12);
+
+        optimization.TotalMassKg.Should().HaveValue();
+        optimization.TotalMassKg!.Value.Should().BeApproximately(expectedMass, 1e-6);
+        optimization.EstimatedCost.Should().HaveValue();
+
+        result.Report.Should().NotBeNull();
+        result.Report!.Summary.TotalMassKg.Should().BeApproximately(expectedMass, 1e-6);
+        result.Report.Summary.EstimatedCost.Should().HaveValue();
     }
 
     [Fact]

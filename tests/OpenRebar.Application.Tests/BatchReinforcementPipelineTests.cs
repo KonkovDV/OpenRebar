@@ -1,6 +1,7 @@
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Domain.Rules;
 using FluentAssertions;
 using NSubstitute;
 
@@ -42,7 +43,8 @@ public class BatchReinforcementPipelineTests
         result.SlabResults.Should().HaveCount(3);
         result.Failures.Should().BeEmpty();
         result.TotalStockBars.Should().Be(3);
-        result.TotalMassKg.Should().BeApproximately(3 * 6.39, 0.01);
+        double expectedMassPerSlab = (7200.0 / 1000.0) * ReinforcementLimits.GetLinearMass(12);
+        result.TotalMassKg.Should().BeApproximately(3 * expectedMassPerSlab, 0.01);
         result.AverageWastePercent.Should().BeApproximately(38.46, 0.01);
     }
 

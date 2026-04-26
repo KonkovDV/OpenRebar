@@ -215,7 +215,7 @@ public sealed class GenerateReinforcementPipeline
             {
                 var lengths = group.Select(r => r.TotalLength).ToList();
                 var optResult = _optimizer.Optimize(lengths, catalog.AvailableLengths, input.OptimizationSettings);
-                optimizationResults[group.Key] = optResult;
+                optimizationResults[group.Key] = EnrichOptimizationResultWithMassAndCost(optResult, group.Key, catalog);
                 _logger.Info(
                     "Optimized cutting plan",
                     ("diameterMm", group.Key),
@@ -753,6 +753,53 @@ public sealed class GenerateReinforcementPipeline
             1 => distinct[0],
             _ => "mixed"
         };
+    }
+
+    private static OptimizationResult EnrichOptimizationResultWithMassAndCost(
+        OptimizationResult result,
+        int diameterMm,
+        SupplierCatalog catalog)
+    {
+        double linearMass = ReinforcementLimits.GetLinearMass(diameterMm);
+        double totalLengthM = result.TotalRebarLengthMm / 1000.0;
+        double totalMassKg = totalLengthM * linearMass;
+        double? estimatedCost = EstimatePurchasedStockCost(result, catalog, linearMass);
+
+        return new OptimizationResult
+        {
+            CuttingPlans = result.CuttingPlans,
+            TotalStockBarsNeeded = result.TotalStockBarsNeeded,
+            TotalWasteMm = result.TotalWasteMm,
+            TotalWastePercent = result.TotalWastePercent,
+            TotalRebarLengthMm = result.TotalRebarLengthMm,
+            TotalMassKg = totalMassKg,
+            EstimatedCost = estimatedCost,
+            DualBound = result.DualBound,
+            Gap = result.Gap,
+            Provenance = result.Provenance
+        };
+    }
+
+    private static double? EstimatePurchasedStockCost(
+        OptimizationResult result,
+        SupplierCatalog catalog,
+        double linearMassKgPerM)
+    {
+        double totalCost = 0;
+        bool hasPricing = false;
+
+        foreach (var plan in result.CuttingPlans)
+        {
+            var stock = catalog.AvailableLengths.FirstOrDefault(s => Math.Abs(s.LengthMm - plan.StockLengthMm) < 0.1);
+            if (stock?.PricePerTon is null)
+                continue;
+
+            hasPricing = true;
+            double purchasedMassKg = (plan.StockLengthMm / 1000.0) * linearMassKgPerM;
+            totalCost += purchasedMassKg / 1000.0 * stock.PricePerTon.Value;
+        }
+
+        return hasPricing ? totalCost : null;
     }
 
     private IIsolineParser GetParser(string filePath)
