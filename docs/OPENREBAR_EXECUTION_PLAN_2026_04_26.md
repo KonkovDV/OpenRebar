@@ -56,8 +56,12 @@ This plan converts the latest project audit into executable work with objective 
 3. CI passes without changing the test pipeline topology.
 4. `main` remains green after merge.
 
-## Remaining Candidates
+## Next Wave
 
 1. Run manual P0 GitHub admin enablement checklist (rulesets, security toggles) outside codebase.
-2. Complete P1 real Revit 2025 end-to-end evidence pack.
-3. Optionally replace IFC sanity lane with a heavier external validator in nightly mode.
+2. Complete P1 real Revit 2025 end-to-end evidence pack with reproducible artifacts (input, result, schedule, logs, screenshots, Revit build/version, OpenRebar commit SHA).
+3. Add production batch corpus integration policy for private data rails:
+  - keep only manifest schema/example in public repo,
+  - document `OPENREBAR_BATCH_CORPUS_ROOT` hookup,
+  - define benchmark gating metrics and fail-threshold policy.
+4. Optionally replace IFC sanity lane with a heavier external validator in nightly mode.

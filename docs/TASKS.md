@@ -2,7 +2,7 @@
 
 > **Для:** ИИ-программист
 > **Дата:** 2026-04-12
-> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. 160/160 .NET тестов проходят. Добавлены real-adapter batch benchmark harness на generated DXF fixtures и corpus-ready manifest rail для production slab batches. В апреле 2026 стабилизированы CI-ветки Linux и python-smoke (imports/dependencies/action pins). Дальше: Revit SDK live validation, production slab-batch corpora для cutting-quality benchmarks, ML training на реальных данных.
+> **Текущий статус:** OpenRebar rebrand complete. P1 Revit boundary и P3 ML pipeline подготовлены. Academic audit hardening внедрён: geometry evidence, HiGHS-backed restricted-master LP, optimizer TEVV, canonical provenance, exact small-instance CSP path, versioned normative tables. На 2026-04-26 текущий регрессионный статус: 193/193 .NET тестов проходят (README/README.ru + CI claim gate). Добавлены real-adapter batch benchmark harness на generated DXF fixtures и corpus-ready manifest rail для production slab batches. В апреле 2026 стабилизированы CI-ветки Linux и python-smoke (imports/dependencies/action pins). Дальше: Revit SDK live validation, production slab-batch corpora для cutting-quality benchmarks, ML training на реальных данных.
 
 ## Update 2026-04-26 — Audit Execution Wave (CI Claims + Examples + Benchmark Artifacts)
 
@@ -38,7 +38,7 @@
 
 ### Верификация wave
 
-- Full .NET lane (restore/build/test) локально зелёный: 160/160 passed.
+- Full .NET lane (restore/build/test) локально зелёный: 160/160 passed (на 2026-04-16).
 - Python smoke в CI-подобном запуске зелёный: 7/7 passed.
 
 ## Update 2026-04-12 — OpenRebar Rebrand + P1/P3 Preparation
@@ -65,7 +65,7 @@
 - Release workflow (`.github/workflows/release.yml`) with SBOM + attestation
 - SBOM generation in CI (anchore/sbom-action)
 - Artifact attestation (actions/attest-build-provenance)
-- Full regression green: 160/160 .NET tests
+- Full regression green: 160/160 .NET tests (на 2026-04-12; текущее значение см. статус в шапке и README).
 
 ### Осталось
 
