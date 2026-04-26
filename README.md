@@ -48,7 +48,7 @@ The canonical report explicitly persists:
 - `normativeProfile` (for example `ru.sp63.2018`) and a versioned table-set id (for example `ru.sp63.2018.tables.v1`)
 - `analysisProvenance` for geometry decomposition and cutting optimisation (algorithm ids, thresholds, and fallbacks)
 - per-cutting-plan `sawCutWidthMm`, so downstream consumers can independently recompute kerf-aware `wasteMm` / `wastePercent`
-- per-diameter `dualBound` / `gap` quality-bound telemetry when available from the optimizer, preserved in the canonical report for auditability
+- per-diameter `dualBound` / `gap` quality-bound telemetry when available from the optimizer; heuristic fallback-master runs intentionally suppress these fields (`null`) because LP lower-bound guarantees do not apply
 
 ## Architecture
 

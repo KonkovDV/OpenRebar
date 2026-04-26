@@ -751,10 +751,14 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         // Calculate gap: (primal - dual) / dual * 100
         double primalObjective = plans.Count;
         double? gap = null;
-        if (lpObjectiveValue.HasValue && lpObjectiveValue.Value > 1e-10)
+        if (!usedFallbackMasterSolver && lpObjectiveValue.HasValue && lpObjectiveValue.Value > 1e-10)
         {
             gap = (primalObjective - lpObjectiveValue.Value) / lpObjectiveValue.Value * 100.0;
         }
+
+        // Fallback master solve is a heuristic recovery path and does not guarantee
+        // a mathematically valid LP lower bound for audit-grade interpretation.
+        double? dualBound = usedFallbackMasterSolver ? null : lpObjectiveValue;
 
         var provenance = BuildColumnGenerationProvenance(usedFallbackMasterSolver);
         if (provenance != null && gap.HasValue)
@@ -769,7 +773,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             TotalWasteMm = totalWaste,
             TotalWastePercent = totalStock > 0 ? totalWaste / totalStock * 100 : 0,
             TotalRebarLengthMm = totalRequired,
-            DualBound = lpObjectiveValue,
+            DualBound = dualBound,
             Gap = gap,
             Provenance = provenance
         };

@@ -227,7 +227,7 @@ public class ColumnGenerationOptimizerTests
     }
 
     [Fact]
-    public void ForcedFallbackMasterSolver_ShouldExposeFallbackProvenanceAndConsistentBounds()
+    public void ForcedFallbackMasterSolver_ShouldSuppressUnreliableBounds()
     {
         using var _ = ColumnGenerationOptimizer.PushForceFallbackMasterSolverOverrideForTesting();
 
@@ -238,12 +238,12 @@ public class ColumnGenerationOptimizerTests
         result.Provenance.Should().NotBeNull();
         result.Provenance!.UsedFallbackMasterSolver.Should().BeTrue();
         result.Provenance.MasterProblemStrategy.Should().Be("restricted-master-lp-highs-with-fallback");
-        result.DualBound.Should().HaveValue();
-        result.Gap.Should().HaveValue();
-        result.DualBound!.Value.Should().BeLessThanOrEqualTo(result.TotalStockBarsNeeded + 1e-6,
-            "LP relaxation bound must not exceed the integer number of purchased bars even in degraded fallback mode");
-        result.Gap!.Value.Should().BeGreaterThanOrEqualTo(-1e-6,
-            "reported primal-vs-dual quality gap should not become negative in degraded fallback mode");
+        result.DualBound.Should().BeNull(
+            "heuristic fallback master solve does not provide an audit-grade LP lower bound");
+        result.Gap.Should().BeNull(
+            "gap depends on a valid LP lower bound and must be suppressed for heuristic fallback master solve");
+        result.Provenance.QualityGapPercent.Should().BeNull(
+            "provenance should not claim a quality gap when the underlying bound is not mathematically reliable");
     }
 
     private static int SolveExactMinimumBars(
