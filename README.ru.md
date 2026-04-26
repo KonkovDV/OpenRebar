@@ -41,13 +41,14 @@ OpenRebar реализует воспроизводимый конвейер:
 | `*.schedule.csv` | CLI exporter | Выгрузка ведомости арматуры (CSV) |
 | `*.reinforcement.ifc` | CLI exporter | IFC-экспорт (IFC4 через xBIM) |
 
-**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `1.1.0`)
+**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `1.2.0`)
 
 Канонический отчёт явно хранит:
 
 - `normativeProfile` (например, `ru.sp63.2018`) и идентификатор набора таблиц с версией (например, `ru.sp63.2018.tables.v1`)
 - `analysisProvenance` по декомпозиции геометрии и оптимизации раскроя (идентификаторы алгоритмов, пороги, fallback-ветви)
 - `sawCutWidthMm` для каждого cutting plan, чтобы downstream-потребители могли независимо пересчитывать kerf-aware `wasteMm` / `wastePercent`
+- `dualBound` / `gap` по каждому диаметру (если доступны у оптимизатора), чтобы сохранялась проверяемая телеметрия качества решения в каноническом отчёте
 
 ## Архитектура
 
@@ -119,7 +120,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **179/179 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **180/180 тестов проходят**.
 
 ## Комплексный аудит (2026-04-25)
 

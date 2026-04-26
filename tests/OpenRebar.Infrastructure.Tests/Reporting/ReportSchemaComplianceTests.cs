@@ -149,6 +149,31 @@ public class ReportSchemaComplianceTests
     }
 
     [Fact]
+    public async Task SaveAsync_OptimizationByDiameterShouldContainQualityBoundsFields()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-opt-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var optimization = doc.RootElement.GetProperty("optimizationByDiameter")[0];
+
+            optimization.TryGetProperty("dualBound", out _).Should().BeTrue();
+            optimization.TryGetProperty("gap", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
     public async Task SaveAsync_ContractIdShouldMatchSchemaConstant()
     {
         var store = new JsonFileReportStore();
@@ -326,6 +351,8 @@ public class ReportSchemaComplianceTests
                 TotalWastePercent = 14.5,
                 TotalRebarLengthMm = 30000,
                 TotalMassKg = 26.6,
+                DualBound = 1.9,
+                Gap = 5.26,
                 CuttingPlans =
                 [
                     new CuttingPlanExecutionReport

@@ -204,6 +204,8 @@
         "totalRebarLengthMm": { "type": "number", "minimum": 0 },
         "totalMassKg": { "type": ["number", "null"], "minimum": 0 },
         "estimatedCost": { "type": ["number", "null"], "minimum": 0 },
+        "dualBound": { "type": ["number", "null"] },
+        "gap": { "type": ["number", "null"] },
         "cuttingPlans": {
           "type": "array",
           "items": { "$ref": "#/$defs/cuttingPlanExecutionReport" }

@@ -218,7 +218,9 @@ public class GenerateReinforcementPipelineTests
                 report.Metadata.SlabId == "SLAB-42" &&
                 report.Zones.Count == 1 &&
                 report.Summary.TotalRebarSegments == 1 &&
-                report.OptimizationByDiameter.Single().CuttingPlans.Single().SawCutWidthMm == input.OptimizationSettings.SawCutWidthMm),
+                report.OptimizationByDiameter.Single().CuttingPlans.Single().SawCutWidthMm == input.OptimizationSettings.SawCutWidthMm &&
+                report.OptimizationByDiameter.Single().DualBound == 0.95 &&
+                report.OptimizationByDiameter.Single().Gap == 5.26),
             input.ReportOutputPath!,
             Arg.Any<CancellationToken>());
     }
@@ -674,6 +676,8 @@ public class GenerateReinforcementPipelineTests
             TotalWastePercent = 38.38,
             TotalRebarLengthMm = 7200,
             TotalMassKg = 6.39
+            ,DualBound = 0.95,
+            Gap = 5.26
         };
     }
 

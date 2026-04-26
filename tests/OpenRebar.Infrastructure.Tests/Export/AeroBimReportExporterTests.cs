@@ -130,6 +130,8 @@ public class AeroBimReportExporterTests
                 TotalWastePercent = 14.53,
                 TotalRebarLengthMm = 10000,
                 TotalMassKg = 10,
+                DualBound = 0.95,
+                Gap = 5.26,
                 CuttingPlans = [new CuttingPlanExecutionReport
                 {
                     StockLengthMm = 11700,

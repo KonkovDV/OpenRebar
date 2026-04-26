@@ -562,6 +562,8 @@ public sealed class GenerateReinforcementPipeline
                     TotalRebarLengthMm = kv.Value.TotalRebarLengthMm,
                     TotalMassKg = kv.Value.TotalMassKg,
                     EstimatedCost = kv.Value.EstimatedCost,
+                    DualBound = kv.Value.DualBound,
+                    Gap = kv.Value.Gap,
                     CuttingPlans = kv.Value.CuttingPlans.Select(plan => new CuttingPlanExecutionReport
                     {
                         StockLengthMm = plan.StockLengthMm,
