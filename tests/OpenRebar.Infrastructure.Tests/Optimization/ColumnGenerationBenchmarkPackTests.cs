@@ -48,6 +48,13 @@ public class ColumnGenerationBenchmarkPackTests
                 [
                     new StockLength { LengthMm = 11700, InStock = true },
                     new StockLength { LengthMm = 6000, InStock = true }
+                ]),
+            new BenchmarkCase(
+                "dual-stock-large-threshold-mixture",
+                Enumerable.Repeat(5500.0, 9).ToArray(),
+                [
+                    new StockLength { LengthMm = 11700, InStock = true },
+                    new StockLength { LengthMm = 6000, InStock = true }
                 ])
         };
 

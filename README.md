@@ -120,7 +120,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **186/186 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **188/188 tests passing**.
 
 ## Comprehensive Audit (2026-04-25)
 
@@ -128,6 +128,7 @@ A full project-wide audit was executed across architecture, algorithmic correctn
 
 - Audit report: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
 - Key fix delivered: cost-aware non-regression guard in `ColumnGenerationOptimizer` with dedicated regression test coverage
+- Follow-up fix delivered: mixed-stock constructive packing for heterogeneous stock catalogs, closing the large-batch single-stock regression and extending benchmark coverage beyond the exact-search envelope
 - Verification baseline: `git fsck --full`, `dotnet build`, `dotnet test`, `dotnet list package --vulnerable --include-transitive`, and formatting gate check (`dotnet format --verify-no-changes`)
 
 ### Optional corpus rail

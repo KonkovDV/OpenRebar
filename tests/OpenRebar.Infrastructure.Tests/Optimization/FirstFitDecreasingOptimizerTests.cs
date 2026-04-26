@@ -102,4 +102,22 @@ public class FirstFitDecreasingOptimizerTests
         act.Should().Throw<OptimizationException>()
             .WithMessage("*exceeds all available stock lengths*");
     }
+
+    [Fact]
+    public void MultipleStockLengths_ShouldMixStockWhenItImprovesOverallPacking()
+    {
+        var stock = new List<StockLength>
+        {
+            new() { LengthMm = 11700, InStock = true },
+            new() { LengthMm = 6000, InStock = true },
+        };
+
+        var lengths = Enumerable.Repeat(5500.0, 9).ToList();
+
+        var result = _optimizer.Optimize(lengths, stock, DefaultSettings);
+
+        result.TotalStockBarsNeeded.Should().Be(5);
+        result.CuttingPlans.Should().Contain(plan => plan.StockLengthMm == 11700);
+        result.CuttingPlans.Should().Contain(plan => plan.StockLengthMm == 6000);
+    }
 }

@@ -157,6 +157,27 @@ public class ColumnGenerationOptimizerTests
     }
 
     [Fact]
+    public void LargeMixedStockBatch_ShouldUseMixedStockLengthsBeyondExactSearchEnvelope()
+    {
+        var stock = new List<StockLength>
+        {
+            new() { LengthMm = 11700, InStock = true },
+            new() { LengthMm = 6000, InStock = true },
+        };
+
+        var lengths = Enumerable.Repeat(5500.0, 9).ToList();
+
+        var result = _optimizer.Optimize(lengths, stock, DefaultSettings);
+
+        result.TotalStockBarsNeeded.Should().Be(5,
+            "four 11.7m bars can cover eight pieces and one 6m bar should cover the remainder");
+        result.CuttingPlans.Should().Contain(plan => plan.StockLengthMm == 11700);
+        result.CuttingPlans.Should().Contain(plan => plan.StockLengthMm == 6000);
+        result.TotalWasteMm.Should().BeApproximately(3273, 0.001,
+            "the heterogeneous catalog should reduce waste versus any single-stock strategy on this batch");
+    }
+
+    [Fact]
     public void CostWeightedOptimization_ShouldNotBeOverriddenByBaselineGuard()
     {
         var stock = new List<StockLength>

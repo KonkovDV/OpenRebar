@@ -3,18 +3,18 @@ using OpenRebar.Domain.Models;
 namespace OpenRebar.Domain.Ports;
 
 /// <summary>
-/// Optimizes rebar cutting to minimize waste and cost.
-/// Solves the bin-packing (cutting stock) problem for rebar lengths.
+/// Optimizes rebar cutting to reduce waste, stock consumption, and cost under the configured weights.
+/// Solves the rebar cutting-stock problem using the implementation's supported exact and heuristic strategies.
 /// </summary>
 public interface IRebarOptimizer
 {
     /// <summary>
-    /// Find the optimal cutting plan to minimize waste.
+    /// Compute a cutting plan for the requested rebar lengths.
     /// </summary>
     /// <param name="requiredLengths">All required rebar lengths in mm.</param>
     /// <param name="stockLengths">Available stock bar lengths.</param>
     /// <param name="settings">Optimization settings.</param>
-    /// <returns>Optimal cutting plan with waste statistics.</returns>
+    /// <returns>Cutting plan with waste statistics and optimizer provenance.</returns>
     OptimizationResult Optimize(
         IReadOnlyList<double> requiredLengths,
         IReadOnlyList<StockLength> stockLengths,

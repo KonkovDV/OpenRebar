@@ -120,7 +120,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **186/186 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **188/188 тестов проходят**.
 
 ## Комплексный аудит (2026-04-25)
 
@@ -128,6 +128,7 @@ dotnet test OpenRebar.sln
 
 - Отчёт аудита: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
 - Ключевой технический фикс: cost-aware non-regression guard в `ColumnGenerationOptimizer` + отдельный регрессионный тест
+- Follow-up фикс: mixed-stock constructive packing для heterogeneous stock catalog, закрывающий large-batch single-stock regression и расширяющий benchmark coverage за пределы exact-search envelope
 - Базовый стек верификации: `git fsck --full`, `dotnet build`, `dotnet test`, `dotnet list package --vulnerable --include-transitive` и формат-гейт `dotnet format --verify-no-changes`
 
 ### Опциональный corpus rail
