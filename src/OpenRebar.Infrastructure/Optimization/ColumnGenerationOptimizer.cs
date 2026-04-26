@@ -340,13 +340,19 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
     #region Demand Aggregation
 
-    private sealed record DemandItem(double OriginalLength, double EffectiveLength, int Count);
+    private sealed record DemandItem(double RepresentativeLength, double EffectiveLength, IReadOnlyList<double> OriginalLengths)
+    {
+        public int Count => OriginalLengths.Count;
+    }
 
     private static List<DemandItem> AggregrateDemand(IReadOnlyList<double> lengths, double sawCut)
     {
         return lengths
             .GroupBy(l => Math.Round(l, 1)) // group within 0.1mm tolerance
-            .Select(g => new DemandItem(g.Key, g.Key + sawCut, g.Count()))
+            .Select(g => new DemandItem(
+                g.Key,
+                g.Key + sawCut,
+                g.OrderByDescending(length => length).ToList()))
             .OrderByDescending(d => d.EffectiveLength)
             .ToList();
     }
@@ -719,7 +725,9 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         double? lpObjectiveValue)
     {
         var plans = new List<CuttingPlan>();
-        var remainingDemand = demand.Select(item => item.Count).ToArray();
+        var remainingDemand = demand
+            .Select(item => new Queue<double>(item.OriginalLengths.OrderByDescending(length => length)))
+            .ToArray();
 
         for (int j = 0; j < integerSolution.Length; j++)
         {
@@ -728,11 +736,9 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
                 var cuts = new List<double>();
                 for (int i = 0; i < demand.Count; i++)
                 {
-                    int cutsStillNeeded = Math.Min(patterns[j][i], remainingDemand[i]);
+                    int cutsStillNeeded = Math.Min(patterns[j][i], remainingDemand[i].Count);
                     for (int k = 0; k < cutsStillNeeded; k++)
-                        cuts.Add(demand[i].OriginalLength);
-
-                    remainingDemand[i] -= cutsStillNeeded;
+                        cuts.Add(remainingDemand[i].Dequeue());
                 }
 
                 if (cuts.Count > 0)

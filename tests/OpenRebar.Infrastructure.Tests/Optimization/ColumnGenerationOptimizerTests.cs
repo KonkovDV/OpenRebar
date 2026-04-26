@@ -303,7 +303,7 @@ public class ColumnGenerationOptimizerTests
         var lengths = new List<double> { 500.06, 500.06, 500.06 };
         var stock = new List<StockLength>
         {
-            new() { LengthMm = 1000, InStock = true }
+            new() { LengthMm = 1000.2, InStock = true }
         };
 
         var result = _optimizer.Optimize(lengths, stock, DefaultSettings with { SawCutWidthMm = 0 });
@@ -311,6 +311,36 @@ public class ColumnGenerationOptimizerTests
         result.CuttingPlans.Should().OnlyContain(plan =>
             plan.ConsumedLengthMm <= plan.StockLengthMm + 1e-6,
             "each emitted cutting plan must be physically feasible even for fractional-length demands");
+    }
+
+    [Fact]
+    public void NonExactFractionalInput_ShouldPreserveOriginalRequestedLengthMultiset()
+    {
+        // 9 items force the non-exact branch where demand aggregation is used.
+        var lengths = new List<double>
+        {
+            500.01, 500.04, 500.01, 500.04, 500.01,
+            500.04, 500.01, 500.04, 500.01
+        };
+        var stock = new List<StockLength>
+        {
+            new() { LengthMm = 1000.2, InStock = true }
+        };
+
+        var result = _optimizer.Optimize(lengths, stock, DefaultSettings with { SawCutWidthMm = 0 });
+
+        var expected = lengths.OrderBy(length => length).ToList();
+        var actual = result.CuttingPlans
+            .SelectMany(plan => plan.Cuts)
+            .OrderBy(length => length)
+            .ToList();
+
+        actual.Should().HaveCount(expected.Count);
+        for (int i = 0; i < expected.Count; i++)
+        {
+            actual[i].Should().BeApproximately(expected[i], 1e-6,
+                "the emitted cut multiset should preserve original requested lengths even when aggregated for pricing/master solves");
+        }
     }
 
     private static int SolveExactMinimumBars(
