@@ -70,7 +70,10 @@ public sealed class OptimizeRebarCuttingUseCase
                 TotalWastePercent = result.TotalWastePercent,
                 TotalRebarLengthMm = result.TotalRebarLengthMm,
                 TotalMassKg = totalMassKg,
-                EstimatedCost = estimatedCost
+                EstimatedCost = estimatedCost,
+                DualBound = result.DualBound,
+                Gap = result.Gap,
+                Provenance = result.Provenance
             };
 
             report.DiameterReports.Add(new DiameterOptimizationReport

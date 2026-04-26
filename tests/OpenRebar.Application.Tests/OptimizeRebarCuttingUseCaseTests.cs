@@ -125,6 +125,55 @@ public class OptimizeRebarCuttingUseCaseTests
         _logger.Received().Info("Starting cutting optimization", Arg.Any<(string Key, object? Value)[]>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ShouldPreserveOptimizerQualityMetadata()
+    {
+        var useCase = new OptimizeRebarCuttingUseCase(_optimizer, _catalogLoader, _logger);
+        IReadOnlyList<ReinforcementZone> zones = [MakeZone("Z-12", 12)];
+
+        var catalog = new SupplierCatalog
+        {
+            SupplierName = "Supplier",
+            AvailableLengths =
+            [
+                new StockLength { LengthMm = 6000, InStock = true }
+            ]
+        };
+
+        var provenance = new OptimizationProvenance
+        {
+            OptimizerId = "column-generation-relaxation-v1",
+            MasterProblemStrategy = "restricted-master-lp-highs",
+            PricingStrategy = "bounded-knapsack-dp",
+            IntegerizationStrategy = "largest-remainder-plus-repair",
+            DemandAggregationPrecisionMm = 0.1,
+            QualityFloor = "ffd-non-regression-floor",
+            UsedFallbackMasterSolver = false,
+            QualityGapPercent = 1.25
+        };
+
+        _catalogLoader.GetDefaultCatalog().Returns(catalog);
+        _optimizer.Optimize(Arg.Any<IReadOnlyList<double>>(), Arg.Any<IReadOnlyList<StockLength>>(), Arg.Any<OptimizationSettings>())
+            .Returns(new OptimizationResult
+            {
+                CuttingPlans = [new CuttingPlan { StockLengthMm = 6000, Cuts = [1400] }],
+                TotalStockBarsNeeded = 1,
+                TotalWasteMm = 4600,
+                TotalWastePercent = 76.67,
+                TotalRebarLengthMm = 1400,
+                DualBound = 0.95,
+                Gap = 5.26,
+                Provenance = provenance
+            });
+
+        var report = await useCase.ExecuteAsync(zones, null, new OptimizationSettings());
+
+        var result = report.DiameterReports.Single().OptimizationResult;
+        result.DualBound.Should().Be(0.95);
+        result.Gap.Should().Be(5.26);
+        result.Provenance.Should().BeEquivalentTo(provenance);
+    }
+
     private static ReinforcementZone MakeZone(string id, int diameterMm) =>
         new()
         {
