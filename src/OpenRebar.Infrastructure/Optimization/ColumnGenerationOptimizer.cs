@@ -86,7 +86,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         var candidates = availableStock
             .Select(stock =>
             {
-                var result = OptimizeForStockLength(requiredLengths, demand, itemLengths, itemDemand, stock.LengthMm);
+                var result = OptimizeForStockLength(requiredLengths, demand, itemLengths, itemDemand, stock.LengthMm, settings.SawCutWidthMm);
                 double? costProxy = stock.PricePerTon.HasValue
                     ? result.CuttingPlans.Sum(plan => plan.StockLengthMm) * stock.PricePerTon.Value
                     : null;
@@ -144,7 +144,8 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         List<DemandItem> demand,
         double[] itemLengths,
         int[] itemDemand,
-        double stockLength)
+        double stockLength,
+        double sawCutWidthMm)
     {
         int m = demand.Count;
         bool usedFallbackMasterSolver = false;
@@ -175,7 +176,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         var integerSolution = RoundSolution(finalMaster.Solution ?? [], patterns, itemDemand, m);
 
         // Build cutting plans from the integer solution
-        return BuildResult(integerSolution, patterns, demand, stockLength, requiredLengths, usedFallbackMasterSolver, finalMaster.LpObjectiveValue);
+        return BuildResult(integerSolution, patterns, demand, stockLength, sawCutWidthMm, requiredLengths, usedFallbackMasterSolver, finalMaster.LpObjectiveValue);
     }
 
     private static OptimizationResult? TryOptimizeExactSmallInstance(
@@ -227,7 +228,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             if (index == sortedLengths.Length)
             {
                 double totalStockLength = bins.Sum(bin => bin.StockLengthMm);
-                double totalWasteMm = totalStockLength - totalRequired;
+                double totalWasteMm = totalStockLength - totalRequired - sortedLengths.Length * settings.SawCutWidthMm;
                 double totalWastePercent = totalStockLength > 0
                     ? totalWasteMm / totalStockLength * 100.0
                     : 0;
@@ -294,12 +295,13 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
             .Select(bin => new CuttingPlan
             {
                 StockLengthMm = bin.StockLengthMm,
-                Cuts = bin.Cuts
+                Cuts = bin.Cuts,
+                SawCutWidthMm = settings.SawCutWidthMm
             })
             .ToList();
 
         double totalStock = plans.Sum(plan => plan.StockLengthMm);
-        double totalWaste = totalStock - totalRequired;
+        double totalWaste = plans.Sum(plan => plan.WasteMm);
 
         return new OptimizationResult
         {
@@ -708,11 +710,13 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         List<int[]> patterns,
         List<DemandItem> demand,
         double stockLength,
+        double sawCutWidthMm,
         IReadOnlyList<double> originalLengths,
         bool usedFallbackMasterSolver,
         double? lpObjectiveValue)
     {
         var plans = new List<CuttingPlan>();
+        var remainingDemand = demand.Select(item => item.Count).ToArray();
 
         for (int j = 0; j < integerSolution.Length; j++)
         {
@@ -721,8 +725,11 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
                 var cuts = new List<double>();
                 for (int i = 0; i < demand.Count; i++)
                 {
-                    for (int k = 0; k < patterns[j][i]; k++)
+                    int cutsStillNeeded = Math.Min(patterns[j][i], remainingDemand[i]);
+                    for (int k = 0; k < cutsStillNeeded; k++)
                         cuts.Add(demand[i].OriginalLength);
+
+                    remainingDemand[i] -= cutsStillNeeded;
                 }
 
                 if (cuts.Count > 0)
@@ -730,15 +737,16 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
                     plans.Add(new CuttingPlan
                     {
                         StockLengthMm = stockLength,
-                        Cuts = cuts
+                        Cuts = cuts,
+                        SawCutWidthMm = sawCutWidthMm
                     });
                 }
             }
         }
 
         double totalRequired = originalLengths.Sum();
-        double totalStock = plans.Count * stockLength;
-        double totalWaste = totalStock - totalRequired;
+        double totalStock = plans.Sum(plan => plan.StockLengthMm);
+        double totalWaste = plans.Sum(plan => plan.WasteMm);
 
         // Calculate gap: (primal - dual) / dual * 100
         double primalObjective = plans.Count;

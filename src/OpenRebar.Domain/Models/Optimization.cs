@@ -55,8 +55,17 @@ public sealed record CuttingPlan
     /// <summary>Segments cut from this bar (lengths in mm).</summary>
     public required IReadOnlyList<double> Cuts { get; init; }
 
-    /// <summary>Remaining waste (mm).</summary>
-    public double WasteMm => StockLengthMm - Cuts.Sum();
+    /// <summary>Saw cut width applied per produced cut (mm).</summary>
+    public double SawCutWidthMm { get; init; }
+
+    /// <summary>Total material lost to saw cuts for this bar (mm).</summary>
+    public double SawKerfLossMm => Cuts.Count * SawCutWidthMm;
+
+    /// <summary>Total consumed stock length: installed steel plus saw-kerf loss (mm).</summary>
+    public double ConsumedLengthMm => Cuts.Sum() + SawKerfLossMm;
+
+    /// <summary>Remaining waste after installed steel and saw-kerf loss (mm).</summary>
+    public double WasteMm => Math.Max(0, StockLengthMm - ConsumedLengthMm);
 
     /// <summary>Waste percentage.</summary>
     public double WastePercent => WasteMm / StockLengthMm * 100;

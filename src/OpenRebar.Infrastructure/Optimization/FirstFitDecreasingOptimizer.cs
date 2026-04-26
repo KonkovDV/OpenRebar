@@ -90,12 +90,13 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
         var plans = bins.Select(b => new CuttingPlan
         {
             StockLengthMm = stockLength,
-            Cuts = b.Cuts
+            Cuts = b.Cuts,
+            SawCutWidthMm = settings.SawCutWidthMm
         }).ToList();
 
         double totalRequired = requiredLengths.Sum();
-        double totalStock = bins.Count * stockLength;
-        double totalWaste = totalStock - totalRequired;
+        double totalStock = plans.Sum(plan => plan.StockLengthMm);
+        double totalWaste = plans.Sum(plan => plan.WasteMm);
 
         return new OptimizationResult
         {

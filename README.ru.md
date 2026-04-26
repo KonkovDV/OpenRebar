@@ -103,6 +103,7 @@ Domain (pure) ← Application (use cases) ← Infrastructure (adapters) ← Host
 | `FirstFitDecreasingOptimizer` | Эвристический бейзлайн и fallback |
 
 Текущую реализацию column generation следует трактовать как сильный инженерный бейзлайн (LP/pricing/repair), но не как математически полный branch-and-price. Это различие явно фиксируется в provenance канонического отчёта.
+Показатели `WasteMm` / `WastePercent` kerf-aware: они измеряют остаток стержня после вычитания как установленной длины арматуры, так и потерь материала на saw cut.
 
 ### Распознавание цветов (DXF/PNG)
 
@@ -117,7 +118,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **178/178 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **179/179 тестов проходят**.
 
 ## Комплексный аудит (2026-04-25)
 

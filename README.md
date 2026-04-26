@@ -103,6 +103,7 @@ Two optimiser implementations behind `IRebarOptimizer`:
 | `FirstFitDecreasingOptimizer` | Heuristic baseline and fallback |
 
 The column-generation implementation should be understood as a strong engineering baseline (LP/pricing/repair), not as a mathematically complete branch-and-price solver. This distinction is persisted into the canonical report provenance.
+Reported `WasteMm` / `WastePercent` are kerf-aware: they measure residual stock after both installed rebar length and saw-cut material loss are subtracted.
 
 ### DXF/PNG Color Recognition
 
@@ -117,7 +118,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **178/178 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **179/179 tests passing**.
 
 ## Comprehensive Audit (2026-04-25)
 

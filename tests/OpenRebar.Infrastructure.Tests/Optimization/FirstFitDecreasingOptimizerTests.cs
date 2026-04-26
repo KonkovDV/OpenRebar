@@ -73,7 +73,8 @@ public class FirstFitDecreasingOptimizerTests
         var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
 
         result.TotalRebarLengthMm.Should().Be(10000);
-        result.TotalWasteMm.Should().BeApproximately(1700, 10);
+        result.CuttingPlans[0].WasteMm.Should().BeApproximately(1697, 0.001);
+        result.TotalWasteMm.Should().BeApproximately(1697, 0.001);
         result.TotalWastePercent.Should().BeApproximately(14.5, 1);
     }
 

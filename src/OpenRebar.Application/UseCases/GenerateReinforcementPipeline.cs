@@ -430,7 +430,8 @@ public sealed class GenerateReinforcementPipeline
             .Select(bin => new CuttingPlan
             {
                 StockLengthMm = stockLengthMm,
-                Cuts = bin.Cuts
+                Cuts = bin.Cuts,
+                SawCutWidthMm = sawCutWidthMm
             })
             .ToList();
         infeasibleReason = null;

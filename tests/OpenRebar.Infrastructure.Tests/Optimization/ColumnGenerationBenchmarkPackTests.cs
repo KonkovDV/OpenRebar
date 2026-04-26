@@ -117,7 +117,7 @@ public class ColumnGenerationBenchmarkPackTests
             if (index == effectiveLengths.Length)
             {
                 double currentTotalStockLength = bins.Sum(bin => bin.StockLengthMm);
-                double currentWaste = currentTotalStockLength - lengths.Sum();
+                double currentWaste = currentTotalStockLength - lengths.Sum() - lengths.Count * settings.SawCutWidthMm;
                 double currentWastePercent = currentTotalStockLength > 0
                     ? currentWaste / currentTotalStockLength * 100.0
                     : 0;
@@ -170,7 +170,7 @@ public class ColumnGenerationBenchmarkPackTests
         return new ExactOptimizationReference(
             bestScore,
             bestBarCount,
-            bestTotalStockLength - totalRequiredLength,
+            bestTotalStockLength - totalRequiredLength - lengths.Count * settings.SawCutWidthMm,
             bestTotalStockLength);
     }
 

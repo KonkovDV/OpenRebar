@@ -62,8 +62,11 @@ public class ColumnGenerationOptimizerTests
         var baseline = new FirstFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
 
         var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
+        var allCuts = result.CuttingPlans.SelectMany(plan => plan.Cuts).ToList();
 
         result.TotalStockBarsNeeded.Should().BeLessThanOrEqualTo(4);
+        allCuts.Should().HaveCount(lengths.Count,
+            "column generation result should not materialize extra cuts beyond the original demand after integer rounding");
         result.TotalWastePercent.Should().BeApproximately(baseline.TotalWastePercent, 0.01,
             "with a single available stock length, the column-generation optimizer should match the practical FFD baseline");
     }
@@ -108,8 +111,9 @@ public class ColumnGenerationOptimizerTests
         var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
 
         result.TotalRebarLengthMm.Should().Be(10000);
+        result.CuttingPlans.Should().OnlyContain(plan => plan.SawCutWidthMm == DefaultSettings.SawCutWidthMm);
         result.TotalWasteMm.Should().BeApproximately(
-            result.TotalStockBarsNeeded * 11700.0 - 10000, 10);
+            result.TotalStockBarsNeeded * 11700.0 - 10000 - DefaultSettings.SawCutWidthMm, 0.001);
     }
 
     [Fact]
