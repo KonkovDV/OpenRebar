@@ -24,7 +24,7 @@ OpenRebar implements a reproducible pipeline:
 1. Parse an isoline file (**DXF** or **PNG**) into color-coded reinforcement zones
 2. Classify zones and decompose complex polygons into rectangles (with persisted coverage/over-coverage evidence)
 3. Calculate reinforcement layout per zone (spacing, diameter, anchorage rules)
-4. Optimize cutting (1D CSP) to reduce waste (column-generation-style baseline + exact small-instance fallback)
+4. Optimize cutting (1D CSP) to reduce waste (exact small-instance path + column-generation baseline for larger instances)
 5. Persist auditable machine-readable artifacts for downstream BIM systems
 6. (When enabled) place shape-driven Rebar elements in Revit and generate tags / bending-shape tracking
 
@@ -101,7 +101,7 @@ Two optimiser implementations behind `IRebarOptimizer`:
 
 | Algorithm | Intended role |
 |---|---|
-| `ColumnGenerationOptimizer` | Production-oriented baseline with persisted optimisation provenance and exact small-instance fallback |
+| `ColumnGenerationOptimizer` | Production-oriented baseline with persisted optimisation provenance and an exact small-instance fast path |
 | `FirstFitDecreasingOptimizer` | Heuristic baseline and fallback |
 
 The column-generation implementation should be understood as a strong engineering baseline (LP/pricing/repair), not as a mathematically complete branch-and-price solver. This distinction is persisted into the canonical report provenance.
