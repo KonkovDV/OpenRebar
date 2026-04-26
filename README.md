@@ -15,6 +15,41 @@ This repo ships three execution surfaces:
 - **Revit host** (`src/OpenRebar.RevitPlugin`) — external command + UI (compiled only when Revit SDK references are available)
 - **Optional ML module** (`ml/`) — U-Net segmentation for PNG isolines exposed via HTTP (FastAPI)
 
+## Table of Contents
+
+- [Problem Statement](#problem-statement)
+- [Quick Start (CI-Parity)](#quick-start-ci-parity)
+- [Outputs and Integration Contract](#outputs-and-integration-contract)
+- [Architecture](#architecture)
+- [Domain Ports](#domain-ports)
+- [Build and Test](#build-and-test)
+- [CI Quality Gates](#ci-quality-gates)
+- [Canonical Examples and Snapshots](#canonical-examples-and-snapshots)
+- [Python ML Module (Optional)](#python-ml-module-optional)
+- [Revit Host Boundary](#revit-host-boundary)
+- [Project Docs](#project-docs)
+- [Scientific Reporting Standard](#scientific-reporting-standard)
+
+## Quick Start (CI-Parity)
+
+Prerequisites:
+
+- .NET SDK 8.x
+- Python 3.11+ (for `tools/ci/*.py` and optional `ml/` lane)
+- Git with LF-aware checkout
+
+Run from repository root:
+
+```bash
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet format OpenRebar.sln --verify-no-changes --no-restore
+dotnet test OpenRebar.sln --no-build --configuration Release
+python tools/ci/verify_readme_regression_claim.py
+```
+
+This sequence mirrors the core .NET lane in CI and is the recommended pre-PR minimum for code or docs claims touching test status.
+
 ## Problem Statement
 
 The motivating workflow is reinforcement placement in Revit from isoline maps exported by tools such as LIRA-SAPR / Stark-ES. Manual placement is time-consuming and susceptible to inconsistency across floors, zones, and engineers.
@@ -116,11 +151,29 @@ Reported `WasteMm` / `WastePercent` are kerf-aware: they measure residual stock 
 ## Build and Test
 
 ```bash
-dotnet build OpenRebar.sln
-dotnet test OpenRebar.sln
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet format OpenRebar.sln --verify-no-changes --no-restore
+dotnet test OpenRebar.sln --no-build --configuration Release
 ```
 
 Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **193/193 tests passing**.
+
+## CI Quality Gates
+
+The `build-and-test` workflow enforces claim-driven checks, not only compilation:
+
+| Gate | Purpose | Failure effect |
+|---|---|---|
+| `dotnet restore --locked-mode` | lockfile integrity and deterministic dependency graph | blocks lane |
+| `dotnet build` | compile-time integrity | blocks lane |
+| `dotnet format --verify-no-changes --no-restore` | whitespace/style drift prevention | blocks lane |
+| `dotnet test` + TRX | executable regression baseline | blocks lane |
+| `verify_readme_regression_claim.py` | README EN/RU test-count claim parity against TRX | blocks lane |
+| dependency governance reports | supply-chain visibility (`--vulnerable`, `--outdated`) | evidence artifacts |
+| benchmark summary gate | threshold-based quality envelope evidence | blocks benchmark lane |
+
+For audit-grade closure, use [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
 ## Comprehensive Audit (2026-04-25)
 
@@ -230,6 +283,15 @@ The repository includes:
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Citation metadata: [CITATION.cff](CITATION.cff)
 - Funding metadata: [.github/FUNDING.yml](.github/FUNDING.yml)
+
+## Documentation Governance
+
+To keep public claims and internal evidence aligned:
+
+1. Update canonical surfaces first (`README.md`, `README.ru.md`, [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), [docs/README.md](docs/README.md)).
+2. Keep historical numbers dated in roadmap/audit docs; keep only current numbers in active claim surfaces.
+3. If behavior changed, update command examples and CI-parity guidance in the same change.
+4. Treat report snapshots as dated evidence, not evergreen truth.
 
 ## Scientific Reporting Standard
 

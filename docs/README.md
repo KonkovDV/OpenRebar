@@ -2,6 +2,13 @@
 
 This directory is the canonical documentation entrypoint for repository-internal technical documents.
 
+## Documentation Quality Principles
+
+- Keep one canonical source per invariant and avoid content forks.
+- Separate current-state claims from historical evidence snapshots.
+- Tie normative or quality claims to executable checks.
+- Keep EN/RU public claim surfaces synchronized when test status or workflow guidance changes.
+
 ## Document Classes
 
 OpenRebar distinguishes between three documentation classes:
@@ -39,6 +46,17 @@ OpenRebar distinguishes between three documentation classes:
 - Evidence documents are snapshots, not living source-of-truth contracts unless explicitly stated.
 - When behavior changes, update the smallest canonical surface first, then align supporting evidence or roadmap docs only if they encode the same invariant.
 
+## Claim Surface Hierarchy
+
+Use this order when updating or validating documentation claims:
+
+1. `README.md` + `README.ru.md` (public current-state claim surface)
+2. `docs/VALIDATION_BASELINE.md` (canonical executable evidence baseline)
+3. `docs/architecture.md` and `docs/NORMATIVE_TRACEABILITY.md` (stable technical reference)
+4. Dated audits and plans in `docs/` (historical evidence and roadmap context)
+
+If a statement conflicts across levels, update the lower-priority document to match the higher-priority canonical source.
+
 ## Verification Baseline
 
 Use this baseline before strengthening claims in docs, audits, or release notes:
@@ -57,3 +75,13 @@ If the change touches ML dependency governance or workflow behavior, also verify
 python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
 python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in
 ```
+
+## Documentation PR Checklist
+
+Before merging docs changes:
+
+1. Verify that all current-state numbers in `README.md` and `README.ru.md` match executable evidence.
+2. Ensure every new command snippet is runnable as written (paths, flags, OS notes).
+3. Mark historical values with explicit date context.
+4. Avoid duplicating long protocol text across multiple files; link to the canonical file.
+5. For CI-related claims, confirm corresponding workflow paths in `.github/workflows/`.

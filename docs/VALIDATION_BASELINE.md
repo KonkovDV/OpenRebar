@@ -29,6 +29,24 @@ Expected interpretation:
 - `dotnet build` validates compile-time integrity for the .NET surface.
 - `dotnet test` validates the current executable regression baseline.
 
+## CI-Parity Fast Lane
+
+Use this command sequence when you want local execution to mirror the CI `.NET` lane as closely as possible:
+
+```bash
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet format OpenRebar.sln --verify-no-changes --no-restore
+dotnet test OpenRebar.sln --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+python tools/ci/verify_readme_regression_claim.py
+```
+
+This lane catches the most common claim-surface drift classes before push:
+
+- formatting drift,
+- regression-count drift between README and TRX,
+- stale build/test assumptions.
+
 ## ML Baseline
 
 Run these commands from `ml/`:
@@ -109,6 +127,16 @@ Interpretation rules:
 - vulnerability and outdated reports support supply-chain posture claims.
 - formatting output is a hygiene signal, not by itself a product-correctness signal.
 - workflow permission scope and Dependabot surface coverage are governance checks, not runtime correctness checks.
+
+## Failure Triage (High-Signal)
+
+When validation fails, use this order to reduce time-to-fix:
+
+1. `dotnet restore` fails: check lockfile or feed connectivity first.
+2. `dotnet format --verify-no-changes` fails: run `dotnet format OpenRebar.sln --no-restore`, then re-verify.
+3. `dotnet test` fails: isolate the failing project/test, then rerun full baseline.
+4. `verify_readme_regression_claim.py` fails: sync `README.md` and `README.ru.md` counts to actual TRX totals.
+5. dependency commands fail: capture output as evidence and classify as vulnerability vs freshness issue.
 
 ## Dependency Modernization Policy
 

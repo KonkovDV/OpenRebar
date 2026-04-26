@@ -15,6 +15,41 @@ OpenRebar — кодовая база на .NET 8 для генерации ра
 - **Revit-хост** (`src/OpenRebar.RevitPlugin`) — ExternalCommand + UI (компилируется только при наличии ссылок на Revit SDK)
 - **Опциональный ML-модуль** (`ml/`) — сегментация PNG-изолиний U-Net через HTTP (FastAPI)
 
+## Содержание
+
+- [Постановка задачи](#постановка-задачи)
+- [Быстрый старт (паритет с CI)](#быстрый-старт-паритет-с-ci)
+- [Выходные артефакты и контракт интеграции](#выходные-артефакты-и-контракт-интеграции)
+- [Архитектура](#архитектура)
+- [Доменные порты](#доменные-порты)
+- [Сборка и тесты](#сборка-и-тесты)
+- [CI quality gates](#ci-quality-gates)
+- [Канонические примеры и снапшоты](#канонические-примеры-и-снапшоты)
+- [Python ML модуль (опционально)](#python-ml-модуль-опционально)
+- [Граница Revit-хоста](#граница-revit-хоста)
+- [Документация](#документация)
+- [Академический Стандарт Отчётности](#академический-стандарт-отчётности)
+
+## Быстрый старт (паритет с CI)
+
+Предварительные требования:
+
+- .NET SDK 8.x
+- Python 3.11+ (для `tools/ci/*.py` и опционального `ml/` lane)
+- Git с корректной обработкой LF
+
+Запускать из корня репозитория:
+
+```bash
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet format OpenRebar.sln --verify-no-changes --no-restore
+dotnet test OpenRebar.sln --no-build --configuration Release
+python tools/ci/verify_readme_regression_claim.py
+```
+
+Эта последовательность соответствует базовому .NET-lane в CI и рекомендуется как минимальный pre-PR baseline для изменений кода и claim-surface.
+
 ## Постановка задачи
 
 Мотивирующий сценарий: инженер по ЖБ размещает арматуру в Revit на основании карт изолиний, экспортируемых из расчётных/постпроцессорных инструментов (например, LIRA-SAPR / Stark-ES). Ручная постановка занимает существенное время и даёт вариативность результатов (между этажами, зонами и исполнителями).
@@ -116,11 +151,29 @@ Domain (pure) ← Application (use cases) ← Infrastructure (adapters) ← Host
 ## Сборка и тесты
 
 ```bash
-dotnet build OpenRebar.sln
-dotnet test OpenRebar.sln
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet format OpenRebar.sln --verify-no-changes --no-restore
+dotnet test OpenRebar.sln --no-build --configuration Release
 ```
 
 Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **193/193 тестов проходят**.
+
+## CI Quality Gates
+
+Workflow `build-and-test` проверяет не только компиляцию, но и согласованность заявлений:
+
+| Gate | Назначение | Эффект при падении |
+|---|---|---|
+| `dotnet restore --locked-mode` | целостность lockfile и детерминированный граф зависимостей | блокирует lane |
+| `dotnet build` | целостность компиляции | блокирует lane |
+| `dotnet format --verify-no-changes --no-restore` | защита от дрейфа форматирования | блокирует lane |
+| `dotnet test` + TRX | исполнимый регрессионный baseline | блокирует lane |
+| `verify_readme_regression_claim.py` | паритет числа тестов в README EN/RU с TRX | блокирует lane |
+| dependency governance reports | видимость supply-chain состояния (`--vulnerable`, `--outdated`) | артефакты evidence |
+| benchmark summary gate | пороговая проверка quality envelope | блокирует benchmark lane |
+
+Для аудит-уровня используйте [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
 ## Комплексный аудит (2026-04-25)
 
@@ -272,6 +325,15 @@ python -m piptools compile --allow-unsafe --generate-hashes --output-file=requir
 - [Maintainers](MAINTAINERS.md)
 - [Release Policy](RELEASE_POLICY.md)
 - [Citation Metadata](CITATION.cff)
+
+## Governance Документации
+
+Чтобы не допускать расхождения между публичными утверждениями и evidence:
+
+1. Сначала обновляйте канонические поверхности (`README.md`, `README.ru.md`, [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), [docs/README.md](docs/README.md)).
+2. Исторические цифры оставляйте только с датой в roadmap/audit документах; актуальные значения держите в текущих claim-surface.
+3. Если изменилось поведение, в том же изменении обновляйте командные примеры и CI-parity guidance.
+4. Снимки отчётов трактуйте как датированные evidence, а не как вечную истину.
 
 ## Лицензия
 

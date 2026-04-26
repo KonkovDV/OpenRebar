@@ -31,10 +31,18 @@ pytest tests -q
 
 1. `dotnet build OpenRebar.sln`
 2. `dotnet test OpenRebar.sln`
-3. If you touched `ml/`, run `pytest tests -q` from `ml/`
-4. If you changed ML dependency or workflow surfaces, run the relevant steps from [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
-5. If you changed docs or governance surfaces, re-read [docs/README.md](docs/README.md), [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), and the touched public-facing docs for consistency and GitHub safety
-6. Do not include local logs, generated temp files, ML checkpoints, or Revit SDK binaries
+3. `dotnet format OpenRebar.sln --verify-no-changes --no-restore`
+4. If you touched `ml/`, run `pytest tests -q` from `ml/`
+5. If you changed ML dependency or workflow surfaces, run the relevant steps from [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
+6. If you changed docs or governance surfaces, re-read [docs/README.md](docs/README.md), [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), and the touched public-facing docs for consistency and GitHub safety
+7. Do not include local logs, generated temp files, ML checkpoints, or Revit SDK binaries
+
+## Documentation Contributions
+
+- Treat `README.md` and `README.ru.md` as synchronized public claim surfaces.
+- Keep current-state claims in canonical docs; keep historical notes in dated audit/plan files.
+- When test counts or CI behavior change, update command examples and claim wording in the same PR.
+- Prefer links to canonical docs over duplicated protocol blocks.
 
 ## Architecture Guardrails
 
