@@ -36,8 +36,11 @@ public class CsvScheduleExporterTests
 
             var lines = await File.ReadAllLinesAsync(outputPath, Encoding.UTF8);
             lines[0].Should().Be("Марка;Диаметр, мм;Длина, мм;Количество;Масса 1 шт, кг;Масса всего, кг;Класс стали");
-            lines[1].Should().Contain(";12;2450;2;");
+            lines.Should().HaveCount(3);
+            lines[1].Should().Contain("1;12;2450;1;");
             lines[1].Should().EndWith(";A500C");
+            lines[2].Should().Contain("2;12;2450;1;");
+            lines[2].Should().EndWith(";A500C");
         }
         finally
         {

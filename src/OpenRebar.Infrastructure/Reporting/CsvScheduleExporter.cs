@@ -26,12 +26,14 @@ public sealed class CsvScheduleExporter : IScheduleExporter
             .SelectMany(z => z.Rebars.Select(rebar => new { Zone = z, Rebar = rebar }))
             .GroupBy(item => new
             {
+                item.Rebar.Mark,
                 item.Rebar.DiameterMm,
                 LengthMm = Math.Round(item.Rebar.TotalLength, 0),
                 item.Zone.Spec.SteelClass
             })
             .OrderBy(group => group.Key.DiameterMm)
             .ThenBy(group => group.Key.LengthMm)
+            .ThenBy(group => group.Key.Mark)
             .ToList();
 
         var builder = new StringBuilder();
@@ -46,7 +48,7 @@ public sealed class CsvScheduleExporter : IScheduleExporter
             double totalMass = massPerPiece * quantity;
 
             builder.AppendLine(string.Join(";",
-                representative.Mark,
+                group.Key.Mark,
                 group.Key.DiameterMm,
                 lengthMm,
                 quantity,
