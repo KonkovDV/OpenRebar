@@ -37,6 +37,9 @@ jobs:
       - name: Test
         run: dotnet test OpenRebar.sln --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
+      - name: Verify README regression claim
+        run: python tools/ci/verify_readme_regression_claim.py
+
       - name: Upload test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
