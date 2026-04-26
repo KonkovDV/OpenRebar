@@ -35,7 +35,7 @@ jobs:
         run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
 
       - name: Verify formatting
-        run: dotnet format OpenRebar.sln --verify-no-changes
+        run: dotnet format OpenRebar.sln --verify-no-changes --no-restore
 
       - name: Test
         run: dotnet test OpenRebar.sln --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
