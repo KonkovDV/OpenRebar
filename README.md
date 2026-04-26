@@ -120,7 +120,7 @@ dotnet build OpenRebar.sln
 dotnet test OpenRebar.sln
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **184/184 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **186/186 tests passing**.
 
 ## Comprehensive Audit (2026-04-25)
 

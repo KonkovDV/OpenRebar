@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using Json.Schema;
 using OpenRebar.Domain.Models;
 using OpenRebar.Infrastructure.Reporting;
 
@@ -32,6 +33,99 @@ public class ReportSchemaComplianceTests
         "errors",
         "partialResult"
     ];
+
+    [Fact]
+    public async Task SaveAsync_OutputShouldValidateAgainstCanonicalJsonSchema()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-runtime-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            var evaluation = EvaluateAgainstCanonicalSchema(outputPath);
+
+            evaluation.IsValid.Should().BeTrue($"schema validation errors: {DescribeErrors(evaluation)}");
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_PartialResultShouldValidateAgainstCanonicalJsonSchema()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-partial-runtime-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport() with
+        {
+            PartialResult = true,
+            Errors =
+            [
+                new PipelineFailureDiagnostic
+                {
+                    Stage = "Optimization",
+                    ErrorMessage = "solver aborted",
+                    ExceptionType = "OptimizationException",
+                    OccurredAtUtc = DateTimeOffset.UtcNow,
+                    IsCritical = true
+                }
+            ],
+            AnalysisProvenance = new AnalysisProvenanceExecutionReport
+            {
+                Geometry = new GeometryProcessingExecutionReport
+                {
+                    DecompositionAlgorithm = "n/a",
+                    RectangularShortcutFillRatio = 0,
+                    MinRectangleAreaMm2 = 1,
+                    SamplingResolutionPerAxis = 1,
+                    CellCoverageInclusionThreshold = 0
+                },
+                Optimization = new OptimizationProcessingExecutionReport
+                {
+                    OptimizerId = "n/a",
+                    MasterProblemStrategy = "n/a",
+                    PricingStrategy = "n/a",
+                    IntegerizationStrategy = "n/a",
+                    DemandAggregationPrecisionMm = 0,
+                    QualityFloor = "n/a",
+                    AnyFallbackMasterSolverUsed = false
+                }
+            },
+            Zones = [],
+            OptimizationByDiameter = [],
+            Summary = new ExecutionSummaryReport
+            {
+                ParsedZoneCount = 0,
+                ClassifiedZoneCount = 0,
+                TotalRebarSegments = 0,
+                TotalWastePercent = 0,
+                TotalWasteMm = 0,
+                TotalMassKg = 0,
+                EstimatedCost = null
+            }
+        };
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            var evaluation = EvaluateAgainstCanonicalSchema(outputPath);
+
+            evaluation.IsValid.Should().BeTrue($"schema validation errors: {DescribeErrors(evaluation)}");
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
 
     [Fact]
     public async Task SaveAsync_OutputShouldContainAllRequiredTopLevelFields()
@@ -479,4 +573,57 @@ public class ReportSchemaComplianceTests
             TotalMassKg = 26.6
         }
     };
+
+    private static EvaluationResults EvaluateAgainstCanonicalSchema(string payloadPath)
+    {
+        var schemaPath = Path.Combine(GetRepositoryRoot(), "contracts", "aerobim-reinforcement-report.schema.json");
+        var schema = JsonSchema.FromFile(
+            schemaPath,
+            new BuildOptions
+            {
+                Dialect = Dialect.Draft202012,
+                SchemaRegistry = new SchemaRegistry(),
+                DialectRegistry = new DialectRegistry(),
+                VocabularyRegistry = new VocabularyRegistry()
+            },
+            new Uri(schemaPath));
+
+        using var payloadDocument = JsonDocument.Parse(File.ReadAllText(payloadPath));
+
+        return schema.Evaluate(payloadDocument.RootElement, new EvaluationOptions
+        {
+            RequireFormatValidation = true
+        });
+    }
+
+    private static string GetRepositoryRoot()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (current is not null)
+        {
+            if (File.Exists(Path.Combine(current.FullName, "contracts", "aerobim-reinforcement-report.schema.json")))
+                return current.FullName;
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate OpenRebar repository root containing contracts/aerobim-reinforcement-report.schema.json.");
+    }
+
+    private static string DescribeErrors(EvaluationResults results)
+    {
+        var messages = new List<string>();
+        CollectErrors(results, messages);
+        return messages.Count > 0 ? string.Join(" | ", messages) : "none";
+    }
+
+    private static void CollectErrors(EvaluationResults results, ICollection<string> messages)
+    {
+        foreach (var error in results.Errors ?? [])
+            messages.Add($"{results.InstanceLocation}: {error.Key} => {error.Value}");
+
+        foreach (var detail in results.Details ?? [])
+            CollectErrors(detail, messages);
+    }
 }
