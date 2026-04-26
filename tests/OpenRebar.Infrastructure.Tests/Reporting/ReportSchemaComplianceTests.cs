@@ -332,8 +332,9 @@ public class ReportSchemaComplianceTests
                     {
                         StockLengthMm = 11700,
                         CutsMm = [5000, 5000],
-                        WasteMm = 1700,
-                        WastePercent = 14.5
+                        SawCutWidthMm = 3,
+                        WasteMm = 1694,
+                        WastePercent = 14.48
                     }
                 ]
             }
@@ -352,8 +353,8 @@ public class ReportSchemaComplianceTests
             ParsedZoneCount = 1,
             ClassifiedZoneCount = 1,
             TotalRebarSegments = 5,
-            TotalWastePercent = 14.5,
-            TotalWasteMm = 3400,
+            TotalWastePercent = 14.48,
+            TotalWasteMm = 3388,
             TotalMassKg = 26.6
         }
     };

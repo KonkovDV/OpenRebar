@@ -41,12 +41,13 @@ OpenRebar реализует воспроизводимый конвейер:
 | `*.schedule.csv` | CLI exporter | Выгрузка ведомости арматуры (CSV) |
 | `*.reinforcement.ifc` | CLI exporter | IFC-экспорт (IFC4 через xBIM) |
 
-**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json`
+**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `1.1.0`)
 
 Канонический отчёт явно хранит:
 
 - `normativeProfile` (например, `ru.sp63.2018`) и идентификатор набора таблиц с версией (например, `ru.sp63.2018.tables.v1`)
 - `analysisProvenance` по декомпозиции геометрии и оптимизации раскроя (идентификаторы алгоритмов, пороги, fallback-ветви)
+- `sawCutWidthMm` для каждого cutting plan, чтобы downstream-потребители могли независимо пересчитывать kerf-aware `wasteMm` / `wastePercent`
 
 ## Архитектура
 

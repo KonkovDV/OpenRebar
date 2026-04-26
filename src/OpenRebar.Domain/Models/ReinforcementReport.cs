@@ -25,7 +25,7 @@ public sealed record PipelineExecutionMetadata
 public sealed record ReinforcementExecutionReport
 {
     public string ContractId { get; init; } = "OpenRebar.reinforcement.report.v1";
-    public string SchemaVersion { get; init; } = "1.0.0";
+    public string SchemaVersion { get; init; } = "1.1.0";
     public required DateTimeOffset GeneratedAtUtc { get; init; }
     public required PipelineExecutionMetadata Metadata { get; init; }
     public required NormativeProfileExecutionReport NormativeProfile { get; init; }
@@ -134,6 +134,7 @@ public sealed record CuttingPlanExecutionReport
 {
     public required double StockLengthMm { get; init; }
     public required IReadOnlyList<double> CutsMm { get; init; }
+    public required double SawCutWidthMm { get; init; }
     public required double WasteMm { get; init; }
     public required double WastePercent { get; init; }
 }

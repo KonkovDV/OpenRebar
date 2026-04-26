@@ -217,7 +217,8 @@ public class GenerateReinforcementPipelineTests
             Arg.Is<ReinforcementExecutionReport>(report =>
                 report.Metadata.SlabId == "SLAB-42" &&
                 report.Zones.Count == 1 &&
-                report.Summary.TotalRebarSegments == 1),
+                report.Summary.TotalRebarSegments == 1 &&
+                report.OptimizationByDiameter.Single().CuttingPlans.Single().SawCutWidthMm == input.OptimizationSettings.SawCutWidthMm),
             input.ReportOutputPath!,
             Arg.Any<CancellationToken>());
     }
@@ -664,12 +665,13 @@ public class GenerateReinforcementPipelineTests
                 new CuttingPlan
                 {
                     StockLengthMm = 11700,
-                    Cuts = [2400, 2400, 2400]
+                    Cuts = [2400, 2400, 2400],
+                    SawCutWidthMm = 3
                 }
             ],
             TotalStockBarsNeeded = 1,
-            TotalWasteMm = 4500,
-            TotalWastePercent = 38.46,
+            TotalWasteMm = 4491,
+            TotalWastePercent = 38.38,
             TotalRebarLengthMm = 7200,
             TotalMassKg = 6.39
         };

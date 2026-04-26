@@ -566,6 +566,7 @@ public sealed class GenerateReinforcementPipeline
                     {
                         StockLengthMm = plan.StockLengthMm,
                         CutsMm = plan.Cuts,
+                        SawCutWidthMm = plan.SawCutWidthMm,
                         WasteMm = plan.WasteMm,
                         WastePercent = plan.WastePercent
                     }).ToList()

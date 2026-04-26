@@ -41,12 +41,13 @@ The repository treats the machine-readable outputs as first-class artifacts.
 | `*.schedule.csv` | CLI exporter | Rebar schedule export for downstream spreadsheets/ERP |
 | `*.reinforcement.ifc` | CLI exporter | IFC export surface (IFC4 via xBIM) |
 
-**Canonical schema:** `contracts/aerobim-reinforcement-report.schema.json`
+**Canonical schema:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `1.1.0`)
 
 The canonical report explicitly persists:
 
 - `normativeProfile` (for example `ru.sp63.2018`) and a versioned table-set id (for example `ru.sp63.2018.tables.v1`)
 - `analysisProvenance` for geometry decomposition and cutting optimisation (algorithm ids, thresholds, and fallbacks)
+- per-cutting-plan `sawCutWidthMm`, so downstream consumers can independently recompute kerf-aware `wasteMm` / `wastePercent`
 
 ## Architecture
 

@@ -178,13 +178,14 @@
     },
     "cuttingPlanExecutionReport": {
       "type": "object",
-      "required": ["stockLengthMm", "cutsMm", "wasteMm", "wastePercent"],
+      "required": ["stockLengthMm", "cutsMm", "sawCutWidthMm", "wasteMm", "wastePercent"],
       "properties": {
         "stockLengthMm": { "type": "number", "exclusiveMinimum": 0 },
         "cutsMm": {
           "type": "array",
           "items": { "type": "number", "exclusiveMinimum": 0 }
         },
+          "sawCutWidthMm": { "type": "number", "minimum": 0 },
         "wasteMm": { "type": "number", "minimum": 0 },
         "wastePercent": { "type": "number", "minimum": 0 }
       },

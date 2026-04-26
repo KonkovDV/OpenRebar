@@ -134,8 +134,9 @@ public class AeroBimReportExporterTests
                 {
                     StockLengthMm = 11700,
                     CutsMm = [5000, 5000],
-                    WasteMm = 1700,
-                    WastePercent = 14.53
+                    SawCutWidthMm = 3,
+                    WasteMm = 1694,
+                    WastePercent = 14.48
                 }]
             }],
             Placement = new PlacementExecutionReport
