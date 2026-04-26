@@ -17,7 +17,9 @@
     "zones",
     "optimizationByDiameter",
     "placement",
-    "summary"
+    "summary",
+    "errors",
+    "partialResult"
   ],
   "properties": {
     "contractId": {
@@ -78,9 +80,29 @@
     "warnings": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/pipelineFailureDiagnostic" }
+    },
+    "partialResult": {
+      "type": "boolean"
     }
   },
   "$defs": {
+    "pipelineFailureDiagnostic": {
+      "type": "object",
+      "required": ["stage", "errorMessage", "exceptionType", "occurredAtUtc", "isCritical"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "errorMessage": { "type": "string", "minLength": 1 },
+        "exceptionType": { "type": "string", "minLength": 1 },
+        "occurredAtUtc": { "type": "string", "format": "date-time" },
+        "stackTrace": { "type": ["string", "null"] },
+        "isCritical": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
     "boundingBoxExecutionReport": {
       "type": "object",
       "required": ["minX", "minY", "maxX", "maxY", "width", "height"],

@@ -575,15 +575,18 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     {
         int m = itemLengths.Length;
 
-        // DP capacity in discrete units (0.1mm resolution for rebar)
-        int capacity = (int)(stockLength * 10);
+        // DP capacity in discrete units (0.1mm resolution for rebar).
+        // Use conservative rounding to avoid floor-induced overpacking.
+        int capacity = (int)Math.Floor(stockLength * 10.0 + 1e-9);
         double[] dp = new double[capacity + 1];
         int[,] choices = new int[m, capacity + 1]; // tracks count of each item at each capacity
+        var itemCaps = new int[m];
 
         for (int i = 0; i < m; i++)
         {
-            int itemCap = (int)(itemLengths[i] * 10);
+            int itemCap = (int)Math.Ceiling(itemLengths[i] * 10.0 - 1e-9);
             if (itemCap <= 0) continue;
+            itemCaps[i] = itemCap;
 
             int maxCount = Math.Min(demand[i], capacity / itemCap);
 
@@ -612,7 +615,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
         {
             if (remaining <= 0) break;
             pattern[i] = choices[i, remaining];
-            remaining -= pattern[i] * (int)(itemLengths[i] * 10);
+            remaining -= pattern[i] * itemCaps[i];
         }
 
         return pattern;
@@ -734,12 +737,20 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
                 if (cuts.Count > 0)
                 {
-                    plans.Add(new CuttingPlan
+                    var plan = new CuttingPlan
                     {
                         StockLengthMm = stockLength,
                         Cuts = cuts,
                         SawCutWidthMm = sawCutWidthMm
-                    });
+                    };
+
+                    if (plan.ConsumedLengthMm > plan.StockLengthMm + 1e-6)
+                    {
+                        throw new OptimizationException(
+                            $"Column-generation produced physically infeasible plan: consumed {plan.ConsumedLengthMm:F3}mm > stock {plan.StockLengthMm:F3}mm.");
+                    }
+
+                    plans.Add(plan);
                 }
             }
         }

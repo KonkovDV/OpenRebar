@@ -8,11 +8,31 @@ namespace OpenRebar.Infrastructure.Tests.Reporting;
 /// <summary>
 /// Validates that the canonical report output satisfies the structural
 /// constraints defined in contracts/aerobim-reinforcement-report.schema.json.
-/// This is not a full JSON Schema validator — it checks the key required
-/// fields and shape constraints that matter for downstream consumers.
+/// This suite validates contract-critical shape constraints that map directly
+/// to the canonical schema, including top-level property strictness.
 /// </summary>
 public class ReportSchemaComplianceTests
 {
+    private static readonly HashSet<string> ExpectedTopLevelProperties =
+    [
+        "contractId",
+        "schemaVersion",
+        "generatedAtUtc",
+        "metadata",
+        "normativeProfile",
+        "analysisProvenance",
+        "isolineFileName",
+        "isolineFileFormat",
+        "slab",
+        "zones",
+        "optimizationByDiameter",
+        "placement",
+        "summary",
+        "warnings",
+        "errors",
+        "partialResult"
+    ];
+
     [Fact]
     public async Task SaveAsync_OutputShouldContainAllRequiredTopLevelFields()
     {
@@ -42,6 +62,80 @@ public class ReportSchemaComplianceTests
             root.TryGetProperty("optimizationByDiameter", out _).Should().BeTrue();
             root.TryGetProperty("placement", out _).Should().BeTrue();
             root.TryGetProperty("summary", out _).Should().BeTrue();
+            root.TryGetProperty("errors", out _).Should().BeTrue();
+            root.TryGetProperty("partialResult", out _).Should().BeTrue();
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_TopLevelShouldNotContainUnexpectedProperties()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-top-level-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport();
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var actualProperties = doc.RootElement.EnumerateObject().Select(property => property.Name).ToHashSet();
+
+            actualProperties.Should().BeSubsetOf(ExpectedTopLevelProperties,
+                "canonical payload must not emit undeclared top-level fields when schema disallows additional properties");
+        }
+        finally
+        {
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsync_DiagnosticsEnvelopeShouldMatchContractShape()
+    {
+        var store = new JsonFileReportStore();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schema-diagnostics-{Guid.NewGuid():N}.json");
+
+        var report = BuildSampleReport() with
+        {
+            PartialResult = true,
+            Errors =
+            [
+                new PipelineFailureDiagnostic
+                {
+                    Stage = "Parse",
+                    ErrorMessage = "Unsupported input format",
+                    ExceptionType = "ValidationException",
+                    OccurredAtUtc = DateTimeOffset.UtcNow,
+                    IsCritical = true
+                }
+            ]
+        };
+
+        try
+        {
+            await store.SaveAsync(report, outputPath);
+
+            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(outputPath));
+            var root = doc.RootElement;
+
+            root.GetProperty("partialResult").GetBoolean().Should().BeTrue();
+            var errors = root.GetProperty("errors");
+            errors.GetArrayLength().Should().Be(1);
+
+            var error = errors[0];
+            error.TryGetProperty("stage", out _).Should().BeTrue();
+            error.TryGetProperty("errorMessage", out _).Should().BeTrue();
+            error.TryGetProperty("exceptionType", out _).Should().BeTrue();
+            error.TryGetProperty("occurredAtUtc", out _).Should().BeTrue();
+            error.TryGetProperty("isCritical", out _).Should().BeTrue();
         }
         finally
         {

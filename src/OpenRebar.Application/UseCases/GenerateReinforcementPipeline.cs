@@ -627,8 +627,8 @@ public sealed class GenerateReinforcementPipeline
                 {
                     DecompositionAlgorithm = "n/a",
                     RectangularShortcutFillRatio = 0,
-                    MinRectangleAreaMm2 = 0,
-                    SamplingResolutionPerAxis = 0,
+                    MinRectangleAreaMm2 = 1,
+                    SamplingResolutionPerAxis = 1,
                     CellCoverageInclusionThreshold = 0
                 },
                 Optimization = new OptimizationProcessingExecutionReport

@@ -276,6 +276,22 @@ public class ColumnGenerationOptimizerTests
             "provenance quality gap should be exactly aligned with result-level gap for reliable LP bounds");
     }
 
+    [Fact]
+    public void FractionalLengthInput_ShouldKeepEveryPlanPhysicallyFeasible()
+    {
+        var lengths = new List<double> { 500.06, 500.06, 500.06 };
+        var stock = new List<StockLength>
+        {
+            new() { LengthMm = 1000, InStock = true }
+        };
+
+        var result = _optimizer.Optimize(lengths, stock, DefaultSettings with { SawCutWidthMm = 0 });
+
+        result.CuttingPlans.Should().OnlyContain(plan =>
+            plan.ConsumedLengthMm <= plan.StockLengthMm + 1e-6,
+            "each emitted cutting plan must be physically feasible even for fractional-length demands");
+    }
+
     private static int SolveExactMinimumBars(
         IReadOnlyList<double> lengths,
         double stockLength,

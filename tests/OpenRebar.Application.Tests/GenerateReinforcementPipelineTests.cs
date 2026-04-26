@@ -111,6 +111,8 @@ public class GenerateReinforcementPipelineTests
         result.Report.Errors[0].Stage.Should().Be("Parse");
         result.Report.Errors[0].IsCritical.Should().BeTrue();
         result.Report.Errors[0].ErrorMessage.Should().Contain("Unsupported isoline file format");
+        result.Report.AnalysisProvenance.Geometry.MinRectangleAreaMm2.Should().BeGreaterThan(0);
+        result.Report.AnalysisProvenance.Geometry.SamplingResolutionPerAxis.Should().BeGreaterOrEqualTo(1);
     }
 
     [Fact]
