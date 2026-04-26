@@ -246,6 +246,36 @@ public class ColumnGenerationOptimizerTests
             "provenance should not claim a quality gap when the underlying bound is not mathematically reliable");
     }
 
+    [Fact]
+    public void HighsMasterSolver_ShouldExposeFormulaConsistentReliableBounds()
+    {
+        var lengths = Enumerable.Repeat(3000.0, 10).ToList();
+
+        var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
+
+        result.Provenance.Should().NotBeNull();
+        result.Provenance!.UsedFallbackMasterSolver.Should().BeFalse(
+            "this deterministic scenario is expected to use the HiGHS LP master path");
+
+        result.DualBound.Should().HaveValue();
+        result.Gap.Should().HaveValue();
+        result.Provenance.QualityGapPercent.Should().HaveValue();
+
+        double dualBound = result.DualBound!.Value;
+        double expectedGap = (result.TotalStockBarsNeeded - dualBound) / dualBound * 100.0;
+
+        dualBound.Should().BeGreaterThan(0,
+            "LP lower bound must be positive for a non-empty demand instance");
+        dualBound.Should().BeLessThanOrEqualTo(result.TotalStockBarsNeeded + 1e-6,
+            "LP lower bound cannot exceed the integer number of purchased bars");
+        result.Gap!.Value.Should().BeGreaterThanOrEqualTo(-1e-6,
+            "primal-vs-dual gap should be non-negative on a mathematically reliable master LP solve");
+        result.Gap.Value.Should().BeApproximately(expectedGap, 1e-6,
+            "reported gap must match (primal - dual) / dual * 100");
+        result.Provenance.QualityGapPercent!.Value.Should().BeApproximately(result.Gap.Value, 1e-6,
+            "provenance quality gap should be exactly aligned with result-level gap for reliable LP bounds");
+    }
+
     private static int SolveExactMinimumBars(
         IReadOnlyList<double> lengths,
         double stockLength,
