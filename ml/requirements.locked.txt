@@ -894,9 +894,9 @@ sympy==1.14.0 \
     # via
     #   onnx-ir
     #   torch
-tifffile==2026.3.3 \
-    --hash=sha256:d9a1266bed6f2ee1dd0abde2018a38b4f8b2935cb843df381d70ac4eac5458b7 \
-    --hash=sha256:e8be15c94273113d31ecb7aa3a39822189dd11c4967e3cc88c178f1ad2fd1170
+tifffile==2026.5.15 \
+    --hash=sha256:6715515a53cabc0cefc5c9f13a0ae2c250e63e2ca784ce02d0b6c333810c2a17 \
+    --hash=sha256:ee4f3e07ee0d8ff4745a8c735ac2b72caa3173c7d6059b00fdc3ff492a0b635b
     # via scikit-image
 torch==2.11.0 \
     --hash=sha256:01018087326984a33b64e04c8cb5c2795f9120e0d775ada1f6638840227b04d7 \
