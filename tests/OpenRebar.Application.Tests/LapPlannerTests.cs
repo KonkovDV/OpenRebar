@@ -26,6 +26,32 @@ public class LapPlannerTests
   }
 
   [Fact]
+  public void HookedEnds_KeepTheirArcOnTheEndPiecesOnly()
+  {
+    var bar = Bar(0, 20000);
+    bar = bar with
+    {
+      EndConditionStart = BarEndCondition.NeedsHook,
+      EndConditionEnd = BarEndCondition.NeedsHook,
+      Shape = BarShape.Hooked,
+      ShapeCode = "H",
+      BendArcMm = BendRules.Describe(12, "A500C", BarEndCondition.NeedsHook, BarEndCondition.NeedsHook).ArcMm
+    };
+    var zone = Zone(bar);
+    var laps = new List<LapLink>();
+    var warnings = new List<string>();
+
+    LapPlanner.Apply([zone], "B25", Stock, Kerf, 0.5, laps, warnings);
+
+    double oneHook = BendRules.Describe(12, "A500C", BarEndCondition.NeedsHook, BarEndCondition.Straight).ArcMm;
+    zone.Rebars.First().BendArcMm.Should().BeApproximately(oneHook, 1e-6);
+    zone.Rebars.Last().BendArcMm.Should().BeApproximately(oneHook, 1e-6);
+    zone.Rebars.Skip(1).SkipLast(1).Should().OnlyContain(piece => piece.BendArcMm == 0 && piece.ShapeCode == "00");
+    zone.Rebars.Should().OnlyContain(piece => piece.TotalLength + Kerf <= Stock.Max() + 0.1);
+    warnings.Should().Contain(warning => warning.Contains("full-section", StringComparison.Ordinal));
+  }
+
+  [Fact]
   public void OneLongBar_UsesTheFullSectionFactorAndFitsStock()
   {
     var zone = Zone(Bar(0, 20000));

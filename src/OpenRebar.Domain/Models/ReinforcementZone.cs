@@ -177,6 +177,17 @@ public enum BarEndCondition
 }
 
 /// <summary>
+/// Internal bar shape. Codes are 00, H, L, and U. They are not GOST or BS numbers.
+/// </summary>
+public enum BarShape
+{
+  Straight,
+  Hooked,
+  L,
+  U
+}
+
+/// <summary>
 /// A single rebar segment to be placed within a zone.
 /// </summary>
 public sealed record RebarSegment
@@ -202,8 +213,17 @@ public sealed record RebarSegment
   /// <summary>Position number shared by bars of the same type. Assigned by <c>PositionAssigner</c>.</summary>
   public string? Mark { get; init; }
 
-  /// <summary>Internal shape code. Straight bars use 00 until a shape catalog is selected.</summary>
+  /// <summary>Internal shape code: 00, H, L, or U.</summary>
   public string ShapeCode { get; init; } = "00";
+
+  /// <summary>Shape that <see cref="ShapeCode"/> names.</summary>
+  public BarShape Shape { get; init; } = BarShape.Straight;
+
+  /// <summary>Inner bend radius, half the mandrel diameter. Zero on a straight bar.</summary>
+  public double BendRadiusMm { get; init; }
+
+  /// <summary>Centerline length of the bends. The straight tail is not included.</summary>
+  public double BendArcMm { get; init; }
 
   /// <summary>Instance status. Discarded bars stay in the model and leave the schedule.</summary>
   public BarInstanceStatus Status { get; init; } = BarInstanceStatus.Active;
@@ -220,9 +240,9 @@ public sealed record RebarSegment
   /// <summary>End at <see cref="End"/> after clipping the anchorage to the working area.</summary>
   public BarEndCondition EndConditionEnd { get; init; } = BarEndCondition.Straight;
 
-  /// <summary>Geometric length from <see cref="Start"/> to <see cref="End"/> (mm).</summary>
-  public double TotalLength => Start.DistanceTo(End);
-
-  /// <summary>Geometric length from <see cref="Start"/> to <see cref="End"/> (mm).</summary>
+  /// <summary>Placed length from <see cref="Start"/> to <see cref="End"/> (mm).</summary>
   public double ClearSpan => Start.DistanceTo(End);
+
+  /// <summary>Cut length: placed length plus the centerline arcs of the bends (mm).</summary>
+  public double TotalLength => ClearSpan + BendArcMm;
 }

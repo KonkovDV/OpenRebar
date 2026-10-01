@@ -152,13 +152,13 @@ Domain (pure) ← Application (use cases) ← Infrastructure (adapters) ← Host
 ## Сборка и тесты
 
 ```bash
-dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
-dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release
+dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release`): **346/346 тестов проходят**.
+Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **358/358 тестов проходят**.
 
 ## Контрольные проверки CI
 
@@ -196,9 +196,9 @@ dotnet test OpenRebar.sln --no-build --configuration Release
 
 Ещё открыто относительно [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md):
 
-- Один чертёж по-прежнему один слой. Файл проекта может назвать до четырёх чертежей. Анкеровка рисуется только в пределах рабочей области; крюк и отгиб ещё не моделируются. Стержень длиннее складского прутка стыкуется нахлёстом. Муфты не моделируются. Отверстия учитываются, но не вычитаются из зоны.
+- Один чертёж по-прежнему один слой. Файл проекта может назвать до четырёх чертежей. Анкеровка рисуется только в пределах рабочей области. Крюк — это дуга по оси стержня, без прямого хвоста за загибом. Стержень длиннее складского прутка стыкуется нахлёстом. Муфты не моделируются. Отверстия учитываются, но не вычитаются из зоны.
 - Генерация столбцов пакует одну складскую длину. Двойственная граница публикуется только при `boundStatus` = `Proven`.
-- Ведомость группирует марки без секции слоя. В IFC нет `IfcReinforcingBarType` и нет геометрии стержня.
+- Ведомость — это CSV-спецификация и лист расхода стали. XLSX не пишется. В IFC нет `IfcReinforcingBarType` и нет геометрии стержня.
 - Расчётные сопротивления A400 и B500 остаются значениями встроенной таблицы, пока нет цитируемой выписки из таблицы 6.14 СП 63.
 - Растр требует калибровки. Опциональный ML-сервис поставляется с пустым манифестом модели.
 - Сетка 50 мм отклоняет раскладку, если хотя бы одна ячейка недобирает заданную площадь (`Passed` только при нулевом дефиците). Развитие считается от уложенного торца, поэтому край без места под анкеровку не проходит проверку. Отверстия остаются внутри проверяемой площади.

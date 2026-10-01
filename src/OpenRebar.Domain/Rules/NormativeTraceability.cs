@@ -33,6 +33,8 @@ public static class NormativeTraceability
     builder.AppendLine();
     builder.AppendLine("Additional bars extend past a zone boundary by the calculated anchorage length, and only inside the working area. The SP 63 clause on curtailment past the theoretical cutoff is not in this repository, so no distance beyond that anchorage length is added.");
     builder.AppendLine();
+    builder.AppendLine("Bent ends use the mandrel diameter from clause 10.3.33. The cut length adds the centerline arc and does not add a straight tail, because that tail is not in the clause. Shape codes stay internal: 00, H, L, and U. GOST 21.501 does not number bar shapes.");
+    builder.AppendLine();
     return builder.ToString().Replace("\r\n", "\n", StringComparison.Ordinal);
   }
 }

@@ -106,6 +106,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
             AllowedAlong(slab, holes, line, alongX));
         var startCondition = AnchorageExtender.Condition(placed.AchievedStart, anchorageLength, requestedEnd);
         var endCondition = AnchorageExtender.Condition(placed.AchievedEnd, anchorageLength, requestedEnd);
+        var shape = BendRules.Describe(diameter, spec.SteelClass, startCondition, endCondition);
         var anchorageStatus = AnchorageStatus.WithinZone;
         if (runLength + 1e-6 < anchorageLength)
         {
@@ -127,7 +128,11 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
           Mark = $"{++markCounter}",
           AnchorageStatus = anchorageStatus,
           EndConditionStart = startCondition,
-          EndConditionEnd = endCondition
+          EndConditionEnd = endCondition,
+          Shape = shape.Shape,
+          ShapeCode = shape.Code,
+          BendRadiusMm = shape.InnerRadiusMm,
+          BendArcMm = shape.ArcMm
         });
       }
     }

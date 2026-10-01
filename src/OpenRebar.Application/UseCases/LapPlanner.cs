@@ -91,14 +91,21 @@ public static class LapPlanner
     {
       bool first = i == 0;
       bool last = i == cuts.Count - 1;
+      var pieceStart = first ? bar.EndConditionStart : BarEndCondition.Straight;
+      var pieceEnd = last ? bar.EndConditionEnd : BarEndCondition.Straight;
+      var shape = BendRules.Describe(bar.DiameterMm, zone.Spec.SteelClass, pieceStart, pieceEnd);
       rebuilt.Add(bar with
       {
         Start = At(bar.Start, ux, uy, cuts[i].From),
         End = At(bar.Start, ux, uy, cuts[i].To),
         AnchorageLengthStart = first ? bar.AnchorageLengthStart : line.Lap,
         AnchorageLengthEnd = last ? bar.AnchorageLengthEnd : line.Lap,
-        EndConditionStart = first ? bar.EndConditionStart : BarEndCondition.Straight,
-        EndConditionEnd = last ? bar.EndConditionEnd : BarEndCondition.Straight,
+        EndConditionStart = pieceStart,
+        EndConditionEnd = pieceEnd,
+        Shape = shape.Shape,
+        ShapeCode = shape.Code,
+        BendRadiusMm = shape.InnerRadiusMm,
+        BendArcMm = shape.ArcMm,
         Mark = null,
         BarId = ""
       });
@@ -139,7 +146,7 @@ public static class LapPlanner
       double kerf,
       double jointRatioMax)
   {
-    if (group.All(bar => bar.Segment.Start.DistanceTo(bar.Segment.End) <= maxPiece + 1e-6))
+    if (group.All(bar => CutLength(zone, bar.Segment) <= maxPiece + 1e-6))
     {
       return new GroupPlan(
           group.Select(_ => new LinePlan([], 0, 0)).ToList(),
@@ -206,14 +213,16 @@ public static class LapPlanner
     foreach (var bar in group)
     {
       double length = bar.Segment.Start.DistanceTo(bar.Segment.End);
-      if (length <= maxPiece + 1e-6)
+      double startArc = OneEndArc(zone, bar.Segment, bar.Segment.EndConditionStart);
+      double endArc = OneEndArc(zone, bar.Segment, bar.Segment.EndConditionEnd);
+      if (length + startArc + endArc <= maxPiece + 1e-6)
       {
         placed.Add(new LinePlan([], lap, alpha));
         centers.Add([]);
         continue;
       }
 
-      var joints = Shortest(length, lap, maxPiece, stock, kerf, center =>
+      var joints = Shortest(length, lap, maxPiece, startArc, endArc, stock, kerf, center =>
           !stagger || Allowed(center, centers, group.Count, window, limit));
       if (joints is null)
         return null;
@@ -245,6 +254,8 @@ public static class LapPlanner
       double length,
       double lap,
       double maxPiece,
+      double startArc,
+      double endArc,
       IReadOnlyList<double> stock,
       double kerf,
       Func<double, bool> allowed)
@@ -280,11 +291,19 @@ public static class LapPlanner
           continue;
         }
 
-        Relax(i, j, piece, stock, kerf, dist, prev);
+        double cut = piece + (nodes[i].Joint ? 0 : startArc);
+        if (cut > maxPiece + 1e-6)
+          break;
+
+        Relax(i, j, cut, stock, kerf, dist, prev);
       }
 
       if (TryPiece(nodes[i], nodes[count - 1], lap, maxPiece, out double endPiece))
-        Relax(i, count - 1, endPiece, stock, kerf, dist, prev);
+      {
+        double cut = endPiece + (nodes[i].Joint ? 0 : startArc) + endArc;
+        if (cut <= maxPiece + 1e-6)
+          Relax(i, count - 1, cut, stock, kerf, dist, prev);
+      }
     }
 
     if (double.IsPositiveInfinity(dist[count - 1]))
@@ -377,6 +396,12 @@ public static class LapPlanner
         .Select(list => list.OrderBy(bar => bar.Station).ToList())
         .ToList();
   }
+
+  private static double CutLength(ReinforcementZone zone, RebarSegment bar) =>
+      bar.Start.DistanceTo(bar.End) + OneEndArc(zone, bar, bar.EndConditionStart) + OneEndArc(zone, bar, bar.EndConditionEnd);
+
+  private static double OneEndArc(ReinforcementZone zone, RebarSegment bar, BarEndCondition condition) =>
+      BendRules.Describe(bar.DiameterMm, zone.Spec.SteelClass, condition, BarEndCondition.Straight).ArcMm;
 
   private static long Quantize(double value) => (long)Math.Round(value * 10.0, MidpointRounding.AwayFromZero);
 

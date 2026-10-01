@@ -127,7 +127,10 @@ public class StandardReinforcementCalculatorTests
     {
       r.AnchorageLengthStart.Should().BeGreaterThan(0);
       r.AnchorageLengthEnd.Should().BeGreaterThan(0);
-      r.TotalLength.Should().BeApproximately(r.Start.DistanceTo(r.End), 1e-6);
+      r.ClearSpan.Should().BeApproximately(r.Start.DistanceTo(r.End), 1e-6);
+      r.BendArcMm.Should().BeApproximately(Math.PI * 36, 1e-6);
+      r.TotalLength.Should().BeApproximately(r.ClearSpan + r.BendArcMm, 1e-6);
+      r.ShapeCode.Should().Be("H");
       r.End.X.Should().BeGreaterThan(5000);
       r.EndConditionStart.Should().Be(BarEndCondition.NeedsHook);
       r.EndConditionEnd.Should().Be(BarEndCondition.Straight);
@@ -235,7 +238,9 @@ public class StandardReinforcementCalculatorTests
         rebar.AnchorageStatus == AnchorageStatus.ExtendedBeyondZone &&
         rebar.EndConditionStart == BarEndCondition.NeedsHook &&
         rebar.EndConditionEnd == BarEndCondition.Straight &&
-        Math.Abs(rebar.TotalLength - (400 + rebar.AnchorageLengthEnd)) < 0.2 &&
+        Math.Abs(rebar.ClearSpan - (400 + rebar.AnchorageLengthEnd)) < 0.2 &&
+        Math.Abs(rebar.BendArcMm - Math.PI * 90) < 0.2 &&
+        rebar.ShapeCode == "H" &&
         rebar.Start.X >= -1e-6 &&
         rebar.End.X <= 10000);
     zone.ExtendedBeyondZoneCount.Should().Be(zone.Rebars.Count);
@@ -345,7 +350,9 @@ public class StandardReinforcementCalculatorTests
 
     zone.Rebars.Should().NotBeEmpty();
     zone.Rebars.Should().OnlyContain(bar =>
-        Math.Abs(bar.TotalLength - 10000) < 0.2 &&
+        Math.Abs(bar.ClearSpan - 10000) < 0.2 &&
+        Math.Abs(bar.BendArcMm - 2 * Math.PI * 36) < 0.2 &&
+        bar.ShapeCode == "H" &&
         bar.Start.X >= -1e-6 &&
         bar.End.X <= 10000 + 1e-6 &&
         bar.EndConditionStart == BarEndCondition.NeedsHook &&

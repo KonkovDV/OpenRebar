@@ -28,7 +28,8 @@
       "additionalProperties": false,
       "required": ["condition"],
       "properties": {
-        "condition": { "type": "string", "enum": ["NeedsHook", "Straight", "Hook", "LBar", "UBar"] }
+        "condition": { "type": "string", "enum": ["NeedsHook", "Straight", "Hook", "LBar", "UBar"] },
+        "shapeStandard": { "type": "string", "enum": ["internal"] }
       }
     },
     "laps": {
@@ -50,7 +51,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["culture"],
-      "properties": { "culture": { "type": "string", "enum": ["ru", "invariant"] } }
+      "properties": {
+        "culture": { "type": "string", "enum": ["ru", "invariant"] },
+        "template": { "type": "string", "enum": ["gost-21.501"] }
+      }
     },
     "supply": {
       "type": "object",
