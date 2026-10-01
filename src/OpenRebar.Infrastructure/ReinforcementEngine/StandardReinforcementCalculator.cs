@@ -84,6 +84,10 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         slab.ConcreteClass,
         topBarAnchorageFactor: topBarFactor);
     int extendedBeyondZone = 0;
+    bool alongX = zone.Direction == RebarDirection.X;
+    string requestedEnd = string.IsNullOrWhiteSpace(zone.RequestedEndCondition)
+        ? "NeedsHook"
+        : zone.RequestedEndCondition;
 
     var runs = BarRunBuilder.Build(zone, slab, polygon, holes);
     zone.Runs = zone.Runs.Concat(runs).ToList();
@@ -91,12 +95,19 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     {
       foreach (double line in run.Lines)
       {
-        double clearSpan = run.EndCoord - run.StartCoord;
-        if (clearSpan < 1e-6)
+        double runLength = run.EndCoord - run.StartCoord;
+        if (runLength < 1e-6)
           continue;
 
+        var placed = AnchorageExtender.Extend(
+            run.StartCoord,
+            run.EndCoord,
+            anchorageLength,
+            AllowedAlong(slab, holes, line, alongX));
+        var startCondition = AnchorageExtender.Condition(placed.AchievedStart, anchorageLength, requestedEnd);
+        var endCondition = AnchorageExtender.Condition(placed.AchievedEnd, anchorageLength, requestedEnd);
         var anchorageStatus = AnchorageStatus.WithinZone;
-        if (clearSpan + 1e-6 < anchorageLength)
+        if (runLength + 1e-6 < anchorageLength)
         {
           extendedBeyondZone++;
           anchorageStatus = AnchorageStatus.ExtendedBeyondZone;
@@ -104,17 +115,19 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
         rebars.Add(new RebarSegment
         {
-          Start = zone.Direction == RebarDirection.X
-              ? new Point2D(run.StartCoord, line)
-              : new Point2D(line, run.StartCoord),
-          End = zone.Direction == RebarDirection.X
-              ? new Point2D(run.EndCoord, line)
-              : new Point2D(line, run.EndCoord),
+          Start = alongX
+              ? new Point2D(placed.Start, line)
+              : new Point2D(line, placed.Start),
+          End = alongX
+              ? new Point2D(placed.End, line)
+              : new Point2D(line, placed.End),
           DiameterMm = diameter,
           AnchorageLengthStart = anchorageLength,
           AnchorageLengthEnd = anchorageLength,
           Mark = $"{++markCounter}",
-          AnchorageStatus = anchorageStatus
+          AnchorageStatus = anchorageStatus,
+          EndConditionStart = startCondition,
+          EndConditionEnd = endCondition
         });
       }
     }
@@ -142,5 +155,29 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     }
 
     return rebars;
+  }
+
+  private List<(double Start, double End)> AllowedAlong(
+      SlabGeometry slab,
+      IReadOnlyList<Polygon> zoneHoles,
+      double station,
+      bool alongX)
+  {
+    IReadOnlyList<Polygon> shells;
+    IReadOnlyList<Polygon> holes;
+    if (_planar is not null
+        && (slab.EdgeCoverMm > 1e-9 || slab.OpeningClearanceMm > 1e-9 || slab.Openings.Count > 0))
+    {
+      var area = WorkingAreaBuilder.Build(slab, _planar);
+      shells = area.Polygons.Select(polygon => polygon.Shell).ToList();
+      holes = area.Polygons.SelectMany(polygon => polygon.Holes).Concat(zoneHoles).ToList();
+    }
+    else
+    {
+      shells = [slab.OuterBoundary];
+      holes = slab.Openings.Concat(zoneHoles).ToList();
+    }
+
+    return BarRunBuilder.IntervalsOnLine(shells, holes, station, alongX);
   }
 }

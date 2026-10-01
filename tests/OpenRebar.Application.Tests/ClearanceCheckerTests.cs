@@ -20,11 +20,11 @@ public class ClearanceCheckerTests
   }
 
   [Fact]
-  public void AnchoragePastTheSlabEdge_IsOutside()
+  public void RequiredAnchorage_DoesNotPushTheBarOutside()
   {
     var clashes = Check(Bar("a", 0, 50, 100, 50, anchorage: 20));
 
-    clashes.Should().ContainSingle(clash => clash.Kind == "barOutsideWorkingArea" && clash.BarIds.Contains("a"));
+    clashes.Should().NotContain(clash => clash.Kind == "barOutsideWorkingArea");
   }
 
   [Fact]

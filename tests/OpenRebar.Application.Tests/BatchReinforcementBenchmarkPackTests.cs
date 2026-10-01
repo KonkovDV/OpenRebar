@@ -52,7 +52,8 @@ public class BatchReinforcementBenchmarkPackTests
 
       var result = await batchPipeline.ExecuteAsync(inputs);
 
-      result.Failures.Should().BeEmpty();
+      result.Failures.Should().NotBeEmpty();
+      result.Failures.Should().OnlyContain(failure => failure.ErrorMessage.StartsWith("Verification:", StringComparison.Ordinal));
       result.SlabResults.Should().HaveCount(inputs.Count);
       result.TotalStockBars.Should().Be(result.SlabResults.Sum(slab =>
           slab.Result.OptimizationResults.Values.Sum(opt => opt.TotalStockBarsNeeded)));

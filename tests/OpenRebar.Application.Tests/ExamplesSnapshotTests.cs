@@ -31,7 +31,7 @@ public class ExamplesSnapshotTests
 
       var args = new[] { tempInputPath }.Concat(extraArgs).ToArray();
       var exitCode = await global::OpenRebar.Cli.Program.Main(args);
-      exitCode.Should().Be(0, "CLI example execution should succeed");
+      exitCode.Should().Be(2, "the slab-edge anchorage is short, so the area check fails");
 
       var actualResultPath = Path.ChangeExtension(tempInputPath, ".result.json");
       var actualSchedulePath = Path.ChangeExtension(tempInputPath, ".schedule.csv");

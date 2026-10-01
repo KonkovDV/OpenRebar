@@ -97,9 +97,9 @@ public class PositionAssignerTests
   private static RebarSegment MakeRebar(int diameterMm, double totalLengthMm, double y) => new()
   {
     Start = new Point2D(0, y),
-    End = new Point2D(Math.Max(0, totalLengthMm - 400), y),
+    End = new Point2D(totalLengthMm, y),
     DiameterMm = diameterMm,
     AnchorageLengthStart = totalLengthMm >= 400 ? 200 : 0,
-    AnchorageLengthEnd = totalLengthMm >= 400 ? 200 : totalLengthMm
+    AnchorageLengthEnd = totalLengthMm >= 400 ? 200 : 0
   };
 }

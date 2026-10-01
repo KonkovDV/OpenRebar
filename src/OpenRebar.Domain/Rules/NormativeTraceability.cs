@@ -31,6 +31,8 @@ public static class NormativeTraceability
     builder.AppendLine();
     builder.AppendLine("The clear distance between adjacent laps in the amendment to clause 10.3.30 is not enforced. That amendment text is not in this repository.");
     builder.AppendLine();
+    builder.AppendLine("Additional bars extend past a zone boundary by the calculated anchorage length, and only inside the working area. The SP 63 clause on curtailment past the theoretical cutoff is not in this repository, so no distance beyond that anchorage length is added.");
+    builder.AppendLine();
     return builder.ToString().Replace("\r\n", "\n", StringComparison.Ordinal);
   }
 }

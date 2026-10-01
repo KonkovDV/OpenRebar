@@ -139,7 +139,7 @@ public class MultiLayerDesignTests
         ]
       });
 
-      result.Report!.PartialResult.Should().BeFalse();
+      result.Report!.PartialResult.Should().BeTrue();
       var bottomZone = result.ClassifiedZones.Single(zone => zone.DesignLayer == LayerKey.BottomX && !zone.IsBackgroundMesh);
       bottomZone.Id.Should().StartWith("BottomX-");
       bottomZone.Direction.Should().Be(RebarDirection.X);
@@ -153,7 +153,7 @@ public class MultiLayerDesignTests
       mesh.Rebars.Should().OnlyContain(bar => bar.DiameterMm == 8);
       result.ClassifiedZones.Single(zone => zone.DesignLayer == LayerKey.TopY).Direction.Should().Be(RebarDirection.Y);
       result.ClassifiedZones.Single(zone => zone.DesignLayer == LayerKey.TopY).EffectiveSpec.DiameterMm.Should().Be(12);
-      result.Report.Verification!.Status.Should().Be(VerificationStatuses.Passed);
+      result.Report.Verification!.Status.Should().Be(VerificationStatuses.Failed);
     }
     finally
     {
@@ -181,7 +181,7 @@ public class MultiLayerDesignTests
     try
     {
       var exitCode = await global::OpenRebar.Cli.Program.Main(["--design", projectPath]);
-      exitCode.Should().Be(0);
+      exitCode.Should().Be(2);
       File.Exists(Path.ChangeExtension(projectPath, ".result.json")).Should().BeTrue();
     }
     finally

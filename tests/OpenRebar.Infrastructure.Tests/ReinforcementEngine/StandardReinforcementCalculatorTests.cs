@@ -1,3 +1,4 @@
+using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Infrastructure.ReinforcementEngine;
@@ -126,7 +127,10 @@ public class StandardReinforcementCalculatorTests
     {
       r.AnchorageLengthStart.Should().BeGreaterThan(0);
       r.AnchorageLengthEnd.Should().BeGreaterThan(0);
-      r.TotalLength.Should().BeGreaterThan(r.ClearSpan);
+      r.TotalLength.Should().BeApproximately(r.Start.DistanceTo(r.End), 1e-6);
+      r.End.X.Should().BeGreaterThan(5000);
+      r.EndConditionStart.Should().Be(BarEndCondition.NeedsHook);
+      r.EndConditionEnd.Should().Be(BarEndCondition.Straight);
     });
   }
 
@@ -157,8 +161,10 @@ public class StandardReinforcementCalculatorTests
 
     var upperBars = zone.Rebars.Where(r => r.Start.Y > 1000).ToList();
     upperBars.Should().NotBeEmpty();
-    upperBars.Should().OnlyContain(r => r.End.X <= 1000 + 0.001,
-        "bars above the notch must be clipped to the narrow leg of the L-shape");
+    double anchorage = upperBars[0].AnchorageLengthEnd;
+    upperBars.Should().OnlyContain(r => Math.Abs(r.End.X - (1000 + anchorage)) < 0.2,
+        "bars above the notch extend by the anchorage into the working area");
+    upperBars.Should().OnlyContain(r => r.End.X < 10000);
 
     var lowerBars = zone.Rebars.Where(r => r.Start.Y < 1000).ToList();
     lowerBars.Should().Contain(r => r.End.X > 3000,
@@ -226,9 +232,12 @@ public class StandardReinforcementCalculatorTests
 
     zone.Rebars.Should().NotBeEmpty();
     zone.Rebars.Should().OnlyContain(rebar =>
-        rebar.ClearSpan < rebar.AnchorageLengthStart &&
         rebar.AnchorageStatus == AnchorageStatus.ExtendedBeyondZone &&
-        Math.Abs(rebar.ClearSpan - 400) < 1e-6);
+        rebar.EndConditionStart == BarEndCondition.NeedsHook &&
+        rebar.EndConditionEnd == BarEndCondition.Straight &&
+        Math.Abs(rebar.TotalLength - (400 + rebar.AnchorageLengthEnd)) < 0.2 &&
+        rebar.Start.X >= -1e-6 &&
+        rebar.End.X <= 10000);
     zone.ExtendedBeyondZoneCount.Should().Be(zone.Rebars.Count);
     _logger.Received().Warn(
         "Rebar clear span is shorter than anchorage; segments were kept",
@@ -303,6 +312,77 @@ public class StandardReinforcementCalculatorTests
         .Should()
         .OnlyContain(gap => gap >= 200 - 1e-6);
     result[0].Rebars.Select(bar => bar.Start.Y).Should().IntersectWith(result[1].Rebars.Select(bar => bar.Start.Y));
+  }
+
+  [Fact]
+  public void CalculatedLength_IsTheScheduleLengthAndTheCuttingLength()
+  {
+    var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+        new BoundingBox(new Point2D(2000, 1000), new Point2D(4000, 3000)));
+    zone.Layer = RebarLayer.Bottom;
+    CreateCalculator().CalculateRebars([zone], TestSlab);
+
+    var positions = PositionAssigner.Assign([zone]);
+    var cuts = zone.Rebars.Select(bar => bar.TotalLength).ToList();
+
+    zone.Rebars.Should().NotBeEmpty();
+    foreach (var bar in zone.Rebars)
+    {
+      bar.TotalLength.Should().BeApproximately(bar.Start.DistanceTo(bar.End), 1e-6);
+      cuts.Should().Contain(length => Math.Abs(length - bar.TotalLength) < 1e-6);
+      int rounded = (int)Math.Round(bar.TotalLength, MidpointRounding.AwayFromZero);
+      positions.Should().Contain(position => position.LengthMm == rounded && position.Quantity >= 1);
+    }
+  }
+
+  [Fact]
+  public void CalculateRebars_BarThatFillsTheSlab_StaysInsideAndAsksForAHook()
+  {
+    var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+        new BoundingBox(new Point2D(0, 0), new Point2D(10000, 8000)));
+
+    CreateCalculator().CalculateRebars([zone], TestSlab);
+
+    zone.Rebars.Should().NotBeEmpty();
+    zone.Rebars.Should().OnlyContain(bar =>
+        Math.Abs(bar.TotalLength - 10000) < 0.2 &&
+        bar.Start.X >= -1e-6 &&
+        bar.End.X <= 10000 + 1e-6 &&
+        bar.EndConditionStart == BarEndCondition.NeedsHook &&
+        bar.EndConditionEnd == BarEndCondition.NeedsHook &&
+        bar.AnchorageLengthStart > 0);
+  }
+
+  [Fact]
+  public void CalculateRebars_InteriorZone_ExtendsBothEndsInsideTheSlab()
+  {
+    var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+        new BoundingBox(new Point2D(2000, 1000), new Point2D(4000, 3000)));
+
+    CreateCalculator().CalculateRebars([zone], TestSlab);
+
+    zone.Rebars.Should().NotBeEmpty();
+    zone.Rebars.Should().OnlyContain(bar =>
+        bar.EndConditionStart == BarEndCondition.Straight &&
+        bar.EndConditionEnd == BarEndCondition.Straight &&
+        Math.Abs(bar.Start.X - (2000 - bar.AnchorageLengthStart)) < 0.2 &&
+        Math.Abs(bar.End.X - (4000 + bar.AnchorageLengthEnd)) < 0.2 &&
+        bar.Start.X >= -1e-6 &&
+        bar.End.X <= 10000);
+  }
+
+  [Fact]
+  public void CalculateRebars_StraightProfile_ShortensTheEdgeInsteadOfAskingForAHook()
+  {
+    var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+        new BoundingBox(new Point2D(0, 0), new Point2D(10000, 8000)));
+    zone.RequestedEndCondition = "Straight";
+
+    CreateCalculator().CalculateRebars([zone], TestSlab);
+
+    zone.Rebars.Should().OnlyContain(bar =>
+        bar.EndConditionStart == BarEndCondition.ShortenedAtEdge &&
+        bar.EndConditionEnd == BarEndCondition.ShortenedAtEdge);
   }
 
   private static ReinforcementZone MakeZone(

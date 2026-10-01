@@ -106,6 +106,39 @@ public static class BarRunBuilder
     return Subtract(intervals, cuts);
   }
 
+  /// <summary>Spans of the line that lie inside the shells and outside the holes.</summary>
+  public static List<(double Start, double End)> IntervalsOnLine(
+      IReadOnlyList<Polygon> shells,
+      IReadOnlyList<Polygon> holes,
+      double station,
+      bool horizontal)
+  {
+    var covered = new List<(double Start, double End)>();
+    foreach (var shell in shells)
+      covered.AddRange(Intervals(shell, station, horizontal));
+    covered = Merge(covered);
+    return Subtract(covered, holes.Select(hole => Intervals(hole, station, horizontal)));
+  }
+
+  private static List<(double Start, double End)> Merge(List<(double Start, double End)> intervals)
+  {
+    if (intervals.Count == 0)
+      return intervals;
+
+    var ordered = intervals.OrderBy(interval => interval.Start).ToList();
+    var merged = new List<(double Start, double End)> { ordered[0] };
+    for (int i = 1; i < ordered.Count; i++)
+    {
+      var last = merged[^1];
+      if (ordered[i].Start <= last.End + 1e-6)
+        merged[^1] = (last.Start, Math.Max(last.End, ordered[i].End));
+      else
+        merged.Add(ordered[i]);
+    }
+
+    return merged;
+  }
+
   private static List<(double Start, double End)> Intervals(Polygon polygon, double station, bool horizontal)
   {
     var hits = new List<double>();

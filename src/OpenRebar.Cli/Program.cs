@@ -448,6 +448,7 @@ public static class Program
         CompanyProfileId = loadedProfile?.Profile.Id,
         CompanyProfileVersion = loadedProfile?.Profile.Version ?? "0",
         JointRatioMax = loadedProfile?.Profile.Laps.JointRatioMax ?? 0.5,
+        EndCondition = loadedProfile?.Profile.Ends.Condition ?? "NeedsHook",
         SupplierCatalog = catalogPath is null && loadedProfile is not null
             ? CompanyProfileLoader.ToCatalog(loadedProfile.Profile)
             : null,
@@ -537,9 +538,6 @@ public static class Program
               $"AeroBIM request field reinforcement_handoff_path: {handoff.RelativeManifestPath}");
         }
       }
-
-      if (exitCode != 0)
-        return exitCode;
 
       string schedulePath = Path.ChangeExtension(isolineFile, ".schedule.csv");
       await scheduleExporter.ExportAsync(result.ClassifiedZones, schedulePath, csvCulture);

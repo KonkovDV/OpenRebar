@@ -405,7 +405,7 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
       double vx = point.X - OriginX;
       double vy = point.Y - OriginY;
       double along = vx * AxisX + vy * AxisY;
-      if (along < -AnchorageStartMm - 1e-6 || along > LengthMm + AnchorageEndMm + 1e-6)
+      if (along < -1e-6 || along > LengthMm + 1e-6)
         return 0;
       double across = vx * NormalX + vy * NormalY;
       if (Math.Abs(across) > HalfSpacingMm + 1e-6)
@@ -418,9 +418,8 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
       if (!Ramp || (AnchorageStartMm <= 1e-9 && AnchorageEndMm <= 1e-9))
         return 1;
 
-      double fromStart = along + AnchorageStartMm;
-      double physicalLength = LengthMm + AnchorageStartMm + AnchorageEndMm;
-      double fromEnd = physicalLength - fromStart;
+      double fromStart = along;
+      double fromEnd = LengthMm - along;
       double start = AnchorageStartMm <= 1e-9 ? 1 : Math.Clamp(fromStart / AnchorageStartMm, 0, 1);
       double end = AnchorageEndMm <= 1e-9 ? 1 : Math.Clamp(fromEnd / AnchorageEndMm, 0, 1);
       return Math.Min(start, end);

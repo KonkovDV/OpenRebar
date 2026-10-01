@@ -1,7 +1,7 @@
 {
   "contractId": "OpenRebar.reinforcement.report.v2",
   "schemaVersion": "2.0.0",
-  "generatedAtUtc": "2026-10-01T16:33:07.6861493+00:00",
+  "generatedAtUtc": "2026-10-01T17:45:26.3156402+00:00",
   "metadata": {
     "projectCode": "OpenRebar-CLI",
     "slabId": "input",
@@ -75,7 +75,7 @@
       "spacingMm": 150,
       "rebarCount": 27,
       "totalClearSpanMm": 162000,
-      "totalLengthMm": 206820,
+      "totalLengthMm": 162000,
       "boundingBox": {
         "minX": 0,
         "minY": 0,
@@ -96,10 +96,10 @@
       "supplierName": "Default (Russian market)",
       "rebarCount": 27,
       "stockBarsNeeded": 27,
-      "totalWasteMm": 36099,
-      "totalWastePercent": 14.855555555555554,
-      "totalRebarLengthMm": 206820,
-      "totalMassKg": 510.84540000000004,
+      "totalWasteMm": 80919,
+      "totalWastePercent": 33.300000000000004,
+      "totalRebarLengthMm": 162000,
+      "totalMassKg": 400.14000000000004,
       "estimatedCost": null,
       "dualBound": 27,
       "gap": 0,
@@ -108,245 +108,245 @@
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
-            7660
+            6000
           ],
           "sawCutWidthMm": 3,
-          "wasteMm": 1337,
-          "wastePercent": 14.855555555555554
+          "wasteMm": 2997,
+          "wastePercent": 33.300000000000004
         }
       ]
     }
@@ -365,17 +365,27 @@
     "parsedZoneCount": 1,
     "classifiedZoneCount": 1,
     "totalRebarSegments": 27,
-    "totalWastePercent": 14.855555555555554,
-    "totalWasteMm": 36099,
-    "totalMassKg": 510.84540000000004,
-    "massInstalledKg": 510.84540000000004,
+    "totalWastePercent": 33.300000000000004,
+    "totalWasteMm": 80919,
+    "totalMassKg": 400.14000000000004,
+    "massInstalledKg": 400.14000000000004,
     "massPurchasedKg": 600.21,
     "estimatedCost": null
   },
   "warnings": [
-    "DXF $INSUNITS is unset; coordinates were interpreted as millimetres."
+    "DXF $INSUNITS is unset; coordinates were interpreted as millimetres.",
+    "Anchorage stays inside the working area. Ends that cannot take the full length: NeedsHook 54."
   ],
-  "errors": [],
+  "errors": [
+    {
+      "stage": "Verification",
+      "errorMessage": "Under-reinforced region in DXF-0001 at (0, 0)-(850, 4000) mm.",
+      "exceptionType": "VerificationFailed",
+      "occurredAtUtc": "2026-10-01T17:45:26.2573782+00:00",
+      "stackTrace": null,
+      "isCritical": true
+    }
+  ],
   "unoptimizedBars": [],
   "positions": [
     {
@@ -383,10 +393,10 @@
       "diameterMm": 20,
       "steelClass": "A500C",
       "shapeCode": "00",
-      "lengthMm": 7660,
+      "lengthMm": 6000,
       "quantity": 27,
-      "massPerPieceKg": 18.9202,
-      "totalMassKg": 510.84540000000004,
+      "massPerPieceKg": 14.82,
+      "totalMassKg": 400.14,
       "layer": "BottomX"
     }
   ],
@@ -397,7 +407,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 42.1816,
+      "durationMs": 42.973,
       "algorithmId": "dxf",
       "counters": {
         "processed": 1,
@@ -411,7 +421,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 0.4446,
+      "durationMs": 0.4112,
       "algorithmId": null,
       "counters": {
         "processed": 1,
@@ -425,7 +435,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 8.148,
+      "durationMs": 8.2877,
       "algorithmId": "bar-runs/v1",
       "counters": {
         "processed": 1,
@@ -439,7 +449,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 60.6875,
+      "durationMs": 80.2485,
       "algorithmId": null,
       "counters": {
         "processed": 27,
@@ -449,17 +459,24 @@
     },
     {
       "name": "Verification",
-      "status": "Complete",
-      "complete": true,
+      "status": "Failed",
+      "complete": false,
       "budgetExhausted": false,
-      "partialResults": false,
-      "durationMs": 19.1678,
+      "partialResults": true,
+      "durationMs": 31.7218,
       "algorithmId": "grid-as-v0",
       "counters": {
-        "processed": 1,
+        "processed": 0,
         "max": null
       },
-      "reasons": []
+      "reasons": [
+        {
+          "code": "verification_failed",
+          "retryable": false,
+          "message": "Under-reinforced region in DXF-0001 at (0, 0)-(850, 4000) mm.",
+          "context": null
+        }
+      ]
     },
     {
       "name": "Optimization",
@@ -467,7 +484,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 50.5719,
+      "durationMs": 56.6739,
       "algorithmId": "column-generation-relaxation-v2",
       "counters": {
         "processed": 1,
@@ -481,7 +498,7 @@
       "complete": false,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 0.0247,
+      "durationMs": 0.0256,
       "algorithmId": null,
       "counters": {
         "processed": 0,
@@ -491,27 +508,42 @@
     }
   ],
   "verification": {
-    "status": "Passed",
-    "underReinforcedAreaM2": 0,
+    "status": "Failed",
+    "underReinforcedAreaM2": 6.8,
     "checkedAreaM2": 24,
-    "minMarginMm2PerM": 0,
-    "minProvisionRatio": 1,
+    "minMarginMm2PerM": -2031.3109125620751,
+    "minProvisionRatio": 0.030120481927710843,
     "cellSizeMm": 50,
     "underCoverageRatio": 0,
     "peakSmoothingWindowMm": null,
-    "underReinforcedCells": 0,
+    "underReinforcedCells": 2720,
     "excessSteelKg": 0,
     "layers": [
       {
         "layer": "DXF-0001",
-        "status": "Passed",
-        "underReinforcedAreaM2": 0,
-        "underReinforcedCells": 0,
-        "minMarginMm2PerM": 0,
+        "status": "Failed",
+        "underReinforcedAreaM2": 6.8,
+        "underReinforcedCells": 2720,
+        "minMarginMm2PerM": -2031.3109125620751,
         "excessSteelKg": 0
       }
     ],
-    "deficitRegions": []
+    "deficitRegions": [
+      {
+        "zoneId": "DXF-0001",
+        "minX": 0,
+        "minY": 0,
+        "maxX": 850,
+        "maxY": 4000
+      },
+      {
+        "zoneId": "DXF-0001",
+        "minX": 5150,
+        "minY": 0,
+        "maxX": 6000,
+        "maxY": 4000
+      }
+    ]
   },
   "requiresEngineerReview": true,
   "profile": {
@@ -541,14 +573,14 @@
           "diameterMm": 20,
           "steelClass": "A500C",
           "shapeCode": "00",
-          "lengthMm": 7660,
+          "lengthMm": 6000,
           "quantity": 27,
-          "massPerPieceKg": 18.9202,
-          "totalMassKg": 510.84540000000004,
+          "massPerPieceKg": 14.82,
+          "totalMassKg": 400.14,
           "layer": "BottomX"
         }
       ],
-      "massKg": 510.84540000000004
+      "massKg": 400.14
     },
     {
       "layer": "BottomY",
@@ -650,250 +682,6 @@
       "source": "profile"
     }
   ],
-  "clashes": [
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3225,
-      "barIds": [
-        "043c5467d1790bce"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 1125,
-      "barIds": [
-        "0d2c0bfdd433032c"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3375,
-      "barIds": [
-        "0da951f5b9e1683f"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2175,
-      "barIds": [
-        "16575f25274a1e03"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 75,
-      "barIds": [
-        "1b069ec9c016a68e"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 1725,
-      "barIds": [
-        "1ddb2b60cf573b7e"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 1575,
-      "barIds": [
-        "2f05dde43c57775e"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 525,
-      "barIds": [
-        "2f3ddf1a2f5df149"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2925,
-      "barIds": [
-        "312a2a4a7f98f6f5"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3075,
-      "barIds": [
-        "3c9000e49d211519"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2775,
-      "barIds": [
-        "542fbe7fde1e4b96"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2325,
-      "barIds": [
-        "5f33a1fe403a3ae7"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 675,
-      "barIds": [
-        "68678a73de6fab50"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 375,
-      "barIds": [
-        "68ad5bab2c0d97cc"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2625,
-      "barIds": [
-        "69d78dcf4ca33515"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2475,
-      "barIds": [
-        "6fd15689fe95320a"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 1425,
-      "barIds": [
-        "7ff1e05efa8b014d"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3825,
-      "barIds": [
-        "805101851e68e5cf"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3675,
-      "barIds": [
-        "8672adaa04437b7f"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 2025,
-      "barIds": [
-        "8d13c08017e6b9f8"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3975,
-      "barIds": [
-        "965b4c9e6a9f7657"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 1875,
-      "barIds": [
-        "972fc9c423a790eb"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 3525,
-      "barIds": [
-        "a7383be1d89045c5"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 975,
-      "barIds": [
-        "b6155131d8282b35"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 1275,
-      "barIds": [
-        "bd100d18f342dcd5"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 225,
-      "barIds": [
-        "c228d4a01a2a7f6f"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "barOutsideWorkingArea",
-      "x": -830,
-      "y": 825,
-      "barIds": [
-        "dd5c27bc86037b55"
-      ]
-    }
-  ],
-  "partialResult": false
+  "clashes": [],
+  "partialResult": true
 }

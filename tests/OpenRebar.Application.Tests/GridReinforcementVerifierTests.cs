@@ -128,7 +128,7 @@ public class GridReinforcementVerifierTests
     [
         new RebarSegment
         {
-          Start = new Point2D(0, 100),
+          Start = new Point2D(-400, 100),
           End = new Point2D(400, 100),
           DiameterMm = 12,
           AnchorageLengthStart = 400,
