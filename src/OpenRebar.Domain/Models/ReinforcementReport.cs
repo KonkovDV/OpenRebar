@@ -49,6 +49,7 @@ public sealed record ReinforcementExecutionReport
   public IReadOnlyList<LayerExecutionReport> Layers { get; init; } = LayerExecutionReport.NoneProvided;
   public IReadOnlyList<ParameterSourceReport> ParameterSources { get; init; } = [];
   public IReadOnlyList<ClashReport> Clashes { get; init; } = [];
+  public IReadOnlyList<LapJointReport> Laps { get; init; } = [];
   public bool PartialResult { get; init; }  // true if pipeline aborted early due to critical error
 }
 
@@ -62,6 +63,18 @@ public sealed record ClashReport
   public required double X { get; init; }
   public required double Y { get; init; }
   public required IReadOnlyList<string> BarIds { get; init; }
+}
+
+/// <summary>
+/// One lap splice. Position is the joint centre on the bar axis, in millimetres.
+/// </summary>
+public sealed record LapJointReport
+{
+  public required string LapId { get; init; }
+  public required IReadOnlyList<string> BarIds { get; init; }
+  public required double PositionMm { get; init; }
+  public required double LengthMm { get; init; }
+  public required double Alpha { get; init; }
 }
 
 /// <summary>

@@ -651,7 +651,7 @@ public class GenerateReinforcementPipelineTests
   }
 
   [Fact]
-  public async Task BarLongerThanMaxStock_IsReportedNotFatal()
+  public async Task BarLongerThanMaxStock_IsLappedAndNotFatal()
   {
     var sut = CreateSut();
     var input = CreateInput("plan.dxf", placeInRevit: false);
@@ -685,24 +685,14 @@ public class GenerateReinforcementPipelineTests
 
     result.Report.Should().NotBeNull();
     result.Report!.PartialResult.Should().BeFalse();
-    result.OptimizationResults.Should().NotContainKey(12);
-    result.Report.UnoptimizedBars.Should().ContainSingle(bar =>
-        bar.DiameterMm == 12 &&
-        bar.LengthMm == 12000 &&
-        bar.MaxStockLengthMm == 11700 &&
-        bar.Reason == "bar_exceeds_max_stock");
-    result.Report.Errors.Should().ContainSingle(error =>
-        error.Stage == "Detailing" &&
-        error.ExceptionType == "BarExceedsMaxStock" &&
-        error.IsCritical == false);
-    result.Report.Summary.MassPurchasedKg.Should().Be(0);
-    result.Report.Summary.MassInstalledKg.Should().BeApproximately(
-        12000.0 / 1000.0 * ReinforcementLimits.GetLinearMass(12),
-        1e-6);
-    _optimizer.DidNotReceive().Optimize(
-        Arg.Any<IReadOnlyList<double>>(),
-        Arg.Any<IReadOnlyList<StockLength>>(),
-        Arg.Any<OptimizationSettings>());
+    result.Report.UnoptimizedBars.Should().BeEmpty();
+    result.Report.Errors.Should().NotContain(error => error.ExceptionType == "BarExceedsMaxStock");
+    result.Report.Laps.Should().NotBeEmpty();
+    result.OptimizationResults.Should().ContainKey(12);
+    result.ClassifiedZones
+        .SelectMany(zone => zone.Rebars)
+        .Should()
+        .OnlyContain(bar => bar.TotalLength + input.OptimizationSettings.SawCutWidthMm <= 11700.1);
   }
 
   [Fact]

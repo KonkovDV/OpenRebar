@@ -144,45 +144,119 @@ public static class ClearanceChecker
 
   private static void AddLapClashes(List<ClashReport> clashes, IReadOnlyList<BarRef> bars, double jointRatioMax)
   {
-    foreach (var group in bars.GroupBy(bar => LayerKeyOf(bar.Zone)))
+    foreach (var layer in bars.GroupBy(bar => LayerKeyOf(bar.Zone)))
     {
-      var members = group.ToList();
-      if (members.Count == 0)
-        continue;
+      var lines = ClusterLines(layer.ToList());
+      foreach (var run in ClusterRuns(lines))
+      {
+        var joints = run.SelectMany(line => line.Joints).ToList();
+        if (joints.Count == 0 || run.Count == 0)
+          continue;
 
-      var lapped = new HashSet<string>(StringComparer.Ordinal);
-      Point2D at = members[0].Segment.Start;
+        var origin = run[0].Bars[0].PhysicalStart;
+        var axis = run[0].Bars[0].PhysicalEnd - origin;
+        double axisLength = Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y);
+        if (axisLength < 1e-9)
+          continue;
+        var unit = new Point2D(axis.X / axisLength, axis.Y / axisLength);
+        double Project(Point2D point) => (point.X - origin.X) * unit.X + (point.Y - origin.Y) * unit.Y;
+
+        foreach (var joint in joints)
+        {
+          double at = Project(joint.Center);
+          double window = LapPlanner.SectionLengthFactor * joint.Length;
+          int occupied = run.Count(line => line.Joints.Any(other => Math.Abs(Project(other.Center) - at) <= window + 1e-6));
+          if (occupied / (double)run.Count <= jointRatioMax)
+            continue;
+
+          clashes.Add(new ClashReport
+          {
+            Type = "soft",
+            Kind = "lapOverload",
+            X = joint.Center.X,
+            Y = joint.Center.Y,
+            BarIds = [joint.Left.Id, joint.Right.Id]
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  private static List<LineCluster> ClusterLines(List<BarRef> bars)
+  {
+    var parent = Enumerable.Range(0, bars.Count).ToArray();
+    int Find(int index)
+    {
+      while (parent[index] != index)
+        index = parent[index] = parent[parent[index]];
+      return index;
+    }
+
+    for (int i = 0; i < bars.Count; i++)
+    {
+      for (int j = i + 1; j < bars.Count; j++)
+      {
+        if (!Parallel(bars[i].PhysicalStart, bars[i].PhysicalEnd, bars[j].PhysicalStart, bars[j].PhysicalEnd))
+          continue;
+        if (LineDistance(bars[i], bars[j]) > SameLineMm)
+          continue;
+        if (LongitudinalOverlap(bars[i], bars[j]) < -SameLineMm)
+          continue;
+        parent[Find(i)] = Find(j);
+      }
+    }
+
+    var lines = new List<LineCluster>();
+    foreach (var cluster in bars.Select((bar, index) => (bar, root: Find(index))).GroupBy(item => item.root))
+    {
+      var members = cluster.Select(item => item.bar).ToList();
+      var joints = new List<LapSample>();
       for (int i = 0; i < members.Count; i++)
       {
         for (int j = i + 1; j < members.Count; j++)
         {
-          if (!Parallel(members[i].PhysicalStart, members[i].PhysicalEnd, members[j].PhysicalStart, members[j].PhysicalEnd))
+          if (!TryOverlap(members[i], members[j], out var center, out double overlap))
             continue;
-          if (LineDistance(members[i], members[j]) > SameLineMm)
-            continue;
-          if (LongitudinalOverlap(members[i], members[j]) <= SameLineMm)
-            continue;
-
-          lapped.Add(members[i].Id);
-          lapped.Add(members[j].Id);
-          at = Mid(members[i].Segment.Start, members[j].Segment.Start);
+          joints.Add(new LapSample(center, overlap, members[i], members[j]));
         }
       }
 
-      if (lapped.Count == 0)
-        continue;
-      if (lapped.Count / (double)members.Count <= jointRatioMax)
-        continue;
-
-      clashes.Add(new ClashReport
-      {
-        Type = "soft",
-        Kind = "lapOverload",
-        X = at.X,
-        Y = at.Y,
-        BarIds = lapped.OrderBy(id => id, StringComparer.Ordinal).ToList()
-      });
+      lines.Add(new LineCluster(members, joints));
     }
+
+    return lines;
+  }
+
+  private static List<List<LineCluster>> ClusterRuns(List<LineCluster> lines)
+  {
+    var parent = Enumerable.Range(0, lines.Count).ToArray();
+    int Find(int index)
+    {
+      while (parent[index] != index)
+        index = parent[index] = parent[parent[index]];
+      return index;
+    }
+
+    for (int i = 0; i < lines.Count; i++)
+    {
+      for (int j = i + 1; j < lines.Count; j++)
+      {
+        var left = lines[i].Bars[0];
+        var right = lines[j].Bars[0];
+        if (!Parallel(left.PhysicalStart, left.PhysicalEnd, right.PhysicalStart, right.PhysicalEnd))
+          continue;
+        if (!SpansOverlap(lines[i], lines[j]))
+          continue;
+        parent[Find(i)] = Find(j);
+      }
+    }
+
+    return lines
+        .Select((line, index) => (line, root: Find(index)))
+        .GroupBy(item => item.root)
+        .Select(group => group.Select(item => item.line).ToList())
+        .ToList();
   }
 
   private static List<(BarRef Left, BarRef Right)> CandidatePairs(IReadOnlyList<BarRef> bars, IPlanarGeometry? geometry)
@@ -455,6 +529,58 @@ public static class ClearanceChecker
     _ => zone.Layer.ToString()
   };
 
+  private static bool TryOverlap(BarRef left, BarRef right, out Point2D center, out double length)
+  {
+    length = LongitudinalOverlap(left, right);
+    center = default;
+    if (length <= SameLineMm)
+      return false;
+
+    var origin = left.PhysicalStart;
+    var axis = left.PhysicalEnd - origin;
+    double axisLength = Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y);
+    if (axisLength < 1e-9)
+      return false;
+    var unit = new Point2D(axis.X / axisLength, axis.Y / axisLength);
+    double Project(Point2D point) => (point.X - origin.X) * unit.X + (point.Y - origin.Y) * unit.Y;
+    double a0 = Math.Min(Project(left.PhysicalStart), Project(left.PhysicalEnd));
+    double a1 = Math.Max(Project(left.PhysicalStart), Project(left.PhysicalEnd));
+    double b0 = Math.Min(Project(right.PhysicalStart), Project(right.PhysicalEnd));
+    double b1 = Math.Max(Project(right.PhysicalStart), Project(right.PhysicalEnd));
+    double mid = (Math.Max(a0, b0) + Math.Min(a1, b1)) / 2.0;
+    center = new Point2D(origin.X + unit.X * mid, origin.Y + unit.Y * mid);
+    return true;
+  }
+
+  private static bool SpansOverlap(LineCluster left, LineCluster right)
+  {
+    var origin = left.Bars[0].PhysicalStart;
+    var axis = left.Bars[0].PhysicalEnd - origin;
+    double axisLength = Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y);
+    if (axisLength < 1e-9)
+      return false;
+    var unit = new Point2D(axis.X / axisLength, axis.Y / axisLength);
+    double Project(Point2D point) => (point.X - origin.X) * unit.X + (point.Y - origin.Y) * unit.Y;
+    (double Start, double End) Span(LineCluster line)
+    {
+      double min = double.PositiveInfinity;
+      double max = double.NegativeInfinity;
+      foreach (var bar in line.Bars)
+      {
+        double a = Project(bar.PhysicalStart);
+        double b = Project(bar.PhysicalEnd);
+        min = Math.Min(min, Math.Min(a, b));
+        max = Math.Max(max, Math.Max(a, b));
+      }
+
+      return (min, max);
+    }
+
+    var aSpan = Span(left);
+    var bSpan = Span(right);
+    return Math.Min(aSpan.End, bSpan.End) - Math.Max(aSpan.Start, bSpan.Start) > SameLineMm;
+  }
+
   private static string IdOf(RebarSegment bar) =>
       string.IsNullOrEmpty(bar.BarId) ? bar.Mark ?? "?" : bar.BarId;
 
@@ -465,6 +591,10 @@ public static class ClearanceChecker
   private static double Cross(Point2D a, Point2D b) => a.X * b.Y - a.Y * b.X;
 
   private static double Clamp(double value) => Math.Clamp(value, 0, 1);
+
+  private sealed record LapSample(Point2D Center, double Length, BarRef Left, BarRef Right);
+
+  private sealed record LineCluster(List<BarRef> Bars, List<LapSample> Joints);
 
   private sealed record BarRef(
       ReinforcementZone Zone,

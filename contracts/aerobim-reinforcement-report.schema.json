@@ -122,9 +122,25 @@
     "clashes": {
       "type": "array",
       "items": { "$ref": "#/$defs/clashReport" }
+    },
+    "laps": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/lapJointReport" }
     }
   },
   "$defs": {
+    "lapJointReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lapId", "barIds", "positionMm", "lengthMm", "alpha"],
+      "properties": {
+        "lapId": { "type": "string", "minLength": 1 },
+        "barIds": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+        "positionMm": { "type": "number" },
+        "lengthMm": { "type": "number", "minimum": 0 },
+        "alpha": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
     "clashReport": {
       "type": "object",
       "additionalProperties": false,

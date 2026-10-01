@@ -158,7 +158,7 @@ dotnet format OpenRebar.sln --verify-no-changes --no-restore
 dotnet test OpenRebar.sln --no-build --configuration Release
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **343/343 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release`): **346/346 tests passing**.
 
 ## CI Quality Gates
 
@@ -196,7 +196,7 @@ The normal test lane skips `BatchReinforcementCorpusFixtureTests` when no manife
 
 Still open relative to [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md):
 
-- A single drawing is still one layer. A project file can name up to four drawings. Anchorage is drawn only as far as the working area allows; a hook or bent end is not modeled yet. Holes are counted rather than cut out of the zone.
+- A single drawing is still one layer. A project file can name up to four drawings. Anchorage is drawn only as far as the working area allows; a hook or bent end is not modeled yet. A bar longer than stock is lapped. Couplers are not modeled. Holes are counted rather than cut out of the zone.
 - Column generation packs a single stock length. A dual bound is published only when `boundStatus` is `Proven`.
 - The schedule groups marks without a layer section. IFC export has no `IfcReinforcingBarType` and no bar geometry.
 - Design strengths for A400 and B500 stay at the embedded table until a quoted extract of SP 63 table 6.14 is added.
