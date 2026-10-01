@@ -1,0 +1,259 @@
+{
+    "capturedAtUtc":  "2026-10-01T13:23:04Z",
+    "gitCommit":  "3b6bf3370ca3a2ff2f363a90716daaeb08ed33c1",
+    "workingTreeDirty":  true,
+    "note":  "KPI of the pipeline before Phase A fixes. These numbers describe the current behaviour; they are not targets.",
+    "generator":  "OpenRebar.TestCorpus/v0",
+    "scenarios":  [
+                      {
+                          "id":  "l-zone",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  20,
+                                      "totalMassKg":  136.972,
+                                      "totalWastePercent":  3.1965811965811968,
+                                      "stockBarsNeeded":  10,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  1,
+                                      "totalMassKg":  2.1296,
+                                      "totalWastePercent":  70.61666666666667,
+                                      "stockBarsNeeded":  1,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "narrow-strip",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  3,
+                                      "totalMassKg":  41.9406,
+                                      "totalWastePercent":  4.016949152542373,
+                                      "stockBarsNeeded":  2,
+                                      "optimizerId":  "first-fit-decreasing-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  0,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  0,
+                                      "stockBarsNeeded":  0,
+                                      "optimizerId":  "none",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "rect-6x4",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  20,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  41.641666666666666,
+                                      "stockBarsNeeded":  20,
+                                      "optimizerId":  "none",
+                                      "errors":  [
+                                                     "Column-generation produced physically infeasible plan: consumed 7003.000mm \u003e stock 6000.000mm."
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  2,
+                                      "totalMassKg":  2.8416,
+                                      "totalWastePercent":  46.56666666666667,
+                                      "stockBarsNeeded":  1,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "shaft-opening",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  30,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  26.308333333333334,
+                                      "stockBarsNeeded":  30,
+                                      "optimizerId":  "none",
+                                      "errors":  [
+                                                     "Column-generation produced physically infeasible plan: consumed 8843.000mm \u003e stock 6000.000mm."
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  3,
+                                      "totalMassKg":  3.03564,
+                                      "totalWastePercent":  17.849999999999998,
+                                      "stockBarsNeeded":  1,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "skew-30",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  20,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  41.641666666666666,
+                                      "stockBarsNeeded":  20,
+                                      "optimizerId":  "none",
+                                      "errors":  [
+                                                     "Zone DXF-0001: over-coverage ratio 0.319 exceeds maximum 0.250",
+                                                     "Column-generation produced physically infeasible plan: consumed 7003.000mm \u003e stock 6000.000mm."
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  2,
+                                      "totalMassKg":  2.839824,
+                                      "totalWastePercent":  46.6,
+                                      "stockBarsNeeded":  1,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "span-14m",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  0,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  0,
+                                      "stockBarsNeeded":  0,
+                                      "optimizerId":  "n/a",
+                                      "errors":  [
+                                                     "Required cut 15660.0 mm (effective 15663.0 mm with saw cut) exceeds all available stock lengths. Max in-stock length: 12000.0 mm.",
+                                                     "Fallback infeasible for cut 15660.0 mm (effective 15663.0 mm with saw cut) and stock length 12000.0 mm."
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  2,
+                                      "totalMassKg":  15.116400000000002,
+                                      "totalWastePercent":  31.933333333333337,
+                                      "stockBarsNeeded":  1,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "two-adjacent",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  35,
+                                      "totalMassKg":  324.39820000000003,
+                                      "totalWastePercent":  9.27037579306979,
+                                      "stockBarsNeeded":  18,
+                                      "optimizerId":  "mixed",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  4,
+                                      "totalRebarSegments":  0,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  0,
+                                      "stockBarsNeeded":  0,
+                                      "optimizerId":  "none",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      },
+                      {
+                          "id":  "zone-with-hole",
+                          "dxf":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  1,
+                                      "totalRebarSegments":  20,
+                                      "totalMassKg":  0,
+                                      "totalWastePercent":  41.641666666666666,
+                                      "stockBarsNeeded":  20,
+                                      "optimizerId":  "none",
+                                      "errors":  [
+                                                     "Column-generation produced physically infeasible plan: consumed 7003.000mm \u003e stock 6000.000mm."
+                                                 ],
+                                      "stderrTail":  ""
+                                  },
+                          "png":  {
+                                      "exitCode":  0,
+                                      "timedOut":  false,
+                                      "parsedZoneCount":  2,
+                                      "totalRebarSegments":  2,
+                                      "totalMassKg":  2.8416,
+                                      "totalWastePercent":  46.56666666666667,
+                                      "stockBarsNeeded":  1,
+                                      "optimizerId":  "column-generation-relaxation-v1",
+                                      "errors":  [
+
+                                                 ],
+                                      "stderrTail":  ""
+                                  }
+                      }
+                  ]
+}

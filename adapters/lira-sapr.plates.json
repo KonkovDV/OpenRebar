@@ -1,0 +1,13 @@
+{
+  "adapterId": "lira-sapr.plates",
+  "delimiter": ";",
+  "decimalSeparator": ",",
+  "units": "cm2_per_m",
+  "note": "Anonymized column map. AS1–AS4 follow LIRA-SAPR plate reinforcement: bottom X, top X, bottom Y, top Y. Confirm against a real export before production use.",
+  "columns": {
+    "AS1": "BottomX",
+    "AS2": "TopX",
+    "AS3": "BottomY",
+    "AS4": "TopY"
+  }
+}

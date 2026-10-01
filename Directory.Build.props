@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enforce lockfile-based NuGet restores to improve supply-chain reproducibility. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+</Project>

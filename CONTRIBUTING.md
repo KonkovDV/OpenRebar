@@ -1,0 +1,66 @@
+# Contributing
+
+## Working Principles
+
+- Keep the dependency direction strict: Domain -> nothing, Application -> Domain,
+  Infrastructure -> Domain + Application, RevitPlugin -> all outer wiring.
+- Do not introduce Revit SDK dependencies outside `src/OpenRebar.RevitPlugin/`.
+- Keep all internal numeric geometry in millimetres. Unit conversion belongs only
+  at the Revit boundary.
+- Prefer small, reviewable commits with focused diffs.
+
+## Local Setup
+
+### .NET
+
+```bash
+dotnet restore OpenRebar.sln
+dotnet build OpenRebar.sln
+dotnet test OpenRebar.sln
+```
+
+### Python ML module
+
+```bash
+cd ml
+python -m pip install -r requirements.txt
+pytest tests -q
+```
+
+## What To Validate Before Opening A PR
+
+1. `dotnet build OpenRebar.sln`
+2. `dotnet test OpenRebar.sln`
+3. `dotnet format OpenRebar.sln --verify-no-changes --no-restore`
+4. If you touched `ml/`, run `pytest tests -q` from `ml/`
+5. If you changed ML dependency or workflow surfaces, run the relevant steps from [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
+6. If you changed docs or governance surfaces, re-read [docs/README.md](docs/README.md), [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), and the touched public-facing docs for consistency and GitHub safety
+7. Do not include local logs, generated temp files, ML checkpoints, or Revit SDK binaries
+
+## Documentation Contributions
+
+- Treat `README.md` and `README.ru.md` as synchronized public claim surfaces.
+- Keep current-state claims in canonical docs; keep historical notes in dated audit/plan files.
+- When test counts or CI behavior change, update command examples and claim wording in the same PR.
+- Prefer links to canonical docs over duplicated protocol blocks.
+
+## Architecture Guardrails
+
+- Ports live in `src/OpenRebar.Domain/Ports/`
+- Adapters live in `src/OpenRebar.Infrastructure/`
+- Use cases live in `src/OpenRebar.Application/UseCases/`
+- Composition root stays in `src/OpenRebar.RevitPlugin/Bootstrap.cs`
+- New I/O paths must be introduced as ports first, adapters second
+
+## Pull Requests
+
+- Explain the problem, not only the code delta
+- Link changed contracts, docs, or audit notes when behavior changes
+- Add or update tests for bug fixes and new behavior
+- Keep publication-facing docs accurate: `README.md`, `docs/architecture.md`,
+  `docs/README.md`, `docs/HYPER_DEEP_AUDIT_REPORT.md`, `docs/TASKS.md`
+
+## Security
+
+If your change affects workflows, external HTTP calls, report export, dependency
+updates, or credentials handling, review `SECURITY.md` before opening the PR.

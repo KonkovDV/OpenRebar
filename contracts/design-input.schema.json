@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://OpenRebar-reinforcement.local/contracts/design-input.schema.json",
+  "title": "OpenRebar project design input",
+  "description": "Slab, materials, and one to four reinforcement layers. --design and --project read this file. A company profile is a separate file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slab", "layers"],
+  "properties": {
+    "projectCode": { "type": "string", "minLength": 1 },
+    "slabId": { "type": "string", "minLength": 1 },
+    "steelClass": { "type": "string", "minLength": 1 },
+    "norm": { "type": "string", "const": "ru.sp63.2018" },
+    "slab": { "$ref": "#/$defs/slab" },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/layer" }
+    }
+  },
+  "$defs": {
+    "slab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widthMm", "heightMm", "thicknessMm", "coverMm", "concreteClass"],
+      "properties": {
+        "widthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "heightMm": { "type": "number", "exclusiveMinimum": 0 },
+        "thicknessMm": { "type": "number", "exclusiveMinimum": 0 },
+        "coverMm": { "type": "number", "minimum": 0 },
+        "coverEdgeMm": { "type": "number", "minimum": 0 },
+        "openingClearanceMm": { "type": "number", "minimum": 0 },
+        "concreteClass": { "type": "string", "minLength": 1 }
+      }
+    },
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layer", "file"],
+      "properties": {
+        "layer": { "type": "string", "enum": ["BottomX", "BottomY", "TopX", "TopY"] },
+        "file": { "type": "string", "minLength": 1 },
+        "legendFile": { "type": "string", "minLength": 1 },
+        "background": { "$ref": "#/$defs/background" }
+      }
+    },
+    "background": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diameterMm", "spacingMm", "steelClass"],
+      "properties": {
+        "diameterMm": { "type": "integer", "minimum": 1 },
+        "spacingMm": { "type": "integer", "minimum": 1 },
+        "steelClass": { "type": "string", "minLength": 1 },
+        "gridOriginMm": { "type": "number" }
+      }
+    }
+  }
+}

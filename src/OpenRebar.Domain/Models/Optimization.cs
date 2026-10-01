@@ -1,0 +1,132 @@
+namespace OpenRebar.Domain.Models;
+
+/// <summary>
+/// Available rebar stock length from a supplier.
+/// </summary>
+public sealed record StockLength
+{
+  /// <summary>Standard bar length in mm (e.g. 11700, 12000).</summary>
+  public required double LengthMm
+  {
+    get => _lengthMm;
+    init
+    {
+      if (value <= 0)
+        throw new ArgumentOutOfRangeException(nameof(LengthMm), value, "Stock length must be positive.");
+      _lengthMm = value;
+    }
+  }
+  private readonly double _lengthMm;
+
+  /// <summary>Price per ton in currency units.</summary>
+  public double? PricePerTon
+  {
+    get => _pricePerTon;
+    init
+    {
+      if (value < 0)
+        throw new ArgumentOutOfRangeException(nameof(PricePerTon), value, "Price per ton cannot be negative.");
+      _pricePerTon = value;
+    }
+  }
+  private readonly double? _pricePerTon;
+
+  /// <summary>Whether currently available from the supplier.</summary>
+  public bool InStock { get; init; } = true;
+}
+
+/// <summary>
+/// A supplier's catalog of available rebar stock.
+/// </summary>
+public sealed class SupplierCatalog
+{
+  public required string SupplierName { get; init; }
+  public required IReadOnlyList<StockLength> AvailableLengths { get; init; }
+}
+
+/// <summary>
+/// A cutting instruction: how to cut one stock bar into segments.
+/// </summary>
+public sealed record CuttingPlan
+{
+  /// <summary>The stock bar length used (mm).</summary>
+  public required double StockLengthMm { get; init; }
+
+  /// <summary>Segments cut from this bar (lengths in mm).</summary>
+  public required IReadOnlyList<double> Cuts { get; init; }
+
+  /// <summary>Saw cut width applied per produced cut (mm).</summary>
+  public double SawCutWidthMm { get; init; }
+
+  /// <summary>Total material lost to saw cuts for this bar (mm).</summary>
+  public double SawKerfLossMm => Cuts.Count * SawCutWidthMm;
+
+  /// <summary>Total consumed stock length: installed steel plus saw-kerf loss (mm).</summary>
+  public double ConsumedLengthMm => Cuts.Sum() + SawKerfLossMm;
+
+  /// <summary>Remaining waste after installed steel and saw-kerf loss (mm).</summary>
+  public double WasteMm => Math.Max(0, StockLengthMm - ConsumedLengthMm);
+
+  /// <summary>Waste percentage.</summary>
+  public double WastePercent => WasteMm / StockLengthMm * 100;
+}
+
+/// <summary>
+/// Optimization result: full set of cutting plans + summary stats.
+/// </summary>
+public sealed class OptimizationResult
+{
+  public required IReadOnlyList<CuttingPlan> CuttingPlans { get; init; }
+  public required int TotalStockBarsNeeded { get; init; }
+  public required double TotalWasteMm { get; init; }
+  public required double TotalWastePercent { get; init; }
+  public required double TotalRebarLengthMm { get; init; }
+
+  /// <summary>Installed mass in kg from packed piece lengths.</summary>
+  public double? TotalMassKg { get; init; }
+
+  /// <summary>Installed mass in kg. Same basis as <see cref="TotalMassKg"/>.</summary>
+  public double? MassInstalledKg { get; init; }
+
+  /// <summary>Purchased mass in kg from stock-bar lengths, including offcut.</summary>
+  public double? MassPurchasedKg { get; init; }
+
+  /// <summary>Estimated cost based on supplier prices.</summary>
+  public double? EstimatedCost { get; init; }
+
+  /// <summary>Dual bound from LP relaxation (e.g., from column generation master problem).</summary>
+  public double? DualBound { get; init; }
+
+  /// <summary>Quality gap: (Primal - Dual) / Dual * 100 as a percentage.</summary>
+  public double? Gap { get; init; }
+
+  /// <summary>Proven when the reported dual bound is a valid lower bound. Otherwise NotProven and <see cref="DualBound"/> is null.</summary>
+  public string BoundStatus { get; init; } = BoundStatuses.NotProven;
+
+  /// <summary>
+  /// Execution provenance for the optimizer that produced this result.
+  /// Used in the canonical report and verification-oriented tests.
+  /// </summary>
+  public OptimizationProvenance? Provenance { get; init; }
+}
+
+/// <summary>
+/// Provenance for a cutting optimization run.
+/// Makes algorithmic tradeoffs explicit in persisted reports.
+/// </summary>
+public sealed record OptimizationProvenance
+{
+  public required string OptimizerId { get; init; }
+  public required string MasterProblemStrategy { get; init; }
+  public required string PricingStrategy { get; init; }
+  public required string IntegerizationStrategy { get; init; }
+  public required double DemandAggregationPrecisionMm { get; init; }
+  public required string QualityFloor { get; init; }
+  public required bool UsedFallbackMasterSolver { get; init; }
+
+  /// <summary>True when the pipeline replaced a failed optimizer with max-stock FFD.</summary>
+  public bool FallbackUsed { get; init; }
+
+  /// <summary>Quality gap in percentage: (primal - dual) / dual * 100.</summary>
+  public double? QualityGapPercent { get; init; }
+}
