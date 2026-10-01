@@ -34,6 +34,9 @@ public sealed record AdditionalReinforcementProfile
 public sealed record EndConditionProfile
 {
   public required string Condition { get; init; }
+
+  /// <summary>internal keeps codes 00, H, L, and U. Other catalogs are not loaded.</summary>
+  public string ShapeStandard { get; init; } = "internal";
 }
 
 public sealed record LapProfile
@@ -50,6 +53,9 @@ public sealed record PositionProfile
 public sealed record ScheduleProfile
 {
   public required string Culture { get; init; }
+
+  /// <summary>gost-21.501 is the specification plus the steel-mass sheet. Other templates are not loaded.</summary>
+  public string Template { get; init; } = "gost-21.501";
 }
 
 public sealed record SupplyProfile

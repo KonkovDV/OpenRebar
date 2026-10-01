@@ -75,6 +75,15 @@
     "status": "unchangedPendingQuotedTable",
     "sourceQuote": "A400 stays 355 MPa and B500 stays 435 MPa. Table 6.14 was not available as a citable extract, so those values were not revised."
   },
+  "mandrel": {
+    "splitDiameterMm": 20,
+    "smoothBelowSplit": 2.5,
+    "smoothFromSplit": 4,
+    "periodicBelowSplit": 5,
+    "periodicFromSplit": 8,
+    "clauseId": "SP63.13330.2018:10.3.33",
+    "sourceQuote": "Minimum mandrel diameter is 2.5d for smooth bars below 20 mm, 4d for smooth bars from 20 mm, 5d for periodic bars below 20 mm, and 8d for periodic bars from 20 mm."
+  },
   "lapClearDistance": {
     "clauseId": "SP63.13330.2018+A1:10.3.30",
     "status": "notEnforced",
@@ -168,6 +177,12 @@
       "method": "NormativeProfiles.GetDesignStrength",
       "test": "NormativeProfilesTests.DesignStrengthLookup_ShouldMatchGoldenValues",
       "sourceQuote": "A400 stays 355 MPa and B500 stays 435 MPa until table 6.14 is quoted."
+    },
+    {
+      "clauseId": "SP63.13330.2018:10.3.33",
+      "method": "BendRules.MandrelDiameterMm",
+      "test": "BendRulesTests.MandrelDiameter_FollowsTheClauseSplit",
+      "sourceQuote": "Minimum mandrel diameter is 2.5d or 4d for smooth bars and 5d or 8d for periodic bars, split at 20 mm. The straight tail past the bend is not in this clause and is not added."
     },
     {
       "clauseId": "profile:topBarAnchorageFactor",

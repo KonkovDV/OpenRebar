@@ -10,6 +10,7 @@ Generated from `ru.sp63.2018.tables.v2.json`. Edit the table file, then regenera
 | SP63.13330.2018:10.3.8 | ReinforcementLimits.MaxSpacing | ReinforcementLimitsTests.MaxSpacing_FollowsThicknessBands | Spacing limit is 200 mm when h ≤ 150 mm, otherwise the lesser of 1.5h and 400 mm. |
 | SP63.13330.2018:10.3.5 | ReinforcementLimits.MinReinforcementArea | ReinforcementLimitsTests.MinReinforcementArea_UsesEffectiveDepth | Minimum steel area is 0.1% of b·h0. |
 | SP63.13330.2018:6.14 | NormativeProfiles.GetDesignStrength | NormativeProfilesTests.DesignStrengthLookup_ShouldMatchGoldenValues | A400 stays 355 MPa and B500 stays 435 MPa until table 6.14 is quoted. |
+| SP63.13330.2018:10.3.33 | BendRules.MandrelDiameterMm | BendRulesTests.MandrelDiameter_FollowsTheClauseSplit | Minimum mandrel diameter is 2.5d or 4d for smooth bars and 5d or 8d for periodic bars, split at 20 mm. The straight tail past the bend is not in this clause and is not added. |
 | profile:topBarAnchorageFactor | AnchorageRules.CalculateAnchorageLength | AnchorageRulesTests.TopBarFactor_ScalesAnchorageOnly | Default top-bar factor is 1.0 and is not a code coefficient. |
 
 Design strengths of A400 (355 MPa) and B500 (435 MPa) are unchanged. Table 6.14 was not available as a citable extract.
@@ -17,4 +18,6 @@ Design strengths of A400 (355 MPa) and B500 (435 MPa) are unchanged. Table 6.14 
 The clear distance between adjacent laps in the amendment to clause 10.3.30 is not enforced. That amendment text is not in this repository.
 
 Additional bars extend past a zone boundary by the calculated anchorage length, and only inside the working area. The SP 63 clause on curtailment past the theoretical cutoff is not in this repository, so no distance beyond that anchorage length is added.
+
+Bent ends use the mandrel diameter from clause 10.3.33. The cut length adds the centerline arc and does not add a straight tail, because that tail is not in the clause. Shape codes stay internal: 00, H, L, and U. GOST 21.501 does not number bar shapes.
 

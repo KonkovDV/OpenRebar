@@ -29,16 +29,16 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
 
       - name: Build
-        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 
       - name: Verify formatting
         run: dotnet format OpenRebar.sln --verify-no-changes --no-restore
 
       - name: Test
-        run: dotnet test OpenRebar.sln --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64 --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
       - name: Verify README regression claim
         run: python tools/ci/verify_readme_regression_claim.py
@@ -54,7 +54,7 @@ jobs:
           OPENREBAR_BENCH_SUMMARY_PATH: artifacts/benchmark/column-generation-summary.json
         run: |
           mkdir -p artifacts/benchmark
-          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -p:Platform=x64 --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
 
       - name: Upload test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -80,7 +80,7 @@ jobs:
             **/benchmark-results.trx
 
       - name: Publish CLI
-        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release --output ./publish/cli
+        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release -p:Platform=x64 --output ./publish/cli
 
       - name: Generate SBOM
         uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb
@@ -140,12 +140,12 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
 
       - name: Build
-        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 
       - name: Require batch corpus manifest
         env:
           OPENREBAR_REQUIRE_BATCH_CORPUS: "1"
-        run: dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~BatchReinforcementCorpusFixtureTests
+        run: dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -p:Platform=x64 --filter FullyQualifiedName~BatchReinforcementCorpusFixtureTests

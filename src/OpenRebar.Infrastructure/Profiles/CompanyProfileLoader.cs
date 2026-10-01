@@ -29,10 +29,10 @@ public static class CompanyProfileLoader
         "verification", "safety", "legend"
     ],
     ["additional"] = ["diametersMm", "spacingMode", "maxDiameterCount"],
-    ["ends"] = ["condition"],
+    ["ends"] = ["condition", "shapeStandard"],
     ["laps"] = ["jointRatioMax", "couplers"],
     ["positions"] = ["includeLayerInKey"],
-    ["schedule"] = ["culture"],
+    ["schedule"] = ["culture", "template"],
     ["supply"] = ["supplierName", "stockLengthsMm", "specialLengths", "offcuts"],
     ["smoothing"] = ["allowed"],
     ["verification"] = ["underCoverageRatio"],
@@ -261,8 +261,12 @@ public static class CompanyProfileLoader
       throw new CompanyProfileLoadException("additional.spacingMode must be interleave, explicit, or s/2.");
     if (profile.Schedule.Culture is not ("ru" or "invariant"))
       throw new CompanyProfileLoadException("schedule.culture must be ru or invariant.");
+    if (!string.Equals(profile.Schedule.Template, "gost-21.501", StringComparison.Ordinal))
+      throw new CompanyProfileLoadException("schedule.template must be gost-21.501.");
     if (profile.Ends.Condition is not ("NeedsHook" or "Straight" or "Hook" or "LBar" or "UBar"))
       throw new CompanyProfileLoadException("ends.condition is not a known end treatment.");
+    if (!string.Equals(profile.Ends.ShapeStandard, "internal", StringComparison.Ordinal))
+      throw new CompanyProfileLoadException("ends.shapeStandard must be internal. Numbered shape catalogs are not loaded.");
     if (profile.Supply.StockLengthsMm.Count == 0 || profile.Supply.StockLengthsMm.Any(length => length <= 0))
       throw new CompanyProfileLoadException("supply.stockLengthsMm must list positive lengths.");
     if (profile.Legend.Count == 0)

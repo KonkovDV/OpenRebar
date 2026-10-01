@@ -43,11 +43,12 @@ public class CsvScheduleExporterTests
       var lines = await File.ReadAllLinesAsync(outputPath, Encoding.UTF8);
       lines.Should().Contain("[BottomX]");
       lines.Should().Contain("status;NotProvided");
-      lines.Should().Contain("[Диаметры]");
+      lines.Should().Contain("[Расход стали]");
       double piece = ReinforcementLimits.GetLinearMass(12) * 2.450;
       string mass = piece.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
       string total = (piece * 2).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
-      lines.Should().Contain($"1;12;2450;2;{mass};{total};A500C;BottomX;00;{total}");
+      lines.Should().Contain($"1;;Ø12 A500C l = 2450;2;{mass};форма 00");
+      lines.Should().Contain($"A500C;12;{total}");
     }
     finally
     {
@@ -109,8 +110,8 @@ public class CsvScheduleExporterTests
 
       var lines = await File.ReadAllLinesAsync(outputPath, Encoding.UTF8);
       lines.Should().Contain("[BottomX]");
-      lines.Should().Contain("1;20;7660;27;18.92;510.85;A500C;BottomX;00;510.85");
-      lines.Should().Contain("20;510.85");
+      lines.Should().Contain("1;;Ø20 A500C l = 7660;27;18.92;форма 00");
+      lines.Should().Contain("A500C;20;510.85");
     }
     finally
     {
@@ -146,7 +147,7 @@ public class CsvScheduleExporterTests
       await exporter.ExportAsync(zones, outputPath, ScheduleNumberCulture.Invariant);
       var lines = await File.ReadAllLinesAsync(outputPath, Encoding.UTF8);
       var marks = lines
-          .Where(line => line.Length > 0 && char.IsDigit(line[0]) && line.Count(character => character == ';') >= 9)
+          .Where(line => line.Contains(" l = ", StringComparison.Ordinal))
           .Select(line => line.Split(';')[0])
           .ToArray();
       marks.Should().Equal("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
@@ -157,6 +158,47 @@ public class CsvScheduleExporterTests
         File.Delete(outputPath);
     }
   }
+
+  [Fact]
+  public async Task ExportAsync_SteelConsumption_SplitsClassAndDiameter()
+  {
+    var exporter = new CsvScheduleExporter();
+    var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schedule-steel-{Guid.NewGuid():N}.csv");
+    IReadOnlyList<ReinforcementZone> zones =
+    [
+        Zone("A500C", 12, MakeRebar(12, 1000, 0)),
+        Zone("A400", 12, MakeRebar(12, 1000, 200)),
+        Zone("A500C", 16, MakeRebar(16, 1000, 400))
+    ];
+    zones[2].Direction = RebarDirection.Y;
+    PositionAssigner.Assign(zones);
+
+    try
+    {
+      await exporter.ExportAsync(zones, outputPath, ScheduleNumberCulture.Invariant);
+      var lines = await File.ReadAllLinesAsync(outputPath, Encoding.UTF8);
+      int sheet = Array.IndexOf(lines, "[Расход стали]");
+      var masses = lines.Skip(sheet + 2).Where(line => line.Length > 0).ToArray();
+      string twelve = (ReinforcementLimits.GetLinearMass(12) * 1).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+      string sixteen = (ReinforcementLimits.GetLinearMass(16) * 1).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+      masses.Should().Equal($"A400;12;{twelve}", $"A500C;12;{twelve}", $"A500C;16;{sixteen}");
+    }
+    finally
+    {
+      if (File.Exists(outputPath))
+        File.Delete(outputPath);
+    }
+  }
+
+  private static ReinforcementZone Zone(string steelClass, int diameterMm, RebarSegment bar) => new()
+  {
+    Id = steelClass + diameterMm,
+    Boundary = MakeRect(0, 0, 1000, 1000),
+    Spec = new ReinforcementSpec { DiameterMm = diameterMm, SpacingMm = 200, SteelClass = steelClass },
+    Direction = RebarDirection.X,
+    ZoneType = ZoneType.Simple,
+    Rebars = [bar]
+  };
 
   private static ReinforcementZone MakeSingleBarZone() => new()
   {

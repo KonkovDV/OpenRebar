@@ -41,6 +41,11 @@ public sealed record NormativeProfileData
   public required double MaxSpacingThickSlabFactor { get; init; }
   public required double MaxSpacingThickSlabCapMm { get; init; }
   public required double MinReinforcementRatio { get; init; }
+  public required double MandrelSplitDiameterMm { get; init; }
+  public required double MandrelSmoothBelowSplit { get; init; }
+  public required double MandrelSmoothFromSplit { get; init; }
+  public required double MandrelPeriodicBelowSplit { get; init; }
+  public required double MandrelPeriodicFromSplit { get; init; }
   public required IReadOnlyList<NormativeTraceabilityRow> Traceability { get; init; }
   public required IReadOnlyDictionary<string, double> BondStressByConcreteClass { get; init; }
   public required IReadOnlyDictionary<string, double> DesignStrengthBySteelClass { get; init; }
@@ -165,6 +170,11 @@ public static class NormativeProfiles
       MaxSpacingThickSlabFactor = resource.MaxSpacing.ThickSlabFactorOfThickness,
       MaxSpacingThickSlabCapMm = resource.MaxSpacing.ThickSlabCapMm,
       MinReinforcementRatio = resource.MinReinforcementRatio.Ratio,
+      MandrelSplitDiameterMm = resource.Mandrel.SplitDiameterMm,
+      MandrelSmoothBelowSplit = resource.Mandrel.SmoothBelowSplit,
+      MandrelSmoothFromSplit = resource.Mandrel.SmoothFromSplit,
+      MandrelPeriodicBelowSplit = resource.Mandrel.PeriodicBelowSplit,
+      MandrelPeriodicFromSplit = resource.Mandrel.PeriodicFromSplit,
       Traceability = resource.Traceability,
       BondStressByConcreteClass = new Dictionary<string, double>(resource.BondStressByConcreteClass, StringComparer.OrdinalIgnoreCase),
       DesignStrengthBySteelClass = new Dictionary<string, double>(resource.DesignStrengthBySteelClass, StringComparer.OrdinalIgnoreCase),
@@ -202,6 +212,7 @@ public static class NormativeProfiles
     public required TopBarFactorResource TopBarAnchorageFactor { get; init; }
     public required MaxSpacingResource MaxSpacing { get; init; }
     public required MinRatioResource MinReinforcementRatio { get; init; }
+    public required MandrelResource Mandrel { get; init; }
     public required List<NormativeTraceabilityRow> Traceability { get; init; }
     public required List<int> StandardDiametersMm { get; init; }
     public required List<int> StandardSpacingsMm { get; init; }
@@ -258,6 +269,15 @@ public static class NormativeProfiles
   {
     public required double Ratio { get; init; }
     public required string SectionHeight { get; init; }
+  }
+
+  private sealed record MandrelResource
+  {
+    public required double SplitDiameterMm { get; init; }
+    public required double SmoothBelowSplit { get; init; }
+    public required double SmoothFromSplit { get; init; }
+    public required double PeriodicBelowSplit { get; init; }
+    public required double PeriodicFromSplit { get; init; }
   }
 }
 

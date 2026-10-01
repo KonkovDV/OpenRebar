@@ -7,7 +7,8 @@ using OpenRebar.Domain.Rules;
 namespace OpenRebar.Infrastructure.Reporting;
 
 /// <summary>
-/// Exports a semicolon-delimited reinforcement schedule suitable for Russian Excel defaults.
+/// Exports a semicolon-delimited specification and a steel-mass sheet.
+/// A position name is Ø20 A500C l = 6565. The designation column stays empty.
 /// Rows are positions, ordered by the numeric mark.
 /// </summary>
 public sealed class CsvScheduleExporter : IScheduleExporter
@@ -44,7 +45,7 @@ public sealed class CsvScheduleExporter : IScheduleExporter
         .ToList();
 
     var builder = new StringBuilder();
-    const string header = "Марка;Диаметр, мм;Длина, мм;Количество;Масса 1 шт, кг;Масса всего, кг;Класс стали;Слой;Форма;Масса всего по диаметру";
+    const string header = "Позиция;Обозначение;Наименование;Кол.;Масса ед., кг;Примечание";
     foreach (string layer in LayerOrder)
     {
       builder.AppendLine($"[{layer}]");
@@ -60,7 +61,6 @@ public sealed class CsvScheduleExporter : IScheduleExporter
                 (int)Math.Round(first.Rebar.TotalLength, MidpointRounding.AwayFromZero),
                 first.Zone.Spec.SteelClass,
                 string.IsNullOrWhiteSpace(first.Rebar.ShapeCode) ? "00" : first.Rebar.ShapeCode,
-                layer,
                 group.Count());
           })
           .OrderBy(group => int.TryParse(group.Mark, NumberStyles.Integer, CultureInfo.InvariantCulture, out int mark) ? mark : int.MaxValue)
@@ -73,34 +73,22 @@ public sealed class CsvScheduleExporter : IScheduleExporter
         continue;
       }
 
-      var massByDiameter = layerRows
-          .GroupBy(group => group.DiameterMm)
-          .ToDictionary(
-              group => group.Key,
-              group => group.Sum(item =>
-                  ReinforcementLimits.GetLinearMass(item.DiameterMm) * (item.LengthMm / 1000.0) * item.Quantity));
-
       builder.AppendLine(header);
       foreach (var group in layerRows)
       {
         double massPerPiece = ReinforcementLimits.GetLinearMass(group.DiameterMm) * (group.LengthMm / 1000.0);
-        double totalMass = massPerPiece * group.Quantity;
         builder.AppendLine(string.Join(";",
             group.Mark,
-            group.DiameterMm.ToString(CultureInfo.InvariantCulture),
-            group.LengthMm.ToString(CultureInfo.InvariantCulture),
+            "",
+            $"Ø{group.DiameterMm} {group.SteelClass} l = {group.LengthMm}",
             group.Quantity.ToString(CultureInfo.InvariantCulture),
             massPerPiece.ToString("F2", culture),
-            totalMass.ToString("F2", culture),
-            group.SteelClass,
-            group.Layer,
-            group.ShapeCode,
-            massByDiameter[group.DiameterMm].ToString("F2", culture)));
+            $"форма {group.ShapeCode}"));
       }
     }
 
-    var diameterTotals = rows
-        .GroupBy(row => row.Rebar.DiameterMm)
+    var steelTotals = rows
+        .GroupBy(row => (Steel: row.Zone.Spec.SteelClass, Diameter: row.Rebar.DiameterMm))
         .Select(group =>
         {
           double mass = group.Sum(row =>
@@ -108,15 +96,17 @@ public sealed class CsvScheduleExporter : IScheduleExporter
             int length = (int)Math.Round(row.Rebar.TotalLength, MidpointRounding.AwayFromZero);
             return ReinforcementLimits.GetLinearMass(row.Rebar.DiameterMm) * (length / 1000.0);
           });
-          return (Diameter: group.Key, Mass: mass);
+          return (group.Key.Steel, group.Key.Diameter, Mass: mass);
         })
-        .OrderBy(item => item.Diameter)
+        .OrderBy(item => item.Steel, StringComparer.Ordinal)
+        .ThenBy(item => item.Diameter)
         .ToList();
-    builder.AppendLine("[Диаметры]");
-    builder.AppendLine("Диаметр, мм;Масса, кг");
-    foreach (var item in diameterTotals)
+    builder.AppendLine("[Расход стали]");
+    builder.AppendLine("Класс стали;Диаметр, мм;Масса, кг");
+    foreach (var item in steelTotals)
     {
       builder.AppendLine(string.Join(";",
+          item.Steel,
           item.Diameter.ToString(CultureInfo.InvariantCulture),
           item.Mass.ToString("F2", culture)));
     }
@@ -137,6 +127,5 @@ public sealed class CsvScheduleExporter : IScheduleExporter
       int LengthMm,
       string SteelClass,
       string ShapeCode,
-      string Layer,
       int Quantity);
 }

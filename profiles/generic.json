@@ -10,10 +10,10 @@
     "spacingMode": "interleave",
     "maxDiameterCount": null
   },
-  "ends": { "condition": "NeedsHook" },
+  "ends": { "condition": "NeedsHook", "shapeStandard": "internal" },
   "laps": { "jointRatioMax": 0.5, "couplers": false },
   "positions": { "includeLayerInKey": false },
-  "schedule": { "culture": "ru" },
+  "schedule": { "culture": "ru", "template": "gost-21.501" },
   "supply": {
     "supplierName": "Default (Russian market)",
     "stockLengthsMm": [6000, 9000, 11700, 12000],

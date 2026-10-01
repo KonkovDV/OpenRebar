@@ -98,7 +98,7 @@ public class AsFieldZoneBuilderTests
     var position = bottomX.GetProperty("positions").EnumerateArray().Single();
     position.GetProperty("diameterMm").GetInt32().Should().Be(20);
     position.GetProperty("quantity").GetInt32().Should().Be(27);
-    bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(400.14, 0.1);
+    bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(437.82, 0.1);
   }
 
   private static AsField Field(params AsFieldElement[] elements) => new()
