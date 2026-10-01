@@ -258,15 +258,65 @@ public sealed class GenerateReinforcementPipeline
       });
     }
 
-    // 3. Calculate rebar layout per zone
+    // 3. Load the catalog before detailing so a long bar is cut to stock.
+    SupplierCatalog catalog;
+    try
+    {
+      catalog = input.SupplierCatalogPath is not null
+          ? await _catalogLoader.LoadAsync(input.SupplierCatalogPath, cancellationToken)
+          : input.SupplierCatalog ?? _catalogLoader.GetDefaultCatalog();
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+      failures.Add(new PipelineFailureDiagnostic
+      {
+        Stage = "CatalogLoading",
+        ErrorMessage = ex.Message,
+        ExceptionType = ex.GetType().Name,
+        OccurredAtUtc = DateTimeOffset.UtcNow,
+        StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+        IsCritical = false
+      });
+      _logger.Warn("Failed to load supplier catalog; using default", ("catalogPath", input.SupplierCatalogPath));
+      catalog = _catalogLoader.GetDefaultCatalog();
+    }
+
+    // 4. Calculate rebar layout per zone
     IReadOnlyList<ReinforcementZone> zonesWithRebars;
     try
     {
       foreach (var zone in classifiedZones)
         zone.RequestedEndCondition = string.IsNullOrWhiteSpace(input.EndCondition) ? "NeedsHook" : input.EndCondition;
       zonesWithRebars = _calculator.CalculateRebars(classifiedZones, input.Slab);
-      result.DetailingWarnings = DetailingNotes(zonesWithRebars);
+      var lapLinks = new List<LapLink>();
+      var lapWarnings = new List<string>();
+      if (input.Couplers)
+        lapWarnings.Add("Couplers are selected and lap splices are not modeled.");
+      else
+      {
+        var stock = catalog.AvailableLengths.Where(length => length.InStock).Select(length => (double)length.LengthMm).ToList();
+        LapPlanner.Apply(
+            zonesWithRebars,
+            input.Slab.ConcreteClass,
+            stock,
+            input.OptimizationSettings.SawCutWidthMm,
+            input.JointRatioMax,
+            lapLinks,
+            lapWarnings);
+      }
+
+      result.DetailingWarnings = DetailingNotes(zonesWithRebars).Concat(lapWarnings).ToList();
       result.Positions = PositionAssigner.Assign(zonesWithRebars);
+      result.Laps = lapLinks
+          .Select((link, index) => new LapJointReport
+          {
+            LapId = (index + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            BarIds = [link.Zone.Rebars[link.Left].BarId, link.Zone.Rebars[link.Right].BarId],
+            PositionMm = link.PositionMm,
+            LengthMm = link.LengthMm,
+            Alpha = link.Alpha
+          })
+          .ToList();
       result.Clashes = ClearanceChecker.Check(zonesWithRebars, input.Slab, _planar, input.JointRatioMax);
       result.TotalRebarSegments = zonesWithRebars.Sum(z => z.Rebars.Count);
       _logger.Info(
@@ -335,31 +385,6 @@ public sealed class GenerateReinforcementPipeline
         _logger.Info("Stored partial reinforcement report after calculation failure", ("outputPath", result.StoredReport.OutputPath));
       }
       return Finish();
-    }
-
-    // 4. Load supplier catalog (recoverable failure)
-    SupplierCatalog catalog;
-    try
-    {
-      catalog = input.SupplierCatalogPath is not null
-          ? await _catalogLoader.LoadAsync(input.SupplierCatalogPath, cancellationToken)
-          : input.SupplierCatalog ?? _catalogLoader.GetDefaultCatalog();
-    }
-    catch (Exception ex) when (ex is not OperationCanceledException)
-    {
-      var diagnostic = new PipelineFailureDiagnostic
-      {
-        Stage = "CatalogLoading",
-        ErrorMessage = ex.Message,
-        ExceptionType = ex.GetType().Name,
-        OccurredAtUtc = DateTimeOffset.UtcNow,
-        StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
-        IsCritical = false
-      };
-      failures.Add(diagnostic);
-      _logger.Warn("Failed to load supplier catalog; using default", ("catalogPath", input.SupplierCatalogPath));
-
-      catalog = _catalogLoader.GetDefaultCatalog();
     }
 
     // 5. Optimize cutting (group by diameter) - try to optimize each diameter
@@ -818,6 +843,7 @@ public sealed class GenerateReinforcementPipeline
       Layers = LayerReportBuilder.Build(input, zonesWithRebars),
       ParameterSources = input.ParameterSources,
       Clashes = result.Clashes,
+      Laps = result.Laps,
       Warnings = MergeWarnings(placement?.Warnings, result.ParseStats)
           .Concat(result.FieldWarnings)
           .Concat(result.OverlayWarnings)
@@ -915,6 +941,7 @@ public sealed class GenerateReinforcementPipeline
       Layers = LayerReportBuilder.Build(input, []),
       ParameterSources = input.ParameterSources,
       Clashes = result.Clashes,
+      Laps = result.Laps,
       Warnings = result.OverlayWarnings.Concat(result.LayoutWarnings).Concat(result.DetailingWarnings).ToList(),
       Errors = failures,
       PartialResult = true
@@ -1279,6 +1306,9 @@ public sealed record PipelineInput
 
   /// <summary>Profile end rule. NeedsHook when the profile does not say otherwise.</summary>
   public string EndCondition { get; init; } = "NeedsHook";
+
+  /// <summary>When true, long bars are not cut with a lap. Coupler length is not in the profile.</summary>
+  public bool Couplers { get; init; }
 }
 
 /// <summary>
@@ -1315,6 +1345,7 @@ public sealed class PipelineResult
   public IReadOnlyList<string> LayoutWarnings { get; set; } = [];
   public IReadOnlyList<string> DetailingWarnings { get; set; } = [];
   public IReadOnlyList<ClashReport> Clashes { get; set; } = [];
+  public IReadOnlyList<LapJointReport> Laps { get; set; } = [];
 
   public double TotalWastePercent =>
       OptimizationResults.Values.Any()

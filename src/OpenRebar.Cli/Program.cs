@@ -449,6 +449,7 @@ public static class Program
         CompanyProfileVersion = loadedProfile?.Profile.Version ?? "0",
         JointRatioMax = loadedProfile?.Profile.Laps.JointRatioMax ?? 0.5,
         EndCondition = loadedProfile?.Profile.Ends.Condition ?? "NeedsHook",
+        Couplers = loadedProfile?.Profile.Laps.Couplers ?? false,
         SupplierCatalog = catalogPath is null && loadedProfile is not null
             ? CompanyProfileLoader.ToCatalog(loadedProfile.Profile)
             : null,
