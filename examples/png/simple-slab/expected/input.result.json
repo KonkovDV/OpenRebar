@@ -1,0 +1,895 @@
+{
+  "contractId": "OpenRebar.reinforcement.report.v2",
+  "schemaVersion": "2.0.0",
+  "generatedAtUtc": "2026-10-01T16:33:08.7961786+00:00",
+  "metadata": {
+    "projectCode": "OpenRebar-CLI",
+    "slabId": "input",
+    "levelName": "Standalone",
+    "sourceSystem": "OpenRebar.Reinforcement",
+    "targetSystem": "AeroBIM",
+    "countryCode": "RU",
+    "designCode": "SP 63.13330.2018",
+    "normativeProfileId": "ru.sp63.2018",
+    "normativeTablesVersion": "ru.sp63.2018.tables.v2"
+  },
+  "normativeProfile": {
+    "profileId": "ru.sp63.2018",
+    "id": "ru.sp63.2018",
+    "jurisdiction": "RU",
+    "designCode": "SP 63.13330.2018",
+    "tablesVersion": "ru.sp63.2018.tables.v2",
+    "version": "ru.sp63.2018.tables.v2",
+    "topBarAnchorageFactor": 1
+  },
+  "analysisProvenance": {
+    "geometry": {
+      "decompositionAlgorithm": "bar-runs/v1",
+      "rectangularShortcutFillRatio": 0.85,
+      "minRectangleAreaMm2": 10000,
+      "samplingResolutionPerAxis": 4,
+      "cellCoverageInclusionThreshold": 0.35,
+      "minCoverageRatioAcrossComplexZones": null,
+      "maxOverCoverageRatioAcrossComplexZones": null,
+      "parsedEntityCount": 1,
+      "ignoredByReason": {}
+    },
+    "optimization": {
+      "optimizerId": "column-generation-relaxation-v2",
+      "masterProblemStrategy": "restricted-master-lp-highs",
+      "pricingStrategy": "bounded-knapsack-dp",
+      "integerizationStrategy": "largest-remainder-plus-repair",
+      "demandAggregationPrecisionMm": 0.1,
+      "qualityFloor": "ffd-non-regression-floor",
+      "anyFallbackMasterSolverUsed": false,
+      "fallbackUsed": false
+    }
+  },
+  "isolineFileName": "input.png",
+  "isolineFileFormat": "png",
+  "slab": {
+    "concreteClass": "B25",
+    "thicknessMm": 220,
+    "coverMm": 30,
+    "effectiveDepthMm": 190,
+    "areaMm2": 24000000,
+    "openingCount": 0,
+    "boundingBox": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 6000,
+      "maxY": 4000,
+      "width": 6000,
+      "height": 4000
+    }
+  },
+  "zones": [
+    {
+      "zoneId": "PNG-0001",
+      "zoneType": "Simple",
+      "direction": "X",
+      "layer": "Bottom",
+      "diameterMm": 20,
+      "spacingMm": 150,
+      "rebarCount": 27,
+      "totalClearSpanMm": 162000,
+      "totalLengthMm": 206820,
+      "boundingBox": {
+        "minX": 0,
+        "minY": 0,
+        "maxX": 6000,
+        "maxY": 4000,
+        "width": 6000,
+        "height": 4000
+      },
+      "subRectangleCount": null,
+      "decompositionCoverageRatio": null,
+      "decompositionOverCoverageRatio": null,
+      "extendedBeyondZoneCount": 0
+    }
+  ],
+  "optimizationByDiameter": [
+    {
+      "diameterMm": 20,
+      "supplierName": "Default (Russian market)",
+      "rebarCount": 27,
+      "stockBarsNeeded": 27,
+      "totalWasteMm": 36099,
+      "totalWastePercent": 14.855555555555554,
+      "totalRebarLengthMm": 206820,
+      "totalMassKg": 510.84540000000004,
+      "estimatedCost": null,
+      "dualBound": 27,
+      "gap": 0,
+      "boundStatus": "Proven",
+      "cuttingPlans": [
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        },
+        {
+          "stockLengthMm": 9000,
+          "cutsMm": [
+            7660
+          ],
+          "sawCutWidthMm": 3,
+          "wasteMm": 1337,
+          "wastePercent": 14.855555555555554
+        }
+      ]
+    }
+  ],
+  "placement": {
+    "requested": false,
+    "executed": false,
+    "success": true,
+    "totalRebarsPlaced": 0,
+    "totalTagsCreated": 0,
+    "totalBendingDetails": 0,
+    "warnings": [],
+    "errors": []
+  },
+  "summary": {
+    "parsedZoneCount": 1,
+    "classifiedZoneCount": 1,
+    "totalRebarSegments": 27,
+    "totalWastePercent": 14.855555555555554,
+    "totalWasteMm": 36099,
+    "totalMassKg": 510.84540000000004,
+    "massInstalledKg": 510.84540000000004,
+    "massPurchasedKg": 600.21,
+    "estimatedCost": null
+  },
+  "warnings": [],
+  "errors": [],
+  "unoptimizedBars": [],
+  "positions": [
+    {
+      "mark": "1",
+      "diameterMm": 20,
+      "steelClass": "A500C",
+      "shapeCode": "00",
+      "lengthMm": 7660,
+      "quantity": 27,
+      "massPerPieceKg": 18.9202,
+      "totalMassKg": 510.84540000000004,
+      "layer": "BottomX"
+    }
+  ],
+  "stages": [
+    {
+      "name": "Parse",
+      "status": "Complete",
+      "complete": true,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 131.9115,
+      "algorithmId": "png",
+      "counters": {
+        "processed": 1,
+        "max": null
+      },
+      "reasons": []
+    },
+    {
+      "name": "Layer",
+      "status": "Complete",
+      "complete": true,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 0.424,
+      "algorithmId": null,
+      "counters": {
+        "processed": 1,
+        "max": null
+      },
+      "reasons": []
+    },
+    {
+      "name": "ZoneDetection",
+      "status": "Complete",
+      "complete": true,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 8.1629,
+      "algorithmId": "bar-runs/v1",
+      "counters": {
+        "processed": 1,
+        "max": null
+      },
+      "reasons": []
+    },
+    {
+      "name": "RebarCalculation",
+      "status": "Complete",
+      "complete": true,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 58.6534,
+      "algorithmId": null,
+      "counters": {
+        "processed": 27,
+        "max": null
+      },
+      "reasons": []
+    },
+    {
+      "name": "Verification",
+      "status": "Complete",
+      "complete": true,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 18.1069,
+      "algorithmId": "grid-as-v0",
+      "counters": {
+        "processed": 1,
+        "max": null
+      },
+      "reasons": []
+    },
+    {
+      "name": "Optimization",
+      "status": "Complete",
+      "complete": true,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 52.1153,
+      "algorithmId": "column-generation-relaxation-v2",
+      "counters": {
+        "processed": 1,
+        "max": null
+      },
+      "reasons": []
+    },
+    {
+      "name": "Placement",
+      "status": "Skipped",
+      "complete": false,
+      "budgetExhausted": false,
+      "partialResults": false,
+      "durationMs": 0.0255,
+      "algorithmId": null,
+      "counters": {
+        "processed": 0,
+        "max": null
+      },
+      "reasons": []
+    }
+  ],
+  "verification": {
+    "status": "Passed",
+    "underReinforcedAreaM2": 0,
+    "checkedAreaM2": 24,
+    "minMarginMm2PerM": 0,
+    "minProvisionRatio": 1,
+    "cellSizeMm": 50,
+    "underCoverageRatio": 0,
+    "peakSmoothingWindowMm": null,
+    "underReinforcedCells": 0,
+    "excessSteelKg": 0,
+    "layers": [
+      {
+        "layer": "PNG-0001",
+        "status": "Passed",
+        "underReinforcedAreaM2": 0,
+        "underReinforcedCells": 0,
+        "minMarginMm2PerM": 0,
+        "excessSteelKg": 0
+      }
+    ],
+    "deficitRegions": []
+  },
+  "requiresEngineerReview": true,
+  "profile": {
+    "id": "generic",
+    "version": "1",
+    "sha256": "fa613e1b8a5a2e653e4d98ddf457fef52ca561de231cd7d5a4405bc0317ace27"
+  },
+  "inputSource": {
+    "adapterId": "png",
+    "version": "1.0.0",
+    "sha256": "13fff188da5b39703cf21de4bc9232347f457c63c3e524ccedc64710710912de"
+  },
+  "layers": [
+    {
+      "layer": "BottomX",
+      "status": "Provided",
+      "background": null,
+      "classes": [
+        "A500C Ø20@150"
+      ],
+      "zoneIds": [
+        "PNG-0001"
+      ],
+      "positions": [
+        {
+          "mark": "1",
+          "diameterMm": 20,
+          "steelClass": "A500C",
+          "shapeCode": "00",
+          "lengthMm": 7660,
+          "quantity": 27,
+          "massPerPieceKg": 18.9202,
+          "totalMassKg": 510.84540000000004,
+          "layer": "BottomX"
+        }
+      ],
+      "massKg": 510.84540000000004
+    },
+    {
+      "layer": "BottomY",
+      "status": "NotProvided",
+      "background": null,
+      "classes": [],
+      "zoneIds": [],
+      "positions": [],
+      "massKg": 0
+    },
+    {
+      "layer": "TopX",
+      "status": "NotProvided",
+      "background": null,
+      "classes": [],
+      "zoneIds": [],
+      "positions": [],
+      "massKg": 0
+    },
+    {
+      "layer": "TopY",
+      "status": "NotProvided",
+      "background": null,
+      "classes": [],
+      "zoneIds": [],
+      "positions": [],
+      "massKg": 0
+    }
+  ],
+  "parameterSources": [
+    {
+      "path": "steelClass",
+      "value": "A500C",
+      "source": "profile"
+    },
+    {
+      "path": "concreteClass",
+      "value": "B25",
+      "source": "profile"
+    },
+    {
+      "path": "supply.supplierName",
+      "value": "Default (Russian market)",
+      "source": "profile"
+    },
+    {
+      "path": "supply.stockLengthsMm",
+      "value": "6000,9000,11700,12000",
+      "source": "profile"
+    },
+    {
+      "path": "ends.condition",
+      "value": "NeedsHook",
+      "source": "profile"
+    },
+    {
+      "path": "laps.jointRatioMax",
+      "value": "0.5",
+      "source": "profile"
+    },
+    {
+      "path": "safety.factor",
+      "value": "1",
+      "source": "profile"
+    },
+    {
+      "path": "safety.anchorageLengthFactor",
+      "value": "1",
+      "source": "profile"
+    },
+    {
+      "path": "safety.lapLengthFactor",
+      "value": "1",
+      "source": "profile"
+    },
+    {
+      "path": "schedule.culture",
+      "value": "invariant",
+      "source": "project"
+    },
+    {
+      "path": "verification.underCoverageRatio",
+      "value": "0",
+      "source": "profile"
+    },
+    {
+      "path": "smoothing.allowed",
+      "value": "false",
+      "source": "profile"
+    },
+    {
+      "path": "positions.includeLayerInKey",
+      "value": "false",
+      "source": "profile"
+    },
+    {
+      "path": "legend.count",
+      "value": "7",
+      "source": "profile"
+    }
+  ],
+  "clashes": [
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3225,
+      "barIds": [
+        "043c5467d1790bce"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 1125,
+      "barIds": [
+        "0d2c0bfdd433032c"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3375,
+      "barIds": [
+        "0da951f5b9e1683f"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2175,
+      "barIds": [
+        "16575f25274a1e03"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 75,
+      "barIds": [
+        "1b069ec9c016a68e"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 1725,
+      "barIds": [
+        "1ddb2b60cf573b7e"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 1575,
+      "barIds": [
+        "2f05dde43c57775e"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 525,
+      "barIds": [
+        "2f3ddf1a2f5df149"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2925,
+      "barIds": [
+        "312a2a4a7f98f6f5"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3075,
+      "barIds": [
+        "3c9000e49d211519"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2775,
+      "barIds": [
+        "542fbe7fde1e4b96"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2325,
+      "barIds": [
+        "5f33a1fe403a3ae7"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 675,
+      "barIds": [
+        "68678a73de6fab50"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 375,
+      "barIds": [
+        "68ad5bab2c0d97cc"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2625,
+      "barIds": [
+        "69d78dcf4ca33515"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2475,
+      "barIds": [
+        "6fd15689fe95320a"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 1425,
+      "barIds": [
+        "7ff1e05efa8b014d"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3825,
+      "barIds": [
+        "805101851e68e5cf"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3675,
+      "barIds": [
+        "8672adaa04437b7f"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 2025,
+      "barIds": [
+        "8d13c08017e6b9f8"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3975,
+      "barIds": [
+        "965b4c9e6a9f7657"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 1875,
+      "barIds": [
+        "972fc9c423a790eb"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 3525,
+      "barIds": [
+        "a7383be1d89045c5"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 975,
+      "barIds": [
+        "b6155131d8282b35"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 1275,
+      "barIds": [
+        "bd100d18f342dcd5"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 225,
+      "barIds": [
+        "c228d4a01a2a7f6f"
+      ]
+    },
+    {
+      "type": "hard",
+      "kind": "barOutsideWorkingArea",
+      "x": -830,
+      "y": 825,
+      "barIds": [
+        "dd5c27bc86037b55"
+      ]
+    }
+  ],
+  "partialResult": false
+}

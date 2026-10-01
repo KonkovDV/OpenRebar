@@ -1,0 +1,179 @@
+{
+  "profileId": "ru.sp63.2018",
+  "jurisdiction": "RU",
+  "designCode": "SP 63.13330.2018",
+  "tablesVersion": "ru.sp63.2018.tables.v2",
+  "defaultConcreteClass": "B25",
+  "defaultSteelClass": "A500C",
+  "barTypeByClass": {
+    "A240": "smooth",
+    "A-I": "smooth",
+    "A400": "hotRolledPeriodic",
+    "A-III": "hotRolledPeriodic",
+    "A500": "hotRolledPeriodic",
+    "A500C": "hotRolledPeriodic",
+    "A500SP": "hotRolledPeriodic",
+    "A600": "hotRolledPeriodic",
+    "B500": "coldDeformedPeriodic",
+    "B500C": "coldDeformedPeriodic"
+  },
+  "eta1": {
+    "hotRolledPeriodic": 2.5,
+    "coldDeformedPeriodic": 2.0,
+    "smooth": 1.5,
+    "clauseId": "SP63.13330.2018:10.3.24",
+    "sourceQuote": "η1 is 2.5 for hot-rolled periodic bars, 2.0 for cold-deformed periodic bars, and 1.5 for smooth bars."
+  },
+  "eta2": {
+    "upTo32Mm": 1.0,
+    "from36Mm": 0.9,
+    "clauseId": "SP63.13330.2018:10.3.24",
+    "sourceQuote": "η2 is 1.0 for d ≤ 32 mm and 0.9 for d = 36 mm and 40 mm."
+  },
+  "anchorage": {
+    "tensionAlpha": 1.0,
+    "compressionAlpha": 0.75,
+    "asCalOverAsEf": 1.0,
+    "minimumFactorOfBasic": 0.3,
+    "minimumDiameters": 15,
+    "minimumMm": 200,
+    "roundUpMm": 10,
+    "clauseId": "SP63.13330.2018:10.3.24",
+    "sourceQuote": "l_an = α·l0,an·As,cal/As,ef with α = 1.0 in tension and 0.75 in compression, not less than max(0.3·l0,an, 15d, 200 mm), rounded up to 10 mm. As,cal/As,ef is 1 until a calculated area is supplied."
+  },
+  "lap": {
+    "upTo50Alpha": 1.2,
+    "full100Alpha": 2.0,
+    "compressionAlpha": 0.9,
+    "minimumFactorOfAlphaBasic": 0.4,
+    "minimumDiameters": 20,
+    "minimumMm": 250,
+    "clauseId": "SP63.13330.2018:10.3.30",
+    "sourceQuote": "Lap length uses unrounded l0,an. α is 1.2 when at most half the bars are lapped, 2.0 when every bar is lapped in one section, and 0.9 in compression. Not less than max(0.4·α·l0,an, 20d, 250 mm)."
+  },
+  "topBarAnchorageFactor": {
+    "value": 1.0,
+    "clauseId": "profile:topBarAnchorageFactor",
+    "sourceQuote": "Not a code coefficient. Optional profile multiplier for top-bar anchorage. The default 1.0 leaves the code value unchanged."
+  },
+  "maxSpacing": {
+    "thinSlabThicknessMm": 150,
+    "thinSlabLimitMm": 200,
+    "thickSlabFactorOfThickness": 1.5,
+    "thickSlabCapMm": 400,
+    "clauseId": "SP63.13330.2018:10.3.8",
+    "sourceQuote": "For a slab not thicker than 150 mm the bar spacing does not exceed 200 mm. Above that thickness it does not exceed the lesser of 1.5h and 400 mm."
+  },
+  "minReinforcementRatio": {
+    "ratio": 0.001,
+    "sectionHeight": "effectiveDepth",
+    "clauseId": "SP63.13330.2018:10.3.5",
+    "sourceQuote": "The minimum reinforcement ratio 0.1% is applied to the effective depth h0."
+  },
+  "designStrengthReview": {
+    "clauseId": "SP63.13330.2018:6.14",
+    "status": "unchangedPendingQuotedTable",
+    "sourceQuote": "A400 stays 355 MPa and B500 stays 435 MPa. Table 6.14 was not available as a citable extract, so those values were not revised."
+  },
+  "lapClearDistance": {
+    "clauseId": "SP63.13330.2018+A1:10.3.30",
+    "status": "notEnforced",
+    "sourceQuote": "The amendment text for the clear distance between adjacent laps is not in this repository, so that check is not applied."
+  },
+  "bondStressByConcreteClass": {
+    "B15": 0.75,
+    "C12/15": 0.75,
+    "B20": 0.90,
+    "C16/20": 0.90,
+    "B25": 1.05,
+    "C20/25": 1.05,
+    "B30": 1.15,
+    "C25/30": 1.15,
+    "B35": 1.30,
+    "C28/35": 1.30,
+    "B40": 1.40,
+    "C32/40": 1.40,
+    "B45": 1.50,
+    "C35/45": 1.50,
+    "B50": 1.60,
+    "C40/50": 1.60,
+    "B55": 1.65,
+    "C45/55": 1.65,
+    "B60": 1.70,
+    "C50/60": 1.70
+  },
+  "designStrengthBySteelClass": {
+    "A240": 210,
+    "A-I": 210,
+    "A400": 355,
+    "A-III": 355,
+    "A500": 435,
+    "A500C": 435,
+    "A500SP": 435,
+    "A600": 520,
+    "B500": 435,
+    "B500C": 435
+  },
+  "linearMassKgPerM": {
+    "6": 0.222,
+    "8": 0.395,
+    "10": 0.617,
+    "12": 0.888,
+    "14": 1.210,
+    "16": 1.580,
+    "18": 2.000,
+    "20": 2.470,
+    "22": 2.980,
+    "25": 3.850,
+    "28": 4.830,
+    "32": 6.310,
+    "36": 7.990,
+    "40": 9.870
+  },
+  "standardDiametersMm": [6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36, 40],
+  "standardSpacingsMm": [100, 150, 200, 250, 300],
+  "traceability": [
+    {
+      "clauseId": "SP63.13330.2018:10.3.24",
+      "method": "AnchorageRules.CalculateBasicAnchorageLength",
+      "test": "AnchorageRulesTests.BasicAnchorage_MatchesIndependentFormula",
+      "sourceQuote": "l0,an = Rs·d / (4·η1·η2·Rbt)."
+    },
+    {
+      "clauseId": "SP63.13330.2018:10.3.24",
+      "method": "AnchorageRules.CalculateAnchorageLength",
+      "test": "AnchorageRulesTests.AnchorageLength_MatchesIndependentRounding",
+      "sourceQuote": "l_an = α·l0,an·As,cal/As,ef, not less than max(0.3·l0,an, 15d, 200 mm), rounded up to 10 mm."
+    },
+    {
+      "clauseId": "SP63.13330.2018:10.3.30",
+      "method": "AnchorageRules.CalculateLapLength",
+      "test": "AnchorageRulesTests.LapLength_MatchesIndependentFormula",
+      "sourceQuote": "Lap length uses unrounded l0,an and α of 1.2, 2.0, or 0.9, not less than max(0.4·α·l0,an, 20d, 250 mm)."
+    },
+    {
+      "clauseId": "SP63.13330.2018:10.3.8",
+      "method": "ReinforcementLimits.MaxSpacing",
+      "test": "ReinforcementLimitsTests.MaxSpacing_FollowsThicknessBands",
+      "sourceQuote": "Spacing limit is 200 mm when h ≤ 150 mm, otherwise the lesser of 1.5h and 400 mm."
+    },
+    {
+      "clauseId": "SP63.13330.2018:10.3.5",
+      "method": "ReinforcementLimits.MinReinforcementArea",
+      "test": "ReinforcementLimitsTests.MinReinforcementArea_UsesEffectiveDepth",
+      "sourceQuote": "Minimum steel area is 0.1% of b·h0."
+    },
+    {
+      "clauseId": "SP63.13330.2018:6.14",
+      "method": "NormativeProfiles.GetDesignStrength",
+      "test": "NormativeProfilesTests.DesignStrengthLookup_ShouldMatchGoldenValues",
+      "sourceQuote": "A400 stays 355 MPa and B500 stays 435 MPa until table 6.14 is quoted."
+    },
+    {
+      "clauseId": "profile:topBarAnchorageFactor",
+      "method": "AnchorageRules.CalculateAnchorageLength",
+      "test": "AnchorageRulesTests.TopBarFactor_ScalesAnchorageOnly",
+      "sourceQuote": "Default top-bar factor is 1.0 and is not a code coefficient."
+    }
+  ]
+}

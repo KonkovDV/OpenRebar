@@ -1,0 +1,89 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.swp
+*~
+
+# NuGet
+**/packages/*
+!**/packages/build/
+*.nupkg
+**/[Pp]ackages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Rider
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+*.egg
+.venv/
+venv/
+env/
+.env
+*.pth
+
+# ML models
+*.pt
+*.pth
+*.onnx
+*.h5
+ml/models/
+!ml/models/
+!ml/models/MANIFEST.json
+models/*.bin
+
+# IDE
+.vscode/
+*.code-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Test results
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# Temp
+*.tmp
+*.bak
+*.swp
+
+# Local runtime payloads / scratch audit outputs
+.dotnet8-local/
+_OpenRebar_*.txt
+ml/.venv-ci-*/
+
+# Keep root markdown surface minimal; store audit and task documents in docs/
+/HYPER_DEEP_AUDIT_REPORT*.md
+/TASKS*.md

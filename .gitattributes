@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+# Keep Visual Studio solution files Windows-friendly
+*.sln text eol=crlf
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ifc binary
+*.zip binary
+*.pdf binary

@@ -1,0 +1,11 @@
+{
+  "id": "residential-monolith",
+  "version": "1",
+  "extends": "generic",
+  "example": true,
+  "description": "Пример, не профиль реальной организации. Склад только 11700 мм.",
+  "supply": {
+    "supplierName": "Example mill",
+    "stockLengthsMm": [11700]
+  }
+}

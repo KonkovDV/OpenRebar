@@ -1,0 +1,40 @@
+{
+  "id": "generic",
+  "version": "1",
+  "example": false,
+  "description": "Safe defaults for any design office. Not an organization profile.",
+  "steelClass": "A500C",
+  "concreteClass": "B25",
+  "additional": {
+    "diametersMm": [10, 12, 14, 16, 18, 20, 22, 25],
+    "spacingMode": "interleave",
+    "maxDiameterCount": null
+  },
+  "ends": { "condition": "NeedsHook" },
+  "laps": { "jointRatioMax": 0.5, "couplers": false },
+  "positions": { "includeLayerInKey": false },
+  "schedule": { "culture": "ru" },
+  "supply": {
+    "supplierName": "Default (Russian market)",
+    "stockLengthsMm": [6000, 9000, 11700, 12000],
+    "specialLengths": false,
+    "offcuts": false
+  },
+  "smoothing": { "allowed": false },
+  "verification": { "underCoverageRatio": 0 },
+  "safety": {
+    "factor": 1,
+    "anchorageLengthFactor": 1,
+    "lapLengthFactor": 1,
+    "maxSpacingMm": null
+  },
+  "legend": [
+    { "color": [0, 0, 255], "diameterMm": 8, "spacingMm": 200 },
+    { "color": [0, 255, 255], "diameterMm": 10, "spacingMm": 200 },
+    { "color": [0, 255, 0], "diameterMm": 12, "spacingMm": 200 },
+    { "color": [255, 255, 0], "diameterMm": 14, "spacingMm": 200 },
+    { "color": [255, 165, 0], "diameterMm": 16, "spacingMm": 150 },
+    { "color": [255, 0, 0], "diameterMm": 20, "spacingMm": 150 },
+    { "color": [255, 0, 255], "diameterMm": 25, "spacingMm": 150 }
+  ]
+}

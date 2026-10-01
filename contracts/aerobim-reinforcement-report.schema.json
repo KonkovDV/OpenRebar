@@ -1,0 +1,518 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://OpenRebar-reinforcement.local/contracts/aerobim-reinforcement-report.schema.json",
+  "title": "OpenRebar Reinforcement Execution Report",
+  "description": "Canonical machine-readable reinforcement report exchanged between OpenRebar-Reinforcement and downstream BIM systems such as AeroBIM.",
+  "type": "object",
+  "required": [
+    "contractId",
+    "schemaVersion",
+    "generatedAtUtc",
+    "metadata",
+    "normativeProfile",
+    "analysisProvenance",
+    "isolineFileName",
+    "isolineFileFormat",
+    "slab",
+    "zones",
+    "optimizationByDiameter",
+    "placement",
+    "summary",
+    "errors",
+    "partialResult"
+  ],
+  "properties": {
+    "contractId": {
+      "const": "OpenRebar.reinforcement.report.v2"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "generatedAtUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["projectCode", "slabId", "sourceSystem", "targetSystem", "countryCode", "designCode", "normativeProfileId", "normativeTablesVersion"],
+      "properties": {
+        "projectCode": { "type": "string", "minLength": 1 },
+        "slabId": { "type": "string", "minLength": 1 },
+        "levelName": { "type": ["string", "null"] },
+        "sourceSystem": { "type": "string", "minLength": 1 },
+        "targetSystem": { "type": "string", "minLength": 1 },
+        "countryCode": { "type": "string", "minLength": 2, "maxLength": 2 },
+        "designCode": { "type": "string", "minLength": 1 },
+        "normativeProfileId": { "type": "string", "minLength": 1 },
+        "normativeTablesVersion": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "normativeProfile": {
+      "$ref": "#/$defs/normativeProfileExecutionReport"
+    },
+    "analysisProvenance": {
+      "$ref": "#/$defs/analysisProvenanceExecutionReport"
+    },
+    "isolineFileName": { "type": "string", "minLength": 1 },
+    "isolineFileFormat": {
+      "type": "string",
+      "enum": ["dxf", "png", "jpg", "jpeg", "bmp", "tiff", "csv"]
+    },
+    "slab": {
+      "$ref": "#/$defs/slabExecutionReport"
+    },
+    "zones": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/zoneExecutionReport" }
+    },
+    "optimizationByDiameter": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/diameterOptimizationExecutionReport" }
+    },
+    "placement": {
+      "$ref": "#/$defs/placementExecutionReport"
+    },
+    "summary": {
+      "$ref": "#/$defs/executionSummaryReport"
+    },
+    "unoptimizedBars": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unoptimizedBarReport" }
+    },
+    "positions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/positionExecutionReport" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/pipelineFailureDiagnostic" }
+    },
+    "partialResult": {
+      "type": "boolean"
+    },
+    "stages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/stageExecutionReport" }
+    },
+    "verification": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/reinforcementVerification" }
+      ]
+    },
+    "requiresEngineerReview": { "const": true },
+    "profile": { "$ref": "#/$defs/profileStamp" },
+    "inputSource": { "$ref": "#/$defs/inputSourceStamp" },
+    "layers": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/layerExecutionReport" }
+    },
+    "parameterSources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/parameterSourceReport" }
+    },
+    "clashes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/clashReport" }
+    }
+  },
+  "$defs": {
+    "clashReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "kind", "x", "y", "barIds"],
+      "properties": {
+        "type": { "type": "string", "enum": ["hard", "soft"] },
+        "kind": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "barIds": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    },
+    "parameterSourceReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "value", "source"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "source": { "type": "string", "enum": ["profile", "project", "default"] }
+      }
+    },
+    "profileStamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "sha256": { "type": ["string", "null"] }
+      }
+    },
+    "inputSourceStamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapterId", "version"],
+      "properties": {
+        "adapterId": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "sha256": { "type": ["string", "null"] }
+      }
+    },
+    "layerExecutionReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layer", "status", "classes", "zoneIds", "positions", "massKg"],
+      "properties": {
+        "layer": { "type": "string", "enum": ["BottomX", "BottomY", "TopX", "TopY"] },
+        "status": { "type": "string", "enum": ["Provided", "NotProvided"] },
+        "background": {
+          "anyOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/layerBackgroundReport" }
+          ]
+        },
+        "classes": { "type": "array", "items": { "type": "string" } },
+        "zoneIds": { "type": "array", "items": { "type": "string" } },
+        "positions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/positionExecutionReport" }
+        },
+        "massKg": { "type": "number", "minimum": 0 }
+      }
+    },
+    "layerBackgroundReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diameterMm", "spacingMm", "steelClass", "gridOriginMm"],
+      "properties": {
+        "diameterMm": { "type": "integer", "minimum": 1 },
+        "spacingMm": { "type": "integer", "minimum": 1 },
+        "steelClass": { "type": "string", "minLength": 1 },
+        "gridOriginMm": { "type": "number" }
+      }
+    },
+    "reinforcementVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "underReinforcedAreaM2",
+        "checkedAreaM2",
+        "minMarginMm2PerM",
+        "minProvisionRatio",
+        "cellSizeMm",
+        "underCoverageRatio",
+        "deficitRegions"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["Passed", "Failed", "PassedWithUnderCoverage", "PassedWithSmoothing"]
+        },
+        "underReinforcedAreaM2": { "type": "number", "minimum": 0 },
+        "checkedAreaM2": { "type": "number", "minimum": 0 },
+        "minMarginMm2PerM": { "type": "number" },
+        "minProvisionRatio": { "type": "number", "minimum": 0 },
+        "cellSizeMm": { "type": "number", "exclusiveMinimum": 0 },
+        "underCoverageRatio": { "type": "number", "minimum": 0 },
+        "peakSmoothingWindowMm": { "type": ["number", "null"] },
+        "underReinforcedCells": { "type": "integer", "minimum": 0 },
+        "excessSteelKg": { "type": "number", "minimum": 0 },
+        "layers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/layerVerificationReport" }
+        },
+        "deficitRegions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/deficitRegion" }
+        }
+      }
+    },
+    "layerVerificationReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layer", "status", "underReinforcedAreaM2", "underReinforcedCells", "minMarginMm2PerM", "excessSteelKg"],
+      "properties": {
+        "layer": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["Passed", "Failed", "PassedWithUnderCoverage", "PassedWithSmoothing"] },
+        "underReinforcedAreaM2": { "type": "number", "minimum": 0 },
+        "underReinforcedCells": { "type": "integer", "minimum": 0 },
+        "minMarginMm2PerM": { "type": "number" },
+        "excessSteelKg": { "type": "number", "minimum": 0 }
+      }
+    },
+    "deficitRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zoneId", "minX", "minY", "maxX", "maxY"],
+      "properties": {
+        "zoneId": { "type": "string", "minLength": 1 },
+        "minX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxX": { "type": "number" },
+        "maxY": { "type": "number" }
+      }
+    },
+    "stageExecutionReport": {
+      "type": "object",
+      "required": ["name", "status", "complete", "counters"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["Complete", "Incomplete", "Failed", "Skipped"] },
+        "complete": { "type": "boolean" },
+        "budgetExhausted": { "type": "boolean" },
+        "partialResults": { "type": "boolean" },
+        "durationMs": { "type": "number", "minimum": 0 },
+        "algorithmId": { "type": ["string", "null"] },
+        "counters": {
+          "type": "object",
+          "required": ["processed"],
+          "properties": {
+            "processed": { "type": "integer", "minimum": 0 },
+            "max": { "type": ["integer", "null"], "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string", "minLength": 1 },
+              "retryable": { "type": "boolean" },
+              "message": { "type": "string", "minLength": 1 },
+              "context": { "type": ["string", "null"] }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pipelineFailureDiagnostic": {
+      "type": "object",
+      "required": ["stage", "errorMessage", "exceptionType", "occurredAtUtc", "isCritical"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "errorMessage": { "type": "string", "minLength": 1 },
+        "exceptionType": { "type": "string", "minLength": 1 },
+        "occurredAtUtc": { "type": "string", "format": "date-time" },
+        "stackTrace": { "type": ["string", "null"] },
+        "isCritical": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "boundingBoxExecutionReport": {
+      "type": "object",
+      "required": ["minX", "minY", "maxX", "maxY", "width", "height"],
+      "properties": {
+        "minX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxX": { "type": "number" },
+        "maxY": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "normativeProfileExecutionReport": {
+      "type": "object",
+      "required": ["profileId", "id", "jurisdiction", "designCode", "tablesVersion", "version"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "jurisdiction": { "type": "string", "minLength": 2 },
+        "designCode": { "type": "string", "minLength": 1 },
+        "tablesVersion": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "topBarAnchorageFactor": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "geometryProcessingExecutionReport": {
+      "type": "object",
+      "required": ["decompositionAlgorithm", "rectangularShortcutFillRatio", "minRectangleAreaMm2", "samplingResolutionPerAxis", "cellCoverageInclusionThreshold"],
+      "properties": {
+        "decompositionAlgorithm": { "type": "string", "minLength": 1 },
+        "rectangularShortcutFillRatio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "minRectangleAreaMm2": { "type": "number", "exclusiveMinimum": 0 },
+        "samplingResolutionPerAxis": { "type": "integer", "minimum": 1 },
+        "cellCoverageInclusionThreshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "minCoverageRatioAcrossComplexZones": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "maxOverCoverageRatioAcrossComplexZones": { "type": ["number", "null"], "minimum": 0 },
+        "parsedEntityCount": { "type": "integer", "minimum": 0 },
+        "ignoredByReason": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "optimizationProcessingExecutionReport": {
+      "type": "object",
+      "required": ["optimizerId", "masterProblemStrategy", "pricingStrategy", "integerizationStrategy", "demandAggregationPrecisionMm", "qualityFloor", "anyFallbackMasterSolverUsed"],
+      "properties": {
+        "optimizerId": { "type": "string", "minLength": 1 },
+        "masterProblemStrategy": { "type": "string", "minLength": 1 },
+        "pricingStrategy": { "type": "string", "minLength": 1 },
+        "integerizationStrategy": { "type": "string", "minLength": 1 },
+        "demandAggregationPrecisionMm": { "type": "number", "minimum": 0 },
+        "qualityFloor": { "type": "string", "minLength": 1 },
+        "anyFallbackMasterSolverUsed": { "type": "boolean" },
+        "fallbackUsed": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "analysisProvenanceExecutionReport": {
+      "type": "object",
+      "required": ["geometry", "optimization"],
+      "properties": {
+        "geometry": { "$ref": "#/$defs/geometryProcessingExecutionReport" },
+        "optimization": { "$ref": "#/$defs/optimizationProcessingExecutionReport" }
+      },
+      "additionalProperties": false
+    },
+    "slabExecutionReport": {
+      "type": "object",
+      "required": ["concreteClass", "thicknessMm", "coverMm", "effectiveDepthMm", "areaMm2", "openingCount", "boundingBox"],
+      "properties": {
+        "concreteClass": { "type": "string", "minLength": 1 },
+        "thicknessMm": { "type": "number", "exclusiveMinimum": 0 },
+        "coverMm": { "type": "number", "minimum": 0 },
+        "effectiveDepthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "areaMm2": { "type": "number", "minimum": 0 },
+        "openingCount": { "type": "integer", "minimum": 0 },
+        "boundingBox": { "$ref": "#/$defs/boundingBoxExecutionReport" }
+      },
+      "additionalProperties": false
+    },
+    "zoneExecutionReport": {
+      "type": "object",
+      "required": ["zoneId", "zoneType", "direction", "layer", "diameterMm", "spacingMm", "rebarCount", "totalClearSpanMm", "totalLengthMm", "boundingBox"],
+      "properties": {
+        "zoneId": { "type": "string", "minLength": 1 },
+        "zoneType": { "type": "string", "enum": ["Simple", "Complex", "Special"] },
+        "direction": { "type": "string", "enum": ["X", "Y"] },
+        "layer": { "type": "string", "enum": ["Bottom", "Top"] },
+        "diameterMm": { "type": "integer", "minimum": 1 },
+        "spacingMm": { "type": "integer", "minimum": 1 },
+        "rebarCount": { "type": "integer", "minimum": 0 },
+        "totalClearSpanMm": { "type": "number", "minimum": 0 },
+        "totalLengthMm": { "type": "number", "minimum": 0 },
+        "boundingBox": { "$ref": "#/$defs/boundingBoxExecutionReport" },
+        "subRectangleCount": { "type": ["integer", "null"], "minimum": 0 },
+        "decompositionCoverageRatio": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "decompositionOverCoverageRatio": { "type": ["number", "null"], "minimum": 0 },
+        "extendedBeyondZoneCount": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "cuttingPlanExecutionReport": {
+      "type": "object",
+      "required": ["stockLengthMm", "cutsMm", "sawCutWidthMm", "wasteMm", "wastePercent"],
+      "properties": {
+        "stockLengthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "cutsMm": {
+          "type": "array",
+          "items": { "type": "number", "exclusiveMinimum": 0 }
+        },
+          "sawCutWidthMm": { "type": "number", "minimum": 0 },
+        "wasteMm": { "type": "number", "minimum": 0 },
+        "wastePercent": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "diameterOptimizationExecutionReport": {
+      "type": "object",
+      "required": ["diameterMm", "supplierName", "rebarCount", "stockBarsNeeded", "totalWasteMm", "totalWastePercent", "totalRebarLengthMm", "cuttingPlans"],
+      "properties": {
+        "diameterMm": { "type": "integer", "minimum": 1 },
+        "supplierName": { "type": "string", "minLength": 1 },
+        "rebarCount": { "type": "integer", "minimum": 0 },
+        "stockBarsNeeded": { "type": "integer", "minimum": 0 },
+        "totalWasteMm": { "type": "number", "minimum": 0 },
+        "totalWastePercent": { "type": "number", "minimum": 0 },
+        "totalRebarLengthMm": { "type": "number", "minimum": 0 },
+        "totalMassKg": { "type": ["number", "null"], "minimum": 0 },
+        "estimatedCost": { "type": ["number", "null"], "minimum": 0 },
+        "dualBound": { "type": ["number", "null"] },
+        "gap": { "type": ["number", "null"] },
+        "boundStatus": { "type": "string", "enum": ["Proven", "NotProven"] },
+        "cuttingPlans": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cuttingPlanExecutionReport" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "placementExecutionReport": {
+      "type": "object",
+      "required": ["requested", "executed", "success", "totalRebarsPlaced", "totalTagsCreated", "totalBendingDetails", "warnings", "errors"],
+      "properties": {
+        "requested": { "type": "boolean" },
+        "executed": { "type": "boolean" },
+        "success": { "type": "boolean" },
+        "totalRebarsPlaced": { "type": "integer", "minimum": 0 },
+        "totalTagsCreated": { "type": "integer", "minimum": 0 },
+        "totalBendingDetails": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "errors": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "positionExecutionReport": {
+      "type": "object",
+      "required": ["mark", "diameterMm", "steelClass", "shapeCode", "lengthMm", "quantity", "massPerPieceKg", "totalMassKg", "layer"],
+      "properties": {
+        "mark": { "type": "string", "minLength": 1 },
+        "diameterMm": { "type": "integer", "exclusiveMinimum": 0 },
+        "steelClass": { "type": "string", "minLength": 1 },
+        "shapeCode": { "type": "string", "minLength": 1 },
+        "lengthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "massPerPieceKg": { "type": "number", "minimum": 0 },
+        "totalMassKg": { "type": "number", "minimum": 0 },
+        "layer": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "unoptimizedBarReport": {
+      "type": "object",
+      "required": ["diameterMm", "lengthMm", "maxStockLengthMm", "reason"],
+      "properties": {
+        "diameterMm": { "type": "integer", "exclusiveMinimum": 0 },
+        "lengthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "maxStockLengthMm": { "type": "number", "minimum": 0 },
+        "reason": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "executionSummaryReport": {
+      "type": "object",
+      "required": ["parsedZoneCount", "classifiedZoneCount", "totalRebarSegments", "totalWastePercent", "totalWasteMm", "totalMassKg"],
+      "properties": {
+        "parsedZoneCount": { "type": "integer", "minimum": 0 },
+        "classifiedZoneCount": { "type": "integer", "minimum": 0 },
+        "totalRebarSegments": { "type": "integer", "minimum": 0 },
+        "totalWastePercent": { "type": "number", "minimum": 0 },
+        "totalWasteMm": { "type": "number", "minimum": 0 },
+        "totalMassKg": { "type": "number", "minimum": 0 },
+        "massInstalledKg": { "type": "number", "minimum": 0 },
+        "massPurchasedKg": { "type": "number", "minimum": 0 },
+        "estimatedCost": { "type": ["number", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

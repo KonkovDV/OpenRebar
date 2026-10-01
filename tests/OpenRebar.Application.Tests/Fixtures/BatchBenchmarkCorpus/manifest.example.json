@@ -1,0 +1,30 @@
+{
+  "optimizationSettings": {
+    "sawCutWidthMm": 3,
+    "minScrapLengthMm": 300
+  },
+  "cases": [
+    {
+      "name": "production-slab-01",
+      "slabId": "SLAB-01",
+      "dxfPath": "production-slab-01.dxf",
+      "slabWidthMm": 12000,
+      "slabHeightMm": 9000,
+      "thicknessMm": 220,
+      "coverMm": 30,
+      "concreteClass": "B25",
+      "levelName": "Level 01",
+      "maxBarRegression": 0,
+      "maxWasteRegressionPercent": 0.05,
+      "maxAbsoluteWastePercent": 12.0,
+      "legendEntries": [
+        {
+          "rgb": [255, 0, 0],
+          "diameterMm": 12,
+          "spacingMm": 200,
+          "steelClass": "A500C"
+        }
+      ]
+    }
+  ]
+}

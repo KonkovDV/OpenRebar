@@ -1,0 +1,25 @@
+{
+  "projectCode": "OpenRebar-Example",
+  "slabId": "simple-slab",
+  "steelClass": "A500C",
+  "norm": "ru.sp63.2018",
+  "slab": {
+    "widthMm": 6000,
+    "heightMm": 4000,
+    "thicknessMm": 220,
+    "coverMm": 30,
+    "concreteClass": "B25"
+  },
+  "layers": [
+    {
+      "layer": "BottomX",
+      "file": "../dxf/simple-slab/input.dxf",
+      "background": {
+        "diameterMm": 10,
+        "spacingMm": 200,
+        "steelClass": "A500C",
+        "gridOriginMm": 0
+      }
+    }
+  ]
+}

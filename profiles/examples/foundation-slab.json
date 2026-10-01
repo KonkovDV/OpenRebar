@@ -1,0 +1,9 @@
+{
+  "id": "foundation-slab",
+  "version": "1",
+  "extends": "generic",
+  "example": true,
+  "description": "Пример, не профиль реальной организации. Запас 1.1 и склад 6000/12000 мм.",
+  "safety": { "factor": 1.1 },
+  "supply": { "stockLengthsMm": [6000, 12000] }
+}
