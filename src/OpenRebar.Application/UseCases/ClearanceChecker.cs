@@ -256,20 +256,7 @@ public static class ClearanceChecker
     return bars;
   }
 
-  private static (Point2D Start, Point2D End) Physical(RebarSegment bar)
-  {
-    double dx = bar.End.X - bar.Start.X;
-    double dy = bar.End.Y - bar.Start.Y;
-    double length = Math.Sqrt(dx * dx + dy * dy);
-    if (length < 1e-9)
-      return (bar.Start, bar.End);
-
-    double ux = dx / length;
-    double uy = dy / length;
-    return (
-        new Point2D(bar.Start.X - ux * bar.AnchorageLengthStart, bar.Start.Y - uy * bar.AnchorageLengthStart),
-        new Point2D(bar.End.X + ux * bar.AnchorageLengthEnd, bar.End.Y + uy * bar.AnchorageLengthEnd));
-  }
+  private static (Point2D Start, Point2D End) Physical(RebarSegment bar) => (bar.Start, bar.End);
 
   private static IEnumerable<Point2D> Samples(Point2D start, Point2D end)
   {

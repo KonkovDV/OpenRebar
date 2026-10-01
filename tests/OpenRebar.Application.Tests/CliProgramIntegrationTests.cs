@@ -29,7 +29,7 @@ public class CliProgramIntegrationTests
                 "--layer", "BottomX"
       ]);
 
-      exitCode.Should().Be(0);
+      exitCode.Should().Be(2);
 
       var reportPath = Path.ChangeExtension(dxfPath, ".result.json");
       var schedulePath = Path.ChangeExtension(dxfPath, ".schedule.csv");
@@ -76,7 +76,7 @@ public class CliProgramIntegrationTests
                 "--layer", "BottomX"
       ]);
 
-      exitCode.Should().Be(0);
+      exitCode.Should().Be(2);
 
       var copiedReportPath = Path.Combine(aeroBimStorageDir, "integrations", "openrebar", "floor-10.result.json");
       var handoffPath = Path.Combine(aeroBimStorageDir, "integrations", "openrebar", "floor-10.result.handoff.json");

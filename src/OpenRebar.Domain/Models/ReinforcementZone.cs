@@ -75,8 +75,11 @@ public sealed class ReinforcementZone
   /// <summary>Interior rings. Empty when the zone has no hole.</summary>
   public IReadOnlyList<Polygon> Holes { get; init; } = [];
 
-  /// <summary>Bars whose clear span is shorter than the required anchorage.</summary>
+  /// <summary>Bars whose run is shorter than the required anchorage.</summary>
   public int ExtendedBeyondZoneCount { get; set; }
+
+  /// <summary>Profile end rule used when the anchorage does not fit in the working area.</summary>
+  public string RequestedEndCondition { get; set; } = "NeedsHook";
 
   /// <summary>Design layer when the zone came from a multi-layer input. Null on the legacy single-layer path.</summary>
   public LayerKey? DesignLayer { get; set; }
@@ -153,12 +156,24 @@ public enum BarInstanceStatus
 }
 
 /// <summary>
-/// How the required anchorage relates to the zone interval.
+/// How the required anchorage relates to the run.
 /// </summary>
 public enum AnchorageStatus
 {
   WithinZone,
   ExtendedBeyondZone
+}
+
+/// <summary>
+/// What happens at one end after the anchorage is clipped to the working area.
+/// </summary>
+public enum BarEndCondition
+{
+  Straight,
+  ShortenedAtEdge,
+  NeedsHook,
+  NeedsLBar,
+  NeedsUBar
 }
 
 /// <summary>
@@ -194,14 +209,20 @@ public sealed record RebarSegment
   public BarInstanceStatus Status { get; init; } = BarInstanceStatus.Active;
 
   /// <summary>
-  /// Temporary until anchorage is applied as geometry.
-  /// ExtendedBeyondZone means the clear span is shorter than the required anchorage.
+  /// ExtendedBeyondZone means the run is shorter than the required anchorage.
+  /// The end conditions say whether that anchorage fit inside the working area.
   /// </summary>
   public AnchorageStatus AnchorageStatus { get; init; } = AnchorageStatus.WithinZone;
 
-  /// <summary>Total length including anchorage (mm).</summary>
-  public double TotalLength => Start.DistanceTo(End) + AnchorageLengthStart + AnchorageLengthEnd;
+  /// <summary>End at <see cref="Start"/> after clipping the anchorage to the working area.</summary>
+  public BarEndCondition EndConditionStart { get; init; } = BarEndCondition.Straight;
 
-  /// <summary>Clear span between anchorage zones (mm).</summary>
+  /// <summary>End at <see cref="End"/> after clipping the anchorage to the working area.</summary>
+  public BarEndCondition EndConditionEnd { get; init; } = BarEndCondition.Straight;
+
+  /// <summary>Geometric length from <see cref="Start"/> to <see cref="End"/> (mm).</summary>
+  public double TotalLength => Start.DistanceTo(End);
+
+  /// <summary>Geometric length from <see cref="Start"/> to <see cref="End"/> (mm).</summary>
   public double ClearSpan => Start.DistanceTo(End);
 }

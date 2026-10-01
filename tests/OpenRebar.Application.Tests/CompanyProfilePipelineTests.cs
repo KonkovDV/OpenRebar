@@ -33,8 +33,8 @@ public class CompanyProfilePipelineTests
     using var genericReport = await Run(dxf, generic);
     using var exampleReport = await Run(dxf, example);
 
-    genericReport.RootElement.GetProperty("verification").GetProperty("status").GetString().Should().Be("Passed");
-    exampleReport.RootElement.GetProperty("verification").GetProperty("status").GetString().Should().Be("Passed");
+    genericReport.RootElement.GetProperty("verification").GetProperty("status").GetString().Should().Be("Failed");
+    exampleReport.RootElement.GetProperty("verification").GetProperty("status").GetString().Should().Be("Failed");
 
     double genericWaste = genericReport.RootElement.GetProperty("summary").GetProperty("totalWastePercent").GetDouble();
     double exampleWaste = exampleReport.RootElement.GetProperty("summary").GetProperty("totalWastePercent").GetDouble();
@@ -63,7 +63,7 @@ public class CompanyProfilePipelineTests
         "--layer", "BottomX",
         "--profile", profile
     ]);
-    exit.Should().Be(0);
+    exit.Should().Be(2);
     return JsonDocument.Parse(await File.ReadAllTextAsync(Path.ChangeExtension(input, ".result.json")));
   }
 

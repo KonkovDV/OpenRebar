@@ -39,8 +39,9 @@ public class LayerClassOverlayTests
         .SelectMany(zone => zone.Rebars)
         .ToList();
 
-    bars.Where(bar => bar.Start.X < 150 && bar.End.X > 150).Should().OnlyContain(bar => bar.DiameterMm == 16);
-    bars.Where(bar => bar.DiameterMm == 12).Should().OnlyContain(bar => bar.End.X <= 100.1);
+    bars.Where(bar => bar.DiameterMm == 12).Should().ContainSingle().Which.Should().Match<RebarSegment>(bar =>
+        bar.Start.X <= 100.1 && bar.End.X - 100.0 <= bar.AnchorageLengthEnd + 0.1);
+    bars.Where(bar => bar.DiameterMm == 16).Should().HaveCount(2);
   }
 
   [Fact]

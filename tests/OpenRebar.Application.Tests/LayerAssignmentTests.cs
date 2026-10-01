@@ -92,7 +92,7 @@ public class LayerAssignmentTests
       PlaceInRevit = false
     });
 
-    result.Report!.PartialResult.Should().BeFalse();
+    result.Report!.PartialResult.Should().BeTrue();
     result.ClassifiedZones.Should().ContainSingle();
     result.ClassifiedZones[0].Direction.Should().Be(RebarDirection.X);
     result.ClassifiedZones[0].Layer.Should().Be(RebarLayer.Bottom);

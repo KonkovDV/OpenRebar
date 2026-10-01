@@ -34,16 +34,19 @@ public sealed class BatchReinforcementPipeline
         var result = await _singlePipeline.ExecuteAsync(input, ct);
 
         // Check if the pipeline had critical errors
-        if (result.Report?.PartialResult == true && result.Report.Errors.Any(e => e.IsCritical))
+        var critical = result.Report?.Errors.Where(error => error.IsCritical).ToList() ?? [];
+        if (critical.Count > 0)
         {
-          var criticalError = result.Report.Errors.First(e => e.IsCritical);
+          var criticalError = critical[0];
           failures.Add(new BatchFailure
           {
             SlabId = slabId,
             ErrorMessage = $"{criticalError.Stage}: {criticalError.ErrorMessage}"
           });
         }
-        else
+
+        bool verificationOnly = critical.Count > 0 && critical.All(error => error.Stage == "Verification");
+        if (critical.Count == 0 || verificationOnly)
         {
           slabResults.Add(new BatchSlabResult
           {

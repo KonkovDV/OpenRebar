@@ -262,7 +262,10 @@ public sealed class GenerateReinforcementPipeline
     IReadOnlyList<ReinforcementZone> zonesWithRebars;
     try
     {
+      foreach (var zone in classifiedZones)
+        zone.RequestedEndCondition = string.IsNullOrWhiteSpace(input.EndCondition) ? "NeedsHook" : input.EndCondition;
       zonesWithRebars = _calculator.CalculateRebars(classifiedZones, input.Slab);
+      result.DetailingWarnings = DetailingNotes(zonesWithRebars);
       result.Positions = PositionAssigner.Assign(zonesWithRebars);
       result.Clashes = ClearanceChecker.Check(zonesWithRebars, input.Slab, _planar, input.JointRatioMax);
       result.TotalRebarSegments = zonesWithRebars.Sum(z => z.Rebars.Count);
@@ -819,6 +822,7 @@ public sealed class GenerateReinforcementPipeline
           .Concat(result.FieldWarnings)
           .Concat(result.OverlayWarnings)
           .Concat(result.LayoutWarnings)
+          .Concat(result.DetailingWarnings)
           .ToList(),
       Errors = failures,
       PartialResult = failures.Any(f => f.IsCritical)
@@ -911,10 +915,27 @@ public sealed class GenerateReinforcementPipeline
       Layers = LayerReportBuilder.Build(input, []),
       ParameterSources = input.ParameterSources,
       Clashes = result.Clashes,
-      Warnings = result.OverlayWarnings.Concat(result.LayoutWarnings).ToList(),
+      Warnings = result.OverlayWarnings.Concat(result.LayoutWarnings).Concat(result.DetailingWarnings).ToList(),
       Errors = failures,
       PartialResult = true
     };
+  }
+
+  private static IReadOnlyList<string> DetailingNotes(IReadOnlyList<ReinforcementZone> zones)
+  {
+    var ends = zones
+        .SelectMany(zone => zone.Rebars)
+        .Where(bar => bar.Status != BarInstanceStatus.Discarded)
+        .SelectMany(bar => new[] { bar.EndConditionStart, bar.EndConditionEnd })
+        .Where(condition => condition != BarEndCondition.Straight)
+        .GroupBy(condition => condition)
+        .OrderBy(group => group.Key.ToString(), StringComparer.Ordinal)
+        .ToList();
+    if (ends.Count == 0)
+      return [];
+
+    string counts = string.Join(", ", ends.Select(group => $"{group.Key} {group.Count()}"));
+    return [$"Anchorage stays inside the working area. Ends that cannot take the full length: {counts}."];
   }
 
   private static ReasonCode ParseFailureCode(Exception exception) => exception switch
@@ -1255,6 +1276,9 @@ public sealed record PipelineInput
   public IReadOnlyList<int> FieldSpacingsMm { get; init; } = [];
   public string AdditionalSpacingMode { get; init; } = "interleave";
   public double JointRatioMax { get; init; } = 0.5;
+
+  /// <summary>Profile end rule. NeedsHook when the profile does not say otherwise.</summary>
+  public string EndCondition { get; init; } = "NeedsHook";
 }
 
 /// <summary>
@@ -1289,6 +1313,7 @@ public sealed class PipelineResult
   public IReadOnlyList<string> FieldWarnings { get; set; } = [];
   public IReadOnlyList<string> OverlayWarnings { get; set; } = [];
   public IReadOnlyList<string> LayoutWarnings { get; set; } = [];
+  public IReadOnlyList<string> DetailingWarnings { get; set; } = [];
   public IReadOnlyList<ClashReport> Clashes { get; set; } = [];
 
   public double TotalWastePercent =>

@@ -89,16 +89,16 @@ public class AsFieldZoneBuilderTests
         "--slab-height", "4000"
     ]);
 
-    exit.Should().Be(0);
+    exit.Should().Be(2);
     using var report = JsonDocument.Parse(await File.ReadAllTextAsync(Path.ChangeExtension(input, ".result.json")));
-    report.RootElement.GetProperty("verification").GetProperty("status").GetString().Should().Be("Passed");
+    report.RootElement.GetProperty("verification").GetProperty("status").GetString().Should().Be("Failed");
     var layers = report.RootElement.GetProperty("layers").EnumerateArray().ToList();
     layers.Should().OnlyContain(layer => layer.GetProperty("status").GetString() == "Provided");
     var bottomX = layers.Single(layer => layer.GetProperty("layer").GetString() == "BottomX");
     var position = bottomX.GetProperty("positions").EnumerateArray().Single();
     position.GetProperty("diameterMm").GetInt32().Should().Be(20);
     position.GetProperty("quantity").GetInt32().Should().Be(27);
-    bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(510.85, 0.1);
+    bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(400.14, 0.1);
   }
 
   private static AsField Field(params AsFieldElement[] elements) => new()

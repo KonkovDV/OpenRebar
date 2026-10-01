@@ -16,3 +16,5 @@ Design strengths of A400 (355 MPa) and B500 (435 MPa) are unchanged. Table 6.14 
 
 The clear distance between adjacent laps in the amendment to clause 10.3.30 is not enforced. That amendment text is not in this repository.
 
+Additional bars extend past a zone boundary by the calculated anchorage length, and only inside the working area. The SP 63 clause on curtailment past the theoretical cutoff is not in this repository, so no distance beyond that anchorage length is added.
+

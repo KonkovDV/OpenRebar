@@ -178,7 +178,7 @@ public class CsvScheduleExporterTests
   private static RebarSegment MakeRebar(int diameterMm, double totalLengthMm, double y) => new()
   {
     Start = new Point2D(0, y),
-    End = new Point2D(totalLengthMm - 400, y),
+    End = new Point2D(totalLengthMm, y),
     DiameterMm = diameterMm,
     AnchorageLengthStart = 200,
     AnchorageLengthEnd = 200

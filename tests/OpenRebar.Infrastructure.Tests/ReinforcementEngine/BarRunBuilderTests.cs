@@ -64,8 +64,10 @@ public class BarRunBuilderTests
       run.Lines.Should().NotBeEmpty();
       double length = run.EndCoord - run.StartCoord;
       length.Should().BeApproximately(Math.Round(length / BarRunBuilder.LengthStepMm) * BarRunBuilder.LengthStepMm, 0.1);
-      bars.Where(bar => run.Lines.Any(line => Math.Abs(bar.Start.Y - line) < 0.1))
-          .Should().OnlyContain(bar => Math.Abs((bar.End.X - bar.Start.X) - length) < 0.1);
+      var matching = bars.Where(bar => run.Lines.Any(line => Math.Abs(bar.Start.Y - line) < 0.1)).ToList();
+      matching.Should().NotBeEmpty();
+      matching.Select(bar => Math.Round(bar.TotalLength, 1)).Distinct().Should().ContainSingle();
+      matching.Should().OnlyContain(bar => bar.TotalLength + 0.1 >= length && bar.End.X <= 80.1 && bar.Start.X >= -0.1);
     }
 
     foreach (var bar in bars)
