@@ -295,6 +295,9 @@ public static class ClearanceChecker
 
   private static PlanarRegion OuterWorkingArea(SlabGeometry slab, IPlanarGeometry? geometry)
   {
+    if (SlabEdges.HasDeclaredSupport(slab))
+      return new PlanarRegion([new PlanarPolygon(SlabEdges.WorkingRectangle(slab))]);
+
     var region = new PlanarRegion([new PlanarPolygon(slab.OuterBoundary)]);
     if (slab.EdgeCoverMm > InsideToleranceMm && geometry is not null)
       region = geometry.Buffer(region, -slab.EdgeCoverMm, BufferJoin.Mitre);

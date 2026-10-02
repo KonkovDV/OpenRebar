@@ -46,7 +46,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     if (zone.SuppressLayout)
       return [];
 
-    if (slab.EdgeCoverMm <= 1e-9 && slab.OpeningClearanceMm <= 1e-9)
+    if (slab.EdgeCoverMm <= 1e-9 && slab.OpeningClearanceMm <= 1e-9 && !SlabEdges.HasDeclaredSupport(slab))
       return GenerateRebarsInPolygon(zone.Boundary, zone.Holes, zone, slab, ref markCounter);
 
     if (_planar is null)
@@ -171,11 +171,16 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     IReadOnlyList<Polygon> shells;
     IReadOnlyList<Polygon> holes;
     if (_planar is not null
-        && (slab.EdgeCoverMm > 1e-9 || slab.OpeningClearanceMm > 1e-9 || slab.Openings.Count > 0))
+        && (slab.EdgeCoverMm > 1e-9 || slab.OpeningClearanceMm > 1e-9 || slab.Openings.Count > 0 || SlabEdges.HasDeclaredSupport(slab)))
     {
       var area = WorkingAreaBuilder.Build(slab, _planar);
       shells = area.Polygons.Select(polygon => polygon.Shell).ToList();
       holes = area.Polygons.SelectMany(polygon => polygon.Holes).Concat(zoneHoles).ToList();
+    }
+    else if (SlabEdges.HasDeclaredSupport(slab))
+    {
+      shells = [SlabEdges.WorkingRectangle(slab)];
+      holes = slab.Openings.Concat(zoneHoles).ToList();
     }
     else
     {

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OpenRebar.Domain.Models;
 
 namespace OpenRebar.Application.UseCases;
 
@@ -26,9 +27,21 @@ public static class ProjectDesignLoader
         ?? throw new InvalidDataException($"Project file '{path}' is empty.");
 
     string directory = Path.GetDirectoryName(Path.GetFullPath(path)) ?? Directory.GetCurrentDirectory();
+    var edges = new List<SlabEdge>();
+    var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    foreach (var edge in document.Slab.Edges)
+    {
+      var parsed = SlabEdges.Parse(edge.Segment, edge.Kind, edge.SupportDepthMm);
+      if (!seen.Add(parsed.Segment))
+        throw new InvalidDataException($"Edge segment '{parsed.Segment}' is listed more than once.");
+
+      edges.Add(parsed);
+    }
+
     return document with
     {
       SourcePath = Path.GetFullPath(path),
+      Slab = document.Slab with { ParsedEdges = edges },
       Layers = document.Layers.Select(layer => layer with
       {
         File = Resolve(directory, layer.File),
@@ -65,6 +78,17 @@ public sealed record ProjectSlabDocument
   public double CoverEdgeMm { get; init; }
   public double OpeningClearanceMm { get; init; }
   public string ConcreteClass { get; init; } = "B25";
+  public List<ProjectEdgeDocument> Edges { get; init; } = [];
+
+  [JsonIgnore]
+  public IReadOnlyList<SlabEdge> ParsedEdges { get; init; } = [];
+}
+
+public sealed record ProjectEdgeDocument
+{
+  public string Segment { get; init; } = "";
+  public string Kind { get; init; } = "";
+  public double? SupportDepthMm { get; init; }
 }
 
 public sealed record ProjectLayerDocument

@@ -1,0 +1,26 @@
+{
+  "projectCode": "OpenRebar-Example",
+  "slabId": "supported-slab",
+  "steelClass": "A500C",
+  "norm": "ru.sp63.2018",
+  "slab": {
+    "widthMm": 6000,
+    "heightMm": 4000,
+    "thicknessMm": 220,
+    "coverMm": 30,
+    "coverEdgeMm": 0,
+    "concreteClass": "B25",
+    "edges": [
+      { "segment": "minX", "kind": "Supported", "supportDepthMm": 1000 },
+      { "segment": "maxX", "kind": "Supported", "supportDepthMm": 1000 },
+      { "segment": "minY", "kind": "Supported", "supportDepthMm": 1000 },
+      { "segment": "maxY", "kind": "Supported", "supportDepthMm": 1000 }
+    ]
+  },
+  "layers": [
+    {
+      "layer": "BottomX",
+      "file": "supported-slab.csv"
+    }
+  ]
+}

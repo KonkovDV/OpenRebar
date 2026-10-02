@@ -77,6 +77,79 @@ public class GridReinforcementVerifierTests
   }
 
   [Fact]
+  public void Verify_FreeEdge_SplitsDevelopmentFromARealGap()
+  {
+    var zone = Zone(
+    [
+        new RebarSegment
+        {
+          Start = new Point2D(0, 100),
+          End = new Point2D(1000, 100),
+          DiameterMm = 12,
+          AnchorageLengthStart = 200,
+          AnchorageLengthEnd = 200
+        }
+    ]);
+    zone.AsRequiredMm2PerM = 1_000_000;
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = zone.Boundary,
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+
+    var result = _verifier.Verify([zone], new VerificationSettings { Slab = slab });
+
+    result.Status.Should().Be(VerificationStatuses.Failed);
+    result.EdgeDevelopmentAreaM2.Should().BeGreaterThan(0);
+    result.RealDeficitAreaM2.Should().BeGreaterThan(0);
+    (result.EdgeDevelopmentAreaM2 + result.RealDeficitAreaM2).Should().BeApproximately(result.UnderReinforcedAreaM2, 1e-9);
+    result.Remedy.Should().Equal("anchorIntoSupport", "uBarAtFreeEdge", "reduceAsReqNearEdge(input)");
+    result.Cells.Should().Contain(cell =>
+        cell.X == 25 && cell.Y == 125 && cell.Status == SlabEdges.EdgeDevelopmentShort);
+    result.Cells.Should().Contain(cell =>
+        cell.X == 525 && cell.Y == 125 && cell.Status == SlabEdges.RealDeficit);
+  }
+
+  [Fact]
+  public void Verify_SupportedEdge_DoesNotCallAShortfallEdgeDevelopment()
+  {
+    var zone = Zone(
+    [
+        new RebarSegment
+        {
+          Start = new Point2D(0, 100),
+          End = new Point2D(1000, 100),
+          DiameterMm = 12,
+          AnchorageLengthStart = 200,
+          AnchorageLengthEnd = 200
+        }
+    ]);
+    zone.AsRequiredMm2PerM = 1_000_000;
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = zone.Boundary,
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25",
+      Edges =
+      [
+          new SlabEdge { Segment = "minX", Kind = SlabEdgeKind.Supported, SupportDepthMm = 600 },
+          new SlabEdge { Segment = "maxX", Kind = SlabEdgeKind.Supported, SupportDepthMm = 600 },
+          new SlabEdge { Segment = "minY", Kind = SlabEdgeKind.Supported, SupportDepthMm = 600 },
+          new SlabEdge { Segment = "maxY", Kind = SlabEdgeKind.Supported, SupportDepthMm = 600 }
+      ]
+    };
+
+    var result = _verifier.Verify([zone], new VerificationSettings { Slab = slab });
+
+    result.EdgeDevelopmentAreaM2.Should().Be(0);
+    result.RealDeficitAreaM2.Should().Be(result.UnderReinforcedAreaM2);
+    result.Remedy.Should().BeEmpty();
+  }
+
+  [Fact]
   public void Verify_StatedBackgroundAreaWithoutMeshBars_DoesNotPass()
   {
     var zone = Zone(BarsAt(100, 300, 500, 700, 900).Select(bar => bar with { DiameterMm = 10 }).ToList());

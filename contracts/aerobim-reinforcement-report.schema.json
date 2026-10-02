@@ -222,6 +222,9 @@
       "required": [
         "status",
         "underReinforcedAreaM2",
+        "edgeDevelopmentAreaM2",
+        "realDeficitAreaM2",
+        "remedy",
         "checkedAreaM2",
         "minMarginMm2PerM",
         "minProvisionRatio",
@@ -235,6 +238,15 @@
           "enum": ["Passed", "Failed", "PassedWithUnderCoverage", "PassedWithSmoothing"]
         },
         "underReinforcedAreaM2": { "type": "number", "minimum": 0 },
+        "edgeDevelopmentAreaM2": { "type": "number", "minimum": 0 },
+        "realDeficitAreaM2": { "type": "number", "minimum": 0 },
+        "remedy": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["anchorIntoSupport", "uBarAtFreeEdge", "reduceAsReqNearEdge(input)"]
+          }
+        },
         "checkedAreaM2": { "type": "number", "minimum": 0 },
         "minMarginMm2PerM": { "type": "number" },
         "minProvisionRatio": { "type": "number", "minimum": 0 },

@@ -25,6 +25,9 @@ public sealed record VerificationSettings
   /// When set, a sample cell takes the greatest element As that the cell touches.
   /// </summary>
   public AsField? Field { get; init; }
+
+  /// <summary>Slab outline used to tell a free-edge development shortfall from a real gap.</summary>
+  public SlabGeometry? Slab { get; init; }
 }
 
 public static class VerificationStatuses
@@ -42,6 +45,16 @@ public sealed record ReinforcementVerificationResult
 {
   public required string Status { get; init; }
   public required double UnderReinforcedAreaM2 { get; init; }
+
+  /// <summary>Failed area that is short only because development does not reach a free edge.</summary>
+  public double EdgeDevelopmentAreaM2 { get; init; }
+
+  /// <summary>Failed area that is not explained by a free edge.</summary>
+  public double RealDeficitAreaM2 { get; init; }
+
+  /// <summary>Ways to remove an edge-development shortfall. Empty when that area is zero.</summary>
+  public IReadOnlyList<string> Remedy { get; init; } = [];
+
   public required double CheckedAreaM2 { get; init; }
   public required double MinMarginMm2PerM { get; init; }
   public required double MinProvisionRatio { get; init; }
@@ -66,6 +79,9 @@ public sealed record VerificationCellReport
   public required double X { get; init; }
   public required double Y { get; init; }
   public required double MarginMm2PerM { get; init; }
+
+  /// <summary>EdgeDevelopmentShort or RealDeficit when the cell is short. Empty when it is covered.</summary>
+  public string? Status { get; init; }
 }
 
 /// <summary>

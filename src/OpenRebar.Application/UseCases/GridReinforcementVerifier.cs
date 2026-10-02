@@ -59,6 +59,7 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
           foreach (var bar in bars)
             provided += bar.ProvisionAt(center);
 
+          bool shortOfArea = provided + 1e-6 < required;
           samples.Add(new CellSample(
               zone.Id,
               LayerName(zone),
@@ -67,7 +68,8 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
               x,
               y,
               provided,
-              required));
+              required,
+              shortOfArea && IsEdgeDevelopment(zone, settings.Slab, x, y, provided)));
         }
       }
     }
@@ -78,6 +80,9 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
       {
         Status = VerificationStatuses.Passed,
         UnderReinforcedAreaM2 = 0,
+        EdgeDevelopmentAreaM2 = 0,
+        RealDeficitAreaM2 = 0,
+        Remedy = [],
         CheckedAreaM2 = 0,
         MinMarginMm2PerM = 0,
         MinProvisionRatio = 1,
@@ -95,6 +100,7 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
     double minMargin = double.PositiveInfinity;
     double minRatio = double.PositiveInfinity;
     int failed = 0;
+    int edgeFailed = 0;
     foreach (var sample in samples)
     {
       double margin = sample.Provided - sample.Required;
@@ -105,6 +111,8 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
         minRatio = ratio;
       if (sample.Provided + 1e-6 < sample.Required)
         failed++;
+      if (sample.EdgeShort)
+        edgeFailed++;
     }
 
     int smoothedFailed = failed;
@@ -121,6 +129,9 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
     {
       Status = status,
       UnderReinforcedAreaM2 = underArea,
+      EdgeDevelopmentAreaM2 = edgeFailed * cellAreaM2,
+      RealDeficitAreaM2 = (failed - edgeFailed) * cellAreaM2,
+      Remedy = edgeFailed > 0 ? SlabEdges.Remedy : [],
       CheckedAreaM2 = checkedArea,
       MinMarginMm2PerM = minMargin,
       MinProvisionRatio = minRatio,
@@ -135,7 +146,12 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
         Layer = sample.Layer,
         X = sample.X,
         Y = sample.Y,
-        MarginMm2PerM = sample.Provided - sample.Required
+        MarginMm2PerM = sample.Provided - sample.Required,
+        Status = sample.EdgeShort
+            ? SlabEdges.EdgeDevelopmentShort
+            : sample.Provided + 1e-6 < sample.Required
+                ? SlabEdges.RealDeficit
+                : null
       }).ToList(),
       DeficitRegions = MergeDeficits(samples, cell)
     };
@@ -143,6 +159,39 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
 
   private static string LayerName(ReinforcementZone zone) =>
       zone.DesignLayer?.ToString() ?? zone.Id;
+
+  /// <summary>
+  /// A covered cell near a free end is short of development, not of steel in the span.
+  /// Distance is taken along the bar. A free edge across the bar does not count.
+  /// </summary>
+  private static bool IsEdgeDevelopment(
+      ReinforcementZone zone,
+      SlabGeometry? slab,
+      double x,
+      double y,
+      double provided)
+  {
+    if (slab is null || provided <= 1e-6)
+      return false;
+
+    double anchorage = zone.Rebars
+        .Where(bar => bar.Status != BarInstanceStatus.Discarded)
+        .SelectMany(bar => new[] { bar.AnchorageLengthStart, bar.AnchorageLengthEnd })
+        .DefaultIfEmpty(0)
+        .Max();
+    if (anchorage <= 1e-9)
+      return false;
+
+    var box = slab.OuterBoundary.GetBoundingBox();
+    if (zone.Direction == RebarDirection.Y)
+    {
+      return (SlabEdges.Kind(slab, "minY") == SlabEdgeKind.Free && y - box.Min.Y <= anchorage + 1e-6)
+          || (SlabEdges.Kind(slab, "maxY") == SlabEdgeKind.Free && box.Max.Y - y <= anchorage + 1e-6);
+    }
+
+    return (SlabEdges.Kind(slab, "minX") == SlabEdgeKind.Free && x - box.Min.X <= anchorage + 1e-6)
+        || (SlabEdges.Kind(slab, "maxX") == SlabEdgeKind.Free && box.Max.X - x <= anchorage + 1e-6);
+  }
 
   private static Dictionary<LayerKey, List<BarStrip>> MeshStrips(IReadOnlyList<ReinforcementZone> zones)
   {
@@ -361,7 +410,8 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
       double X,
       double Y,
       double Provided,
-      double Required);
+      double Required,
+      bool EdgeShort);
 
   private readonly record struct BarStrip(
       double OriginX,

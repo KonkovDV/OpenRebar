@@ -305,7 +305,10 @@ public sealed class GenerateReinforcementPipeline
             lapWarnings);
       }
 
-      result.DetailingWarnings = DetailingNotes(zonesWithRebars).Concat(lapWarnings).ToList();
+      result.DetailingWarnings = DetailingNotes(zonesWithRebars)
+          .Concat(SlabEdges.Warnings(input.Slab))
+          .Concat(lapWarnings)
+          .ToList();
       result.Positions = PositionAssigner.Assign(zonesWithRebars);
       result.Laps = lapLinks
           .Select((link, index) => new LapJointReport
@@ -332,7 +335,7 @@ public sealed class GenerateReinforcementPipeline
               .ToList());
       result.Verification = _verifier.Verify(
           zonesWithRebars,
-          new VerificationSettings { Field = input.AsField });
+          new VerificationSettings { Field = input.AsField, Slab = input.Slab });
       if (result.Verification.Status == VerificationStatuses.Failed)
       {
         var first = result.Verification.DeficitRegions.FirstOrDefault();
