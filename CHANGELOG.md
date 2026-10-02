@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- CI can start again. `run: echo "corpus: NotEvaluated"` was not a YAML string, so GitHub rejected the workflow before creating jobs. The note is now a block scalar, and `lint-workflows` runs actionlint 1.7.12.
 - CI looks up `--no-build` assemblies in `bin/Release`, where the solution build writes them. The push lane no longer fails the missing batch corpus; that check runs on the weekly schedule and on manual dispatch when a corpus path is configured. The ML lock uses CPU PyTorch wheels.
 - Dependabot will not open ImageSharp 4 or FluentAssertions 8. `Microsoft.Extensions.*` updates are grouped. ImageSharp stays on 3.1.x until the distribution model (Q-5) is chosen.
 
