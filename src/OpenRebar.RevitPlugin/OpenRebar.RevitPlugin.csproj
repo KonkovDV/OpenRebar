@@ -1,12 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFrameworks>net8.0-windows;net10.0-windows</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>OpenRebar.RevitPlugin</RootNamespace>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- Revit 2025 uses .NET 8 — set UseWPF for UI panels -->
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
@@ -14,6 +13,11 @@
     <ProjectReference Include="..\OpenRebar.Domain\OpenRebar.Domain.csproj" />
     <ProjectReference Include="..\OpenRebar.Application\OpenRebar.Application.csproj" />
     <ProjectReference Include="..\OpenRebar.Infrastructure\OpenRebar.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="addin\RevitNet8\OpenRebar.addin" Link="OpenRebar.addin" CopyToOutputDirectory="PreserveNewest" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
+    <None Include="addin\RevitNet10\OpenRebar.addin" Link="OpenRebar.addin" CopyToOutputDirectory="PreserveNewest" Condition="'$(TargetFramework)' == 'net10.0-windows'" />
   </ItemGroup>
 
   <ItemGroup>

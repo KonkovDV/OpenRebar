@@ -3,11 +3,12 @@
 [![CI](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg)](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge)](https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-purple)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 English | [Русский](README.ru.md)
 
-OpenRebar is a .NET 8 codebase for generating reinforcement layouts for flat RC slabs from isoline-based inputs (DXF or PNG). The repository is designed to keep the **engineering logic testable outside Revit** while still supporting a Revit 2025 plugin boundary.
+OpenRebar generates reinforcement layouts for flat RC slabs from isoline-based inputs (DXF or PNG). The core libraries build for .NET 8 and .NET 10. The CLI ships on .NET 10. The engineering logic stays testable outside Revit. The Revit add-in is two builds, chosen by the Revit process runtime: `RevitNet8` when that runtime is still .NET 8, and `RevitNet10` for .NET 10.
 
 This repo ships three execution surfaces:
 
@@ -36,7 +37,7 @@ This repo ships three execution surfaces:
 
 Prerequisites:
 
-- .NET SDK 8.x
+- .NET SDK 8.x and .NET SDK 10.x (the CLI and the `net10.0` libraries need the 10 SDK; the Revit .NET 8 build needs the 8 SDK)
 - Python 3.11+ (for `tools/ci/*.py` and optional `ml/` lane)
 - Git with LF-aware checkout
 
@@ -46,7 +47,10 @@ Run from repository root:
 dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
+dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0
 python tools/ci/verify_readme_regression_claim.py
 ```
 
@@ -156,10 +160,13 @@ Reported `WasteMm` / `WastePercent` are kerf-aware: they measure residual stock 
 dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
+dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **371/371 tests passing**.
+Current regression status (those four commands): **376/376 tests passing**.
 
 ## CI Quality Gates
 
@@ -270,7 +277,7 @@ CI executes the Python smoke tests with an explicit `PYTHONPATH` pointing to `ml
 
 ## Revit Host Boundary
 
-The Revit host is compiled under `#if REVIT_SDK` and requires local Autodesk Revit references.
+The Revit host is compiled under `#if REVIT_SDK` and requires local Autodesk Revit references. Copy `addin/RevitNet8` next to the `net8.0-windows` build when the Revit process is still .NET 8, and `addin/RevitNet10` next to the `net10.0-windows` build when it is .NET 10. See [RELEASE_POLICY.md](RELEASE_POLICY.md).
 The repository includes:
 
 - DI composition root (`src/OpenRebar.RevitPlugin/Bootstrap.cs`)
@@ -317,8 +324,11 @@ Use [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md) as the canonical 
 Minimum repository baseline:
 
 ```bash
-dotnet build OpenRebar.sln --configuration Release
-dotnet test OpenRebar.sln --configuration Release
+dotnet build OpenRebar.sln --configuration Release -p:EnableWindowsTargeting=true
+dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --configuration Release -f net10.0
 cd ml
 python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q

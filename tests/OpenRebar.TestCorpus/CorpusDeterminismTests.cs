@@ -24,6 +24,23 @@ public class CorpusDeterminismTests
   }
 
   [Fact]
+  public void CorpusA0_HashFile_IsWrittenWhenRequested()
+  {
+    using var buffer = new MemoryStream();
+    foreach (string id in CorpusGenerator.ScenarioIds)
+    {
+      var files = CorpusGenerator.Generate(id);
+      buffer.Write(files.Dxf.AsSpan());
+      buffer.Write(files.Png.AsSpan());
+      buffer.Write(files.GroundTruthJson.AsSpan());
+    }
+
+    string hash = Sha256(buffer.ToArray());
+    hash.Should().HaveLength(64);
+    WriteHashIfRequested("corpus-a0.sha256", hash);
+  }
+
+  [Fact]
   public void Generate_IsByteForByteStable()
   {
     foreach (string id in CorpusGenerator.ScenarioIds)
@@ -132,4 +149,14 @@ public class CorpusDeterminismTests
 
   private static string Sha256(byte[] bytes) =>
       Convert.ToHexString(SHA256.HashData(bytes));
+
+  private static void WriteHashIfRequested(string fileName, string hash)
+  {
+    string? directory = Environment.GetEnvironmentVariable("OPENREBAR_TFM_HASH_DIR");
+    if (string.IsNullOrWhiteSpace(directory))
+      return;
+
+    Directory.CreateDirectory(directory);
+    File.WriteAllText(Path.Combine(directory, fileName), hash + "\n");
+  }
 }
