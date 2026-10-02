@@ -66,6 +66,9 @@ jobs:
       - name: Verify README regression claim
         run: python tools/ci/verify_readme_regression_claim.py
 
+      - name: Verify AGENTS.md commands
+        run: python tools/ci/verify_agents_md.py
+
       - name: Test libraries on net10
         env:
           OPENREBAR_TFM_HASH_DIR: ${{ github.workspace }}/artifacts/tfm/net10

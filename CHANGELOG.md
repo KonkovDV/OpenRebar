@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `AGENTS.md` lists the CI commands. `tools/ci/verify_agents_md.py` fails when a command in `ci.yml` is missing from that file.
 - `OpenRebar.Application.Tests` runs on `net8.0` and `net10.0`. Tests that call the CLI live in `OpenRebar.Cli.Tests` (`net10.0`). Example `result.json`, `schedule.csv`, and `reinforcement.ifc` hashes are compared across the two runtimes.
 - Core libraries build for `net8.0` and `net10.0`. The CLI ships on `net10.0`. Revit is `RevitNet8` or `RevitNet10`, chosen by the process runtime. After 10 November 2026, `net8.0` stays only for Revit that has not moved to .NET 10; that exception is reviewed on 1 June 2027.
 - The April 2026 audits and execution plans moved to `docs/archive/`. They are historical and are not the source of truth. The current plan is `docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md`.
