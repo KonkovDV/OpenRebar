@@ -97,6 +97,47 @@ public class ClearanceCheckerTests
     clashes.Should().Contain(clash => clash.Kind == "lapOverload" && clash.Type == "soft");
   }
 
+  [Theory]
+  [InlineData(40, true)]
+  [InlineData(60, false)]
+  public void AdjacentLaps_CloserThanTwoDiameters_AreHard(double lateral, bool clash)
+  {
+    var clashes = Check(
+        Bar("a1", 0, 100, 600, 100),
+        Bar("a2", 300, 100, 900, 100),
+        Bar("b1", 0, 100 + lateral, 600, 100 + lateral),
+        Bar("b2", 300, 100 + lateral, 900, 100 + lateral));
+
+    clashes.Any(item => item.Kind == "lapClearance" && item.Type == "hard").Should().Be(clash);
+    clashes.Should().NotContain(item => item.Kind == "layerClearance");
+  }
+
+  [Fact]
+  public void LapsOnFarApartLines_AreNotALapClearanceClash()
+  {
+    var clashes = Check(
+        Bar("a1", 0, 100, 600, 100),
+        Bar("a2", 300, 100, 900, 100),
+        Bar("b1", 0, 300, 600, 300),
+        Bar("b2", 300, 300, 900, 300));
+
+    clashes.Should().NotContain(item => item.Kind == "lapClearance");
+  }
+
+  [Fact]
+  public void TopBars_NeedThirtyMillimetreClearDistance()
+  {
+    var bottom = ClearanceChecker.Check(
+        [Zone([Bar("a", 0, 0, 200, 0), Bar("b", 0, 40, 200, 40)], LayerKey.BottomX)],
+        Slab());
+    var top = ClearanceChecker.Check(
+        [Zone([Bar("a", 0, 0, 200, 0), Bar("b", 0, 40, 200, 40)], LayerKey.TopX)],
+        Slab());
+
+    bottom.Should().NotContain(item => item.Kind == "layerClearance");
+    top.Should().Contain(item => item.Kind == "layerClearance" && item.Type == "hard");
+  }
+
   [Fact]
   public void IndexAndShift_FindTheSameClearanceClash()
   {

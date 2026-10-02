@@ -34,7 +34,7 @@ public class LayerClassOverlayTests
     onlyB.Boundary.CalculateArea().Should().BeApproximately(10_000, 1);
     both.Boundary.CalculateArea().Should().BeApproximately(10_000, 1);
 
-    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger())
+    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
         .CalculateRebars(overlay.Zones, Slab())
         .SelectMany(zone => zone.Rebars)
         .ToList();

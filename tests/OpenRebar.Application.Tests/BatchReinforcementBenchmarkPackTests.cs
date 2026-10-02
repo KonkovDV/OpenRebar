@@ -3,6 +3,7 @@ using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Infrastructure.Catalog;
 using OpenRebar.Infrastructure.DxfProcessing;
+using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.ImageProcessing;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.Optimization;
@@ -38,7 +39,7 @@ public class BatchReinforcementBenchmarkPackTests
           dxfParser: new DxfIsolineParser(),
           pngParser: new PngIsolineParser(),
           zoneDetector: new StandardZoneDetector(),
-          calculator: new StandardReinforcementCalculator(logger),
+          calculator: new StandardReinforcementCalculator(logger, new NtsPlanarGeometry()),
           optimizer: new ColumnGenerationOptimizer(),
           catalogLoader: catalogLoader,
           placer: new StubRevitPlacer(),

@@ -1,5 +1,6 @@
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Application.UseCases;
 
@@ -22,9 +23,18 @@ public static class ClearanceChecker
   {
     var clashes = new List<ClashReport>();
     var bars = Collect(zones);
-    var outer = OuterWorkingArea(slab, geometry);
+    var outers = new Dictionary<int, PlanarRegion>();
     foreach (var bar in bars)
+    {
+      int diameter = bar.Segment.DiameterMm;
+      if (!outers.TryGetValue(diameter, out var outer))
+      {
+        outer = OuterWorkingArea(slab, geometry, diameter);
+        outers[diameter] = outer;
+      }
+
       AddBoundaryClash(clashes, bar, outer);
+    }
 
     foreach (var opening in GrownOpenings(slab, geometry))
     {
@@ -105,7 +115,11 @@ public static class ClearanceChecker
 
     double centerDistance = SegmentDistance(left.PhysicalStart, left.PhysicalEnd, right.PhysicalStart, right.PhysicalEnd);
     double gap = centerDistance - (left.Segment.DiameterMm + right.Segment.DiameterMm) / 2.0;
-    double required = Math.Max(Math.Max(left.Segment.DiameterMm, right.Segment.DiameterMm), MinimumClearGapMm);
+    var profile = NormativeProfiles.Sp63_2018;
+    double minimum = FaceOf(left.Zone) == "Top" || FaceOf(right.Zone) == "Top"
+        ? profile.ClearSpacingTopMm
+        : profile.ClearSpacingBottomMm;
+    double required = Math.Max(Math.Max(left.Segment.DiameterMm, right.Segment.DiameterMm), minimum);
     if (gap >= required)
       return;
 
@@ -179,8 +193,80 @@ public static class ClearanceChecker
           });
           break;
         }
+
+        AddLapClearanceClashes(clashes, run, Project);
       }
     }
+  }
+
+  /// <summary>
+  /// SP 63 clause 10.3.30, Amendment 1: adjacent lap splices across the width keep a clear
+  /// distance of at least 2 ds and 30 mm. A lap is modelled as two bars in contact, centred on
+  /// the line, so it is 2 ds wide. Lapped bars in contact meet the 4 ds gap limit by construction.
+  /// </summary>
+  private static void AddLapClearanceClashes(List<ClashReport> clashes, List<LineCluster> run, Func<Point2D, double> project)
+  {
+    var profile = NormativeProfiles.Sp63_2018;
+    for (int i = 0; i < run.Count; i++)
+    {
+      if (run[i].Joints.Count == 0)
+        continue;
+
+      for (int j = i + 1; j < run.Count; j++)
+      {
+        if (run[j].Joints.Count == 0)
+          continue;
+
+        double lateral = LineDistance(run[i].Bars[0], run[j].Bars[0]);
+        if (lateral <= SameLineMm)
+          continue;
+
+        var hit = FirstTightLapPair(run[i], run[j], lateral, project, profile);
+        if (hit is null)
+          continue;
+
+        var pair = hit.Value;
+
+        var mid = Mid(pair.Left.Center, pair.Right.Center);
+        clashes.Add(new ClashReport
+        {
+          Type = "hard",
+          Kind = "lapClearance",
+          X = mid.X,
+          Y = mid.Y,
+          BarIds = [pair.Left.Left.Id, pair.Right.Left.Id]
+        });
+      }
+    }
+  }
+
+  private static (LapSample Left, LapSample Right)? FirstTightLapPair(
+      LineCluster first,
+      LineCluster second,
+      double lateral,
+      Func<Point2D, double> project,
+      NormativeProfileData profile)
+  {
+    foreach (var left in first.Joints)
+    {
+      foreach (var right in second.Joints)
+      {
+        double gapAlong = Math.Abs(project(left.Center) - project(right.Center));
+        if (gapAlong >= (left.Length + right.Length) / 2.0 - 1e-6)
+          continue;
+
+        double leftDiameter = Math.Max(left.Left.Segment.DiameterMm, left.Right.Segment.DiameterMm);
+        double rightDiameter = Math.Max(right.Left.Segment.DiameterMm, right.Right.Segment.DiameterMm);
+        double clear = lateral - leftDiameter - rightDiameter;
+        double required = Math.Max(
+            profile.LapClearMinimumDiameters * Math.Max(leftDiameter, rightDiameter),
+            profile.LapClearMinimumMm);
+        if (clear < required)
+          return (left, right);
+      }
+    }
+
+    return null;
   }
 
   private static List<LineCluster> ClusterLines(List<BarRef> bars)
@@ -293,14 +379,15 @@ public static class ClearanceChecker
     return pairs;
   }
 
-  private static PlanarRegion OuterWorkingArea(SlabGeometry slab, IPlanarGeometry? geometry)
+  private static PlanarRegion OuterWorkingArea(SlabGeometry slab, IPlanarGeometry? geometry, double diameterMm)
   {
     if (SlabEdges.HasDeclaredSupport(slab))
-      return new PlanarRegion([new PlanarPolygon(SlabEdges.WorkingRectangle(slab))]);
+      return new PlanarRegion([new PlanarPolygon(SlabEdges.WorkingRectangle(slab, diameterMm))]);
 
     var region = new PlanarRegion([new PlanarPolygon(slab.OuterBoundary)]);
-    if (slab.EdgeCoverMm > InsideToleranceMm && geometry is not null)
-      region = geometry.Buffer(region, -slab.EdgeCoverMm, BufferJoin.Mitre);
+    double inset = SlabEdges.FreeInsetMm(slab, diameterMm);
+    if (inset > InsideToleranceMm && geometry is not null)
+      region = geometry.Buffer(region, -inset, BufferJoin.Mitre);
     return region;
   }
 

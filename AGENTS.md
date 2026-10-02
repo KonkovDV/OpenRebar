@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Source of truth: the code and tests on `main`, then [r8](docs/OPENREBAR_AGENT_PLAN_r8_2026_10_02.md), then [r7](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md), then [r6](docs/OPENREBAR_AGENT_PLAN_r6_2026_10_01.md), then [r5](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md). Other files under `docs/` are history. A human answer recorded in [docs/agent/decisions/DECISIONS.md](docs/agent/decisions/DECISIONS.md) overrides the plan.
+Source of truth: the code and tests on `main`, then [r9](docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md), then [r8](docs/OPENREBAR_AGENT_PLAN_r8_2026_10_02.md), then [r7](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md), then [r6](docs/OPENREBAR_AGENT_PLAN_r6_2026_10_01.md), then [r5](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md). Other files under `docs/` are history. A human answer recorded in [docs/agent/decisions/DECISIONS.md](docs/agent/decisions/DECISIONS.md) overrides the plan.
 
 Do not commit or push unless asked. Do not force-push.
 

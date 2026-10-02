@@ -1,5 +1,6 @@
 using FluentAssertions;
 using OpenRebar.Domain.Models;
+using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.ReinforcementEngine;
 
@@ -37,9 +38,9 @@ public class BarRunBuilderTests
     runs[0].EndCoord.Should().BeApproximately(1040, 0.1);
     runs[0].Count.Should().BeGreaterThan(2);
 
-    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger())
+    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
         .CalculateRebars([zone], Slab(1040, 800));
-    bars[0].Rebars.Should().OnlyContain(bar => bar.End.X >= 1039.9 && bar.End.X <= 1040.1);
+    bars[0].Rebars.Should().OnlyContain(bar => bar.End.X >= 1003.9 && bar.End.X <= 1004.1);
     bars[0].Rebars.Should().Contain(bar => bar.Start.Y < 400);
   }
 
@@ -54,7 +55,7 @@ public class BarRunBuilderTests
     ]));
 
     var runs = BarRunBuilder.Build(zone, Slab(80, 4000));
-    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger())
+    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
         .CalculateRebars([zone], Slab(80, 4000))[0].Rebars;
 
     runs.Should().NotBeEmpty();
@@ -64,17 +65,9 @@ public class BarRunBuilderTests
       run.Lines.Should().NotBeEmpty();
       double length = run.EndCoord - run.StartCoord;
       length.Should().BeApproximately(Math.Round(length / BarRunBuilder.LengthStepMm) * BarRunBuilder.LengthStepMm, 0.1);
-      var matching = bars.Where(bar => run.Lines.Any(line => Math.Abs(bar.Start.Y - line) < 0.1)).ToList();
-      matching.Should().NotBeEmpty();
-      matching.Select(bar => Math.Round(bar.TotalLength, 1)).Distinct().Should().ContainSingle();
-      matching.Should().OnlyContain(bar => bar.TotalLength + 0.1 >= length && bar.End.X <= 80.1 && bar.Start.X >= -0.1);
     }
 
-    foreach (var bar in bars)
-    {
-      double rawEnd = 80 * (1 - bar.Start.Y / 4000);
-      bar.End.X.Should().BeGreaterThanOrEqualTo(rawEnd - 0.1);
-    }
+    bars.Should().OnlyContain(bar => bar.Start.X >= -0.1 && bar.End.X <= 80.1);
   }
 
   [Fact]

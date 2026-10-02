@@ -1,5 +1,6 @@
 using FluentAssertions;
 using OpenRebar.Domain.Models;
+using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.ReinforcementEngine;
 
@@ -27,7 +28,8 @@ public class ZoneHoleTests
       ConcreteClass = "B25"
     };
 
-    var calculated = new StandardReinforcementCalculator(new ConsoleStructuredLogger()).CalculateRebars([zone], slab);
+    var calculated = new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
+        .CalculateRebars([zone], slab);
 
     calculated[0].Rebars.Should().NotBeEmpty();
     calculated[0].Rebars.Should().OnlyContain(bar => bar.End.X <= 400.1 || bar.Start.X >= 599.9);

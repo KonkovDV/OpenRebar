@@ -29,7 +29,7 @@ public static class NormativeTraceability
     builder.AppendLine();
     builder.AppendLine("Table 6.14 of Amendment 1, from the TECHNO NICOL copy accessed 2026-10-02: Rs is A240 210, A400 340, A500 435, B500 415 MPa. Rsc is A240 210, A400 350, A500 435 (400), B500 415 (380) MPa. Parenthetical Rsc is for short-term load only. A second public transcription prints A400 Rsc as 340. The official order text was not opened. Anchorage uses Rs.");
     builder.AppendLine();
-    builder.AppendLine("The clear distance between adjacent laps in the amendment to clause 10.3.30 is not enforced. That amendment text is not in this repository.");
+    builder.AppendLine("The clear distance between adjacent laps from the amendment to clause 10.3.30 is enforced as a hard clash: at least 2 ds and 30 mm, with each lap modelled as two bars in contact. The condition on transverse bars inside the lap is not evaluated. The minimum ratio of 0.1% is clause 10.3.6; clause 10.3.5 is the clear distance between bars.");
     builder.AppendLine();
     builder.AppendLine("Additional bars extend past a zone boundary by the calculated anchorage length, and only inside the working area. The SP 63 clause on curtailment past the theoretical cutoff is not in this repository, so no distance beyond that anchorage length is added.");
     builder.AppendLine();

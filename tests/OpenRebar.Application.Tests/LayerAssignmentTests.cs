@@ -2,6 +2,7 @@ using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
 using OpenRebar.Infrastructure.Catalog;
+using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.Optimization;
 using OpenRebar.Infrastructure.ReinforcementEngine;
@@ -59,7 +60,7 @@ public class LayerAssignmentTests
         parser,
         parser,
         new StandardZoneDetector(),
-        new StandardReinforcementCalculator(logger),
+        new StandardReinforcementCalculator(logger, new NtsPlanarGeometry()),
         new ColumnGenerationOptimizer(),
         new FileSupplierCatalogLoader(),
         new StubRevitPlacer(),

@@ -41,6 +41,11 @@ public sealed record NormativeProfileData
   public required double MaxSpacingThickSlabFactor { get; init; }
   public required double MaxSpacingThickSlabCapMm { get; init; }
   public required double MinReinforcementRatio { get; init; }
+  public required double ClearSpacingBottomMm { get; init; }
+  public required double ClearSpacingTopMm { get; init; }
+  public required double LapClearMinimumDiameters { get; init; }
+  public required double LapClearMinimumMm { get; init; }
+  public required double LapBarGapMaximumDiameters { get; init; }
   public required double MandrelSplitDiameterMm { get; init; }
   public required double MandrelSmoothBelowSplit { get; init; }
   public required double MandrelSmoothFromSplit { get; init; }
@@ -189,6 +194,11 @@ public static class NormativeProfiles
       MaxSpacingThickSlabFactor = resource.MaxSpacing.ThickSlabFactorOfThickness,
       MaxSpacingThickSlabCapMm = resource.MaxSpacing.ThickSlabCapMm,
       MinReinforcementRatio = resource.MinReinforcementRatio.Ratio,
+      ClearSpacingBottomMm = resource.ClearSpacing.BottomMm,
+      ClearSpacingTopMm = resource.ClearSpacing.TopMm,
+      LapClearMinimumDiameters = resource.LapClearDistance.MinimumDiameters,
+      LapClearMinimumMm = resource.LapClearDistance.MinimumMm,
+      LapBarGapMaximumDiameters = resource.LapClearDistance.BarGapMaximumDiameters,
       MandrelSplitDiameterMm = resource.Mandrel.SplitDiameterMm,
       MandrelSmoothBelowSplit = resource.Mandrel.SmoothBelowSplit,
       MandrelSmoothFromSplit = resource.Mandrel.SmoothFromSplit,
@@ -240,6 +250,8 @@ public static class NormativeProfiles
     public required TopBarFactorResource TopBarAnchorageFactor { get; init; }
     public required MaxSpacingResource MaxSpacing { get; init; }
     public required MinRatioResource MinReinforcementRatio { get; init; }
+    public required ClearSpacingResource ClearSpacing { get; init; }
+    public required LapClearDistanceResource LapClearDistance { get; init; }
     public required MandrelResource Mandrel { get; init; }
     public required List<NormativeTraceabilityRow> Traceability { get; init; }
     public required List<int> StandardDiametersMm { get; init; }
@@ -297,6 +309,19 @@ public static class NormativeProfiles
   {
     public required double Ratio { get; init; }
     public required string SectionHeight { get; init; }
+  }
+
+  private sealed record ClearSpacingResource
+  {
+    public required double BottomMm { get; init; }
+    public required double TopMm { get; init; }
+  }
+
+  private sealed record LapClearDistanceResource
+  {
+    public required double MinimumDiameters { get; init; }
+    public required double MinimumMm { get; init; }
+    public required double BarGapMaximumDiameters { get; init; }
   }
 
   private sealed record DesignStrengthReviewResource

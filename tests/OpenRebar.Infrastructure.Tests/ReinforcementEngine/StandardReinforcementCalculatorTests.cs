@@ -1,6 +1,7 @@
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.ReinforcementEngine;
 using FluentAssertions;
 using System.Reflection;
@@ -12,7 +13,7 @@ public class StandardReinforcementCalculatorTests
 {
   private readonly IStructuredLogger _logger = Substitute.For<IStructuredLogger>();
 
-  private StandardReinforcementCalculator CreateCalculator() => new(_logger);
+  private StandardReinforcementCalculator CreateCalculator() => new(_logger, new NtsPlanarGeometry());
 
   private static readonly SlabGeometry TestSlab = new()
   {
@@ -78,7 +79,7 @@ public class StandardReinforcementCalculatorTests
     calculator.CalculateRebars([zoneBottom], TestSlab);
     var bottomAnch = zoneBottom.Rebars[0].AnchorageLengthStart;
 
-    var calc2 = new StandardReinforcementCalculator(_logger);
+    var calc2 = new StandardReinforcementCalculator(_logger, new NtsPlanarGeometry());
     calc2.CalculateRebars([zoneTop], TestSlab);
     var topAnch = zoneTop.Rebars[0].AnchorageLengthStart;
 
@@ -238,10 +239,10 @@ public class StandardReinforcementCalculatorTests
         rebar.AnchorageStatus == AnchorageStatus.ExtendedBeyondZone &&
         rebar.EndConditionStart == BarEndCondition.NeedsHook &&
         rebar.EndConditionEnd == BarEndCondition.Straight &&
-        Math.Abs(rebar.ClearSpan - (400 + rebar.AnchorageLengthEnd)) < 0.2 &&
+        Math.Abs(rebar.Start.X - 35) < 0.2 &&
+        Math.Abs(rebar.ClearSpan - (400 - rebar.Start.X + rebar.AnchorageLengthEnd)) < 0.2 &&
         Math.Abs(rebar.BendArcMm - Math.PI * 90) < 0.2 &&
         rebar.ShapeCode == "H" &&
-        rebar.Start.X >= -1e-6 &&
         rebar.End.X <= 10000);
     zone.ExtendedBeyondZoneCount.Should().Be(zone.Rebars.Count);
     _logger.Received().Warn(
@@ -350,11 +351,11 @@ public class StandardReinforcementCalculatorTests
 
     zone.Rebars.Should().NotBeEmpty();
     zone.Rebars.Should().OnlyContain(bar =>
-        Math.Abs(bar.ClearSpan - 10000) < 0.2 &&
+        Math.Abs(bar.ClearSpan - 9938) < 0.2 &&
         Math.Abs(bar.BendArcMm - 2 * Math.PI * 36) < 0.2 &&
         bar.ShapeCode == "H" &&
-        bar.Start.X >= -1e-6 &&
-        bar.End.X <= 10000 + 1e-6 &&
+        bar.Start.X >= 30.9 &&
+        bar.End.X <= 9969.1 &&
         bar.EndConditionStart == BarEndCondition.NeedsHook &&
         bar.EndConditionEnd == BarEndCondition.NeedsHook &&
         bar.AnchorageLengthStart > 0);

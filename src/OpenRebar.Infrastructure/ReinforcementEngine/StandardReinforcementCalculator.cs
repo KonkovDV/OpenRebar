@@ -46,7 +46,8 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     if (zone.SuppressLayout)
       return [];
 
-    if (slab.EdgeCoverMm <= 1e-9 && slab.OpeningClearanceMm <= 1e-9 && !SlabEdges.HasDeclaredSupport(slab))
+    int diameter = zone.EffectiveSpec.DiameterMm;
+    if (!NeedsWorkingArea(slab, diameter))
       return GenerateRebarsInPolygon(zone.Boundary, zone.Holes, zone, slab, ref markCounter);
 
     if (_planar is null)
@@ -54,7 +55,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
 
     var clipped = _planar.Intersection(
         new PlanarRegion([new PlanarPolygon(zone.Boundary, zone.Holes)]),
-        WorkingAreaBuilder.Build(slab, _planar));
+        WorkingAreaBuilder.Build(slab, _planar, diameter));
 
     var rebars = new List<RebarSegment>();
     foreach (var part in clipped.Polygons)
@@ -73,6 +74,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     var spec = zone.EffectiveSpec;
     int spacing = spec.SpacingMm;
     int diameter = spec.DiameterMm;
+    var blocked = holes.Concat(zone.Holes).ToList();
 
     double topBarFactor = zone.Layer == RebarLayer.Top
         ? NormativeProfiles.Sp63_2018.TopBarAnchorageFactor
@@ -89,7 +91,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         ? "NeedsHook"
         : zone.RequestedEndCondition;
 
-    var runs = BarRunBuilder.Build(zone, slab, polygon, holes);
+    var runs = BarRunBuilder.Build(zone, slab, polygon, blocked);
     zone.Runs = zone.Runs.Concat(runs).ToList();
     foreach (var run in runs)
     {
@@ -103,7 +105,7 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
             run.StartCoord,
             run.EndCoord,
             anchorageLength,
-            AllowedAlong(slab, holes, line, alongX));
+            AllowedAlong(slab, blocked, line, alongX, diameter));
         var startCondition = AnchorageExtender.Condition(placed.AchievedStart, anchorageLength, requestedEnd);
         var endCondition = AnchorageExtender.Condition(placed.AchievedEnd, anchorageLength, requestedEnd);
         var shape = BendRules.Describe(diameter, spec.SteelClass, startCondition, endCondition);
@@ -162,24 +164,30 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
     return rebars;
   }
 
+  private static bool NeedsWorkingArea(SlabGeometry slab, double diameterMm) =>
+      SlabEdges.FreeInsetMm(slab, diameterMm) > 1e-9
+      || slab.OpeningClearanceMm > 1e-9
+      || slab.Openings.Count > 0
+      || SlabEdges.HasDeclaredSupport(slab);
+
   private List<(double Start, double End)> AllowedAlong(
       SlabGeometry slab,
       IReadOnlyList<Polygon> zoneHoles,
       double station,
-      bool alongX)
+      bool alongX,
+      int diameter)
   {
     IReadOnlyList<Polygon> shells;
     IReadOnlyList<Polygon> holes;
-    if (_planar is not null
-        && (slab.EdgeCoverMm > 1e-9 || slab.OpeningClearanceMm > 1e-9 || slab.Openings.Count > 0 || SlabEdges.HasDeclaredSupport(slab)))
+    if (_planar is not null && NeedsWorkingArea(slab, diameter))
     {
-      var area = WorkingAreaBuilder.Build(slab, _planar);
+      var area = WorkingAreaBuilder.Build(slab, _planar, diameter);
       shells = area.Polygons.Select(polygon => polygon.Shell).ToList();
       holes = area.Polygons.SelectMany(polygon => polygon.Holes).Concat(zoneHoles).ToList();
     }
     else if (SlabEdges.HasDeclaredSupport(slab))
     {
-      shells = [SlabEdges.WorkingRectangle(slab)];
+      shells = [SlabEdges.WorkingRectangle(slab, diameter)];
       holes = slab.Openings.Concat(zoneHoles).ToList();
     }
     else

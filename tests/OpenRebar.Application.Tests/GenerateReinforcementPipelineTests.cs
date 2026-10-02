@@ -696,6 +696,45 @@ public class GenerateReinforcementPipelineTests
   }
 
   [Fact]
+  public async Task BarThatCannotBeLapped_IsCriticalAndListedAsUnoptimized()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var zone = CreateZone("Z-1");
+    zone.Rebars =
+    [
+        new RebarSegment
+            {
+                Start = new Point2D(0, 0),
+                End = new Point2D(12000, 0),
+                DiameterMm = 12,
+                AnchorageLengthStart = 0,
+                AnchorageLengthEnd = 0,
+                Mark = "1"
+            }
+    ];
+    var zones = new[] { zone };
+
+    _dxfParser.ParseAsync(input.IsolineFilePath, input.Legend, Arg.Any<CancellationToken>())
+        .Returns(zones);
+    _zoneDetector.ClassifyAndDecompose(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab, Arg.Any<bool>())
+        .Returns(zones);
+    _calculator.CalculateRebars(zones, input.Slab).Returns(zones);
+    _catalogLoader.GetDefaultCatalog().Returns(new SupplierCatalog
+    {
+      SupplierName = "Default",
+      AvailableLengths = [new StockLength { LengthMm = 600, InStock = true }]
+    });
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeTrue();
+    result.Report.UnoptimizedBars.Should().NotBeEmpty();
+    result.Report.Errors.Should().Contain(error => error.ExceptionType == "BarExceedsMaxStock" && error.IsCritical);
+  }
+
+  [Fact]
   public async Task ExecuteAsync_WhenOptimizerThrowsAndNoInStockLengths_ShouldReturnPartialReport()
   {
     var sut = CreateSut();

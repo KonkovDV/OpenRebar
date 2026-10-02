@@ -43,7 +43,7 @@ public static class ReinforcementLimits
   }
 
   /// <summary>
-  /// Minimum reinforcement area per SP 63 §10.3.5, μ_min = 0.1% of b·h0.
+  /// Minimum reinforcement area per SP 63 §10.3.6, μ_min = 0.1% of b·h0.
   /// </summary>
   public static double MinReinforcementArea(double effectiveDepthMm, double widthMm)
   {

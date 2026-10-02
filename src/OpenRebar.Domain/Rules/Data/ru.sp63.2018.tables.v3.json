@@ -67,8 +67,15 @@
   "minReinforcementRatio": {
     "ratio": 0.001,
     "sectionHeight": "effectiveDepth",
-    "clauseId": "SP63.13330.2018:10.3.5",
+    "clauseId": "SP63.13330.2018:10.3.6",
     "sourceQuote": "The minimum reinforcement ratio 0.1% is applied to the effective depth h0."
+  },
+  "clearSpacing": {
+    "bottomMm": 25,
+    "topMm": 30,
+    "clauseId": "SP63.13330.2018:10.3.5",
+    "confidence": "secondary",
+    "sourceQuote": "Clear distance between bars is not less than the largest bar diameter and not less than 25 mm for bottom bars in one or two rows and 30 mm for top bars, for bars horizontal during concreting. Secondary transcription; check against the official text before release."
   },
   "designStrengthReview": {
     "clauseId": "SP63.13330.2018+A1:table6.14",
@@ -86,9 +93,14 @@
     "sourceQuote": "Minimum mandrel diameter is 2.5d for smooth bars below 20 mm, 4d for smooth bars from 20 mm, 5d for periodic bars below 20 mm, and 8d for periodic bars from 20 mm."
   },
   "lapClearDistance": {
+    "minimumDiameters": 2,
+    "minimumMm": 30,
+    "barGapMaximumDiameters": 4,
     "clauseId": "SP63.13330.2018+A1:10.3.30",
-    "status": "notEnforced",
-    "sourceQuote": "The amendment text for the clear distance between adjacent laps is not in this repository, so that check is not applied."
+    "status": "enforced",
+    "sourceUrl": "https://nav.tn.ru/documents/regulatory/ast_s_sp_63_13330_2018_izm1/",
+    "accessedUtc": "2026-10-02",
+    "sourceQuote": "Amendment 1, clause 10.3.30: the clear distance between lapped working bars does not exceed 4 ds; the clear distance between adjacent lap splices across the width of the element is not less than 2 ds and not less than 30 mm. TECHNO NICOL copy; the order number and date are blank in that copy."
   },
   "bondStressByConcreteClass": {
     "B15": 0.75,
@@ -186,7 +198,7 @@
       "sourceQuote": "Spacing limit is 200 mm when h ≤ 150 mm, otherwise the lesser of 1.5h and 400 mm."
     },
     {
-      "clauseId": "SP63.13330.2018:10.3.5",
+      "clauseId": "SP63.13330.2018:10.3.6",
       "method": "ReinforcementLimits.MinReinforcementArea",
       "test": "ReinforcementLimitsTests.MinReinforcementArea_UsesEffectiveDepth",
       "sourceQuote": "Minimum steel area is 0.1% of b·h0."
@@ -202,6 +214,18 @@
       "method": "BendRules.MandrelDiameterMm",
       "test": "BendRulesTests.MandrelDiameter_FollowsTheClauseSplit",
       "sourceQuote": "Minimum mandrel diameter is 2.5d or 4d for smooth bars and 5d or 8d for periodic bars, split at 20 mm. The straight tail past the bend is not in this clause and is not added."
+    },
+    {
+      "clauseId": "SP63.13330.2018:10.3.5",
+      "method": "ClearanceChecker.Check",
+      "test": "ClearanceCheckerTests.TopBars_NeedThirtyMillimetreClearDistance",
+      "sourceQuote": "Clear distance is not less than the largest diameter and 25 mm for bottom bars, 30 mm for top bars. Secondary transcription."
+    },
+    {
+      "clauseId": "SP63.13330.2018+A1:10.3.30",
+      "method": "ClearanceChecker.Check",
+      "test": "ClearanceCheckerTests.AdjacentLaps_CloserThanTwoDiameters_AreHard",
+      "sourceQuote": "Clear distance between adjacent lap splices is not less than 2 ds and 30 mm. Lapped bars are modelled in contact, so their gap of at most 4 ds holds by construction."
     },
     {
       "clauseId": "profile:topBarAnchorageFactor",
