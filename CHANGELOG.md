@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The April 2026 audits and execution plans moved to `docs/archive/`. They are historical and are not the source of truth. The current plan is `docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md`.
 - A slab edge is `Free`, `Supported`, or `Continuous`. An omitted edge is `Free`, and the report says `EdgeKindDefaulted`. Anchorage may run into a support; a hook is still not credited. The coverage check lists `edgeDevelopmentAreaM2` apart from `realDeficitAreaM2`. `examples/fe-field/supported-slab.csv` is a slab on walls and passes.
 - Report `stages[]` with stable `snake_case` reason codes, and `boundStatus` (`Proven` or `NotProven`) on each cutting result. A dual bound is omitted until column generation has converged.
 - PNG calibration (`--px-per-mm`, `--origin-px`, `--roi-px`) and a closed-polyline DXF reader. The simple-slab PNG twin matches the DXF zone.
@@ -73,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSON report schema validation test against `contracts/aerobim-reinforcement-report.schema.json`
 - Linux CI hardening for mixed solution targets: workflow restore/build lanes now pass `EnableWindowsTargeting=true` for `net8.0-windows` Revit project compatibility on Ubuntu runners
 - Python smoke hardening in CI/release workflows with explicit `PYTHONPATH` for stable `ml/src` imports
-- Comprehensive multi-level audit report `docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md` with evidence-backed findings and remediation log
+- Comprehensive multi-level audit report `docs/archive/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md` with evidence-backed findings and remediation log
 
 ### Changed
 

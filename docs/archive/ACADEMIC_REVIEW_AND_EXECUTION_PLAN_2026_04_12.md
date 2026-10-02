@@ -1,3 +1,5 @@
+> Historical. Not the source of truth. The current plan is [r7](../OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
+
 # OpenRebar-Reinforcement: Academic Review And Execution Plan
 
 ## Document Status
@@ -5,8 +7,8 @@
 This document is a historical review-and-plan snapshot dated 2026-04-12.
 
 - It should be read as an archived execution framing from that date, not as the current repository status surface.
-- For current repository evidence, use [COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md).
-- For the current executable validation baseline, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
+- For current repository evidence, use [the current plan](../OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
+- For the current executable validation baseline, use [VALIDATION_BASELINE.md](../VALIDATION_BASELINE.md).
 
 ## Scope
 

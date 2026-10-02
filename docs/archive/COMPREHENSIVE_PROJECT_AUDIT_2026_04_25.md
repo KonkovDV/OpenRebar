@@ -1,11 +1,13 @@
+> Historical. Not the source of truth. The current plan is [r7](../OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
+
 # OpenRebar Comprehensive Project Audit (2026-04-25)
 
 ## Document Status
 
 This is a dated evidence document. It records the audit state and findings as of 2026-04-25.
 
-- For current architectural understanding, use [architecture.md](architecture.md).
-- For the canonical executable validation baseline, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
+- For current architectural understanding, use [architecture.md](../architecture.md).
+- For the canonical executable validation baseline, use [VALIDATION_BASELINE.md](../VALIDATION_BASELINE.md).
 - For historical academic review context, use [ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md](ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md).
 
 ## Scope and Objective

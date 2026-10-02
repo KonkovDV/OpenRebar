@@ -58,7 +58,7 @@ pytest tests -q
 - Link changed contracts, docs, or audit notes when behavior changes
 - Add or update tests for bug fixes and new behavior
 - Keep publication-facing docs accurate: `README.md`, `docs/architecture.md`,
-  `docs/README.md`, `docs/HYPER_DEEP_AUDIT_REPORT.md`, `docs/TASKS.md`
+  `docs/README.md`. April 2026 audits in `docs/archive/` are not the source of truth.
 
 ## Security
 
