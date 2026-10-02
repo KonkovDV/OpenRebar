@@ -60,7 +60,8 @@ jobs:
           dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
           dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
           dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
-          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
+          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
+          dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
       - name: Verify README regression claim
         run: python tools/ci/verify_readme_regression_claim.py
@@ -73,12 +74,14 @@ jobs:
           dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
           dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
           dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
+          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
 
       - name: Compare net8 and net10 outputs
         run: |
           mkdir -p artifacts/tfm/net8
           OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~Schedule_HashFile
           OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~CorpusA0_HashFile
+          OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~Examples_WriteNormalizedArtifactHashes
           python tools/ci/compare_tfm_hashes.py artifacts/tfm/net8 artifacts/tfm/net10
 
       - name: Generate dependency governance reports

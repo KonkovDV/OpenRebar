@@ -4,7 +4,7 @@ using IxMilia.Dxf;
 using IxMilia.Dxf.Entities;
 using OpenRebar.Domain.Models;
 
-namespace OpenRebar.Application.Tests;
+namespace OpenRebar.Cli.Tests;
 
 public class CliProgramIntegrationTests
 {
