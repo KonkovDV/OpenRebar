@@ -42,10 +42,10 @@ OpenRebar — кодовая база на .NET 8 для генерации ра
 Запускать из корня репозитория:
 
 ```bash
-dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
-dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release
+dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 python tools/ci/verify_readme_regression_claim.py
 ```
 
@@ -187,7 +187,7 @@ dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 
 ### Опциональный контур корпусных данных
 
-Обычный тест-лейн пропускает `BatchReinforcementCorpusFixtureTests`, если манифеста нет. Задача CI `benchmark-corpus` выставляет `OPENREBAR_REQUIRE_BATCH_CORPUS=1` и в этом случае падает. Чтобы прогнать конверт локально, добавьте:
+Обычный тест-лейн пропускает `BatchReinforcementCorpusFixtureTests`, если манифеста нет. На push и pull request линия корпуса пишет `corpus: NotEvaluated`. По расписанию и при ручном запуске задача `benchmark-corpus` ставит `OPENREBAR_REQUIRE_BATCH_CORPUS=1` только если задан `OPENREBAR_BATCH_CORPUS_ROOT`, и тогда падает без манифеста. Чтобы прогнать конверт локально, добавьте:
 
 - `tests/OpenRebar.Application.Tests/Fixtures/BatchBenchmarkCorpus/manifest.json`, или
 - установите `OPENREBAR_BATCH_CORPUS_ROOT` на директорию, содержащую manifest и фикстуры.

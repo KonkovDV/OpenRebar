@@ -7,7 +7,7 @@ The test looks for one of these sources:
 1. `OPENREBAR_BATCH_CORPUS_ROOT` environment variable pointing to a directory with `manifest.json`
 2. This directory, when `manifest.json` is present here
 
-When no manifest is found, the normal test lane records the gap and continues. The `benchmark-corpus` CI job sets `OPENREBAR_REQUIRE_BATCH_CORPUS=1` and fails if the manifest is still missing.
+When no manifest is found, the normal test lane records the gap and continues. On push and pull request CI writes `corpus: NotEvaluated`. The scheduled and manually dispatched `benchmark-corpus` job sets `OPENREBAR_REQUIRE_BATCH_CORPUS=1` only when `OPENREBAR_BATCH_CORPUS_ROOT` is set, and then fails if the manifest is still missing.
 
 ## Expected Files
 

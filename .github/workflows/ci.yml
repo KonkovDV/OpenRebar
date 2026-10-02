@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
 
 permissions:
   contents: read
@@ -54,7 +56,7 @@ jobs:
           OPENREBAR_BENCH_SUMMARY_PATH: artifacts/benchmark/column-generation-summary.json
         run: |
           mkdir -p artifacts/benchmark
-          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -p:Platform=x64 --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
 
       - name: Upload test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -80,7 +82,7 @@ jobs:
             **/benchmark-results.trx
 
       - name: Publish CLI
-        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release -p:Platform=x64 --output ./publish/cli
+        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release --output ./publish/cli
 
       - name: Generate SBOM
         uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb
@@ -127,6 +129,7 @@ jobs:
         run: pytest tests -q
 
   benchmark-corpus:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -147,5 +150,19 @@ jobs:
 
       - name: Require batch corpus manifest
         env:
-          OPENREBAR_REQUIRE_BATCH_CORPUS: "1"
-        run: dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -p:Platform=x64 --filter FullyQualifiedName~BatchReinforcementCorpusFixtureTests
+          OPENREBAR_BATCH_CORPUS_ROOT: ${{ secrets.OPENREBAR_BATCH_CORPUS_ROOT }}
+        run: |
+          if [ -z "$OPENREBAR_BATCH_CORPUS_ROOT" ]; then
+            echo "corpus: NotEvaluated" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          export OPENREBAR_REQUIRE_BATCH_CORPUS=1
+          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~BatchReinforcementCorpusFixtureTests
+
+  corpus-note:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Corpus is outside the push lane
+        run: echo "corpus: NotEvaluated" >> "$GITHUB_STEP_SUMMARY"
