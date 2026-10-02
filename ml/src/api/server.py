@@ -3,10 +3,12 @@ FastAPI server exposing the segmentation model as an HTTP service.
 C# infrastructure calls this via HTTP to get polygon zone data from PNG isolines.
 
 Usage from repository root:
-    uvicorn ml.src.api.server:app --host 0.0.0.0 --port 8101
+    uvicorn ml.src.api.server:app --host 127.0.0.1 --port 8101
 
 Usage from ml/ directory:
-    uvicorn src.api.server:app --host 0.0.0.0 --port 8101
+    uvicorn src.api.server:app --host 127.0.0.1 --port 8101
+
+Bind to 127.0.0.1. The service has no authentication; expose it only behind a proxy that adds it.
 """
 
 from __future__ import annotations
@@ -16,13 +18,19 @@ import os
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 
 from ..segmentation.model import IsolineUNet
 from ..segmentation.predict import load_model, segment_isoline_image
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+MAX_MIN_AREA = 1.0e9
+_READ_CHUNK_BYTES = 1024 * 1024
+_MAGIC_SUFFIXES: tuple[tuple[bytes, str], ...] = (
+    (b"\x89PNG\r\n\x1a\n", ".png"),
+    (b"\xff\xd8\xff", ".jpg"),
+)
 BASE_DIR = Path(__file__).resolve().parents[2]
 MODEL_PATH = Path(os.environ.get("OpenRebar_MODEL_PATH", str(BASE_DIR / "models" / "isoline_unet.pt")))
 
@@ -70,16 +78,16 @@ async def health() -> dict[str, str]:
 @app.post("/segment", response_model=SegmentationResponse)
 async def segment(
     file: UploadFile = File(..., description="PNG/JPG isoline image"),
-    min_area: float = 1000.0,
+    min_area: float = Query(1000.0, ge=0.0, le=MAX_MIN_AREA),
 ) -> SegmentationResponse:
     if _model is None:
         raise HTTPException(503, "Model not loaded. Place model at models/isoline_unet.pt")
 
-    # Save upload to temp file
-    suffix = Path(file.filename or "image.png").suffix
-    content = await file.read()
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, f"Uploaded file is too large. Limit: {MAX_UPLOAD_BYTES} bytes")
+    content = await _read_limited(file, MAX_UPLOAD_BYTES)
+    # The suffix comes from the file content, never from the client file name.
+    suffix = _suffix_from_magic(content)
+    if suffix is None:
+        raise HTTPException(415, "Only PNG and JPEG images are accepted.")
 
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(content)
@@ -101,3 +109,22 @@ async def segment(
         )
     finally:
         tmp_path.unlink(missing_ok=True)
+
+
+async def _read_limited(file: UploadFile, limit: int) -> bytes:
+    """Read the upload in chunks and stop as soon as it passes the limit."""
+    buffer = bytearray()
+    while True:
+        chunk = await file.read(_READ_CHUNK_BYTES)
+        if not chunk:
+            return bytes(buffer)
+        buffer.extend(chunk)
+        if len(buffer) > limit:
+            raise HTTPException(413, f"Uploaded file is too large. Limit: {limit} bytes")
+
+
+def _suffix_from_magic(content: bytes) -> str | None:
+    for magic, suffix in _MAGIC_SUFFIXES:
+        if content.startswith(magic):
+            return suffix
+    return None

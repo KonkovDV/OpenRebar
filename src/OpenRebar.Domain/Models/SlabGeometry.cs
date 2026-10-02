@@ -44,7 +44,7 @@ public sealed class SlabGeometry
   /// <summary>Concrete class designation (e.g. "C25/30", "B25").</summary>
   public required string ConcreteClass { get; init; }
 
-  /// <summary>Inset of the working area from the slab edge, mm. Zero keeps the current outline.</summary>
+  /// <summary>Extra inset from the slab edge, mm. A free edge still keeps cover + d/2 when this is smaller.</summary>
   public double EdgeCoverMm { get; init; }
 
   /// <summary>Extra gap added around each slab opening, mm.</summary>

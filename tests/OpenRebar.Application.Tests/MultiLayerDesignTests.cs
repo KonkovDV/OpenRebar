@@ -5,6 +5,7 @@ using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Infrastructure.Catalog;
 using OpenRebar.Infrastructure.DxfProcessing;
+using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.ImageProcessing;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.Optimization;
@@ -91,7 +92,7 @@ public class MultiLayerDesignTests
           new DxfIsolineParser(),
           new PngIsolineParser(),
           new StandardZoneDetector(),
-          new StandardReinforcementCalculator(logger),
+          new StandardReinforcementCalculator(logger, new NtsPlanarGeometry()),
           new ColumnGenerationOptimizer(),
           new FileSupplierCatalogLoader(),
           new StubRevitPlacer(),

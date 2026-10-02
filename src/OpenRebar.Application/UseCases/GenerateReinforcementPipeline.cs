@@ -462,10 +462,11 @@ public sealed class GenerateReinforcementPipeline
         failures.Add(new PipelineFailureDiagnostic
         {
           Stage = "Detailing",
-          ErrorMessage = $"{oversized.Count} bar(s) of d{group.Key} mm exceed max in-stock length {maxStockLength:F0} mm and were excluded from cutting.",
+          ErrorMessage = $"{oversized.Count} bar(s) of d{group.Key} mm exceed max in-stock length {maxStockLength:F0} mm and were excluded from cutting. The cutting plan and purchased mass are incomplete.",
           ExceptionType = "BarExceedsMaxStock",
           OccurredAtUtc = DateTimeOffset.UtcNow,
-          IsCritical = false
+          // A bar that cannot be bought or lapped makes the plan incomplete. It must not look like a success.
+          IsCritical = true
         });
       }
 

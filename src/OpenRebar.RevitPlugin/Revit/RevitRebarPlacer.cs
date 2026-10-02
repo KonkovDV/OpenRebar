@@ -7,6 +7,7 @@ using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Domain.Rules;
 
 public sealed class RevitRebarPlacer : IRevitPlacer
 {
@@ -63,8 +64,11 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             });
         }
 
-        double coverMm = GetHostCoverMm(hostFloor);
+        double coverBottomMm = GetHostCoverMm(hostFloor, BuiltInParameter.CLEAR_COVER_BOTTOM);
+        double coverTopMm = GetHostCoverMm(hostFloor, BuiltInParameter.CLEAR_COVER_TOP);
         double thicknessMm = GetHostThicknessMm(hostFloor);
+        var layerDiameters = MaxDiameterByLayer(zones);
+        int bentSkipped = 0;
         var barTypeIndex = BuildBarTypeIndex(doc);
         int batchIndex = 0;
         int rebarsInCurrentTransaction = 0;
@@ -99,6 +103,14 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                         continue;
                     }
 
+                    // The Revit placer draws one straight line. A bent bar would lose its arcs here,
+                    // so the model would disagree with the schedule. Refuse it instead.
+                    if (segment.Shape != BarShape.Straight || segment.BendArcMm > 1e-6)
+                    {
+                        bentSkipped++;
+                        continue;
+                    }
+
                     try
                     {
                         var startPoint = new XYZ(
@@ -110,9 +122,23 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                             segment.End.Y * MillimetersToFeet,
                             0);
 
-                        double zFeet = zone.Layer == RebarLayer.Bottom
-                            ? settings.ElevationOffsetFeet + coverMm * MillimetersToFeet
-                            : settings.ElevationOffsetFeet + (thicknessMm - coverMm) * MillimetersToFeet;
+                        // Cover is measured to the bar surface. The axis is d/2 inside it, and the
+                        // inner direction of a face sits on the outer one.
+                        double outerDiameter = layerDiameters.GetValueOrDefault((zone.Layer, RebarDirection.X), segment.DiameterMm);
+                        double innerDiameter = layerDiameters.GetValueOrDefault((zone.Layer, RebarDirection.Y), segment.DiameterMm);
+                        if (zone.Direction == RebarDirection.X)
+                            outerDiameter = Math.Max(outerDiameter, segment.DiameterMm);
+                        else
+                            innerDiameter = Math.Max(innerDiameter, segment.DiameterMm);
+                        double axisMm = LayerElevations.AxisElevationMm(
+                            zone.Layer,
+                            zone.Direction,
+                            thicknessMm,
+                            coverBottomMm,
+                            coverTopMm,
+                            outerDiameter,
+                            innerDiameter);
+                        double zFeet = settings.ElevationOffsetFeet + axisMm * MillimetersToFeet;
 
                         startPoint = new XYZ(startPoint.X, startPoint.Y, zFeet);
                         endPoint = new XYZ(endPoint.X, endPoint.Y, zFeet);
@@ -159,6 +185,11 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             CommitPlacementTransaction(currentTransaction);
             currentTransaction.Dispose();
             currentTransaction = null;
+
+            if (bentSkipped > 0)
+            {
+                errors.Add($"{bentSkipped} bent bar(s) were not placed. The Revit placer only draws straight bars; hooks and bends stay in the schedule and IFC. Do not use this model for detailing until bent shapes are supported.");
+            }
 
             // P1: Tag creation pass
             if (settings.CreateTags && createdRebarIds.Count > 0)
@@ -351,9 +382,25 @@ public sealed class RevitRebarPlacer : IRevitPlacer
         return floor.FloorType.GetCompoundStructure()?.GetLayers().Sum(layer => layer.Width) * 304.8 ?? 200.0;
     }
 
-    private static double GetHostCoverMm(Floor floor)
+    private static IReadOnlyDictionary<(RebarLayer Layer, RebarDirection Direction), double> MaxDiameterByLayer(
+        IReadOnlyList<ReinforcementZone> zones)
     {
-        var coverTypeId = floor.get_Parameter(BuiltInParameter.CLEAR_COVER_BOTTOM)?.AsElementId();
+        var result = new Dictionary<(RebarLayer Layer, RebarDirection Direction), double>();
+        foreach (var zone in zones)
+        {
+            foreach (var segment in zone.Rebars)
+            {
+                var key = (zone.Layer, zone.Direction);
+                result[key] = Math.Max(result.GetValueOrDefault(key), segment.DiameterMm);
+            }
+        }
+
+        return result;
+    }
+
+    private static double GetHostCoverMm(Floor floor, BuiltInParameter coverParameter)
+    {
+        var coverTypeId = floor.get_Parameter(coverParameter)?.AsElementId();
         var coverType = coverTypeId is not null && coverTypeId != ElementId.InvalidElementId
             ? floor.Document.GetElement(coverTypeId) as RebarCoverType
             : null;

@@ -10,11 +10,24 @@ namespace OpenRebar.Infrastructure.Tests.ReinforcementEngine;
 public class WorkingAreaTests
 {
   [Fact]
-  public void ZeroInsets_KeepTheFullSpan()
+  public void ZeroCover_InsetsTheAxisByHalfTheDiameter()
+  {
+    var calculated = Calculate(edgeCoverMm: 0, openingClearanceMm: 0, opening: null, coverMm: 0);
+
+    calculated[0].Rebars.Should().OnlyContain(bar =>
+        bar.Start.X >= 5.9 && bar.Start.X <= 6.1
+        && bar.End.X >= 1993.9 && bar.End.X <= 1994.1);
+  }
+
+  [Fact]
+  public void FreeEdge_PullsTheAxisInsideCoverPlusHalfDiameter()
   {
     var calculated = Calculate(edgeCoverMm: 0, openingClearanceMm: 0, opening: null);
 
-    calculated[0].Rebars.Should().Contain(bar => bar.Start.X <= 0.1 && bar.End.X >= 1999.9);
+    calculated[0].Rebars.Should().NotBeEmpty();
+    calculated[0].Rebars.Should().OnlyContain(bar =>
+        bar.Start.X >= 35.9 && bar.Start.X <= 36.1
+        && bar.End.X >= 1963.9 && bar.End.X <= 1964.1);
   }
 
   [Fact]
@@ -56,8 +69,8 @@ public class WorkingAreaTests
     var calculated = Calculate(edgeCoverMm: 0, openingClearanceMm: 0, opening: null);
 
     calculated[0].Rebars.Should().OnlyContain(bar =>
-        bar.Start.X >= -0.1 && bar.Start.X <= 0.1
-        && bar.End.X >= 1999.9 && bar.End.X <= 2000.1
+        bar.Start.X >= 35.9 && bar.Start.X <= 36.1
+        && bar.End.X >= 1963.9 && bar.End.X <= 1964.1
         && bar.EndConditionStart == BarEndCondition.NeedsHook
         && bar.EndConditionEnd == BarEndCondition.NeedsHook
         && bar.AnchorageLengthStart == 500);
@@ -81,7 +94,8 @@ public class WorkingAreaTests
       double edgeCoverMm,
       double openingClearanceMm,
       Polygon? opening,
-      IReadOnlyList<SlabEdge>? edges = null)
+      IReadOnlyList<SlabEdge>? edges = null,
+      double coverMm = 30)
   {
     var zone = new ReinforcementZone
     {
@@ -91,7 +105,7 @@ public class WorkingAreaTests
       Direction = RebarDirection.X,
       ZoneType = ZoneType.Simple
     };
-    var slab = Slab(edgeCoverMm, openingClearanceMm, opening, edges);
+    var slab = Slab(edgeCoverMm, openingClearanceMm, opening, edges, coverMm);
 
     return new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
         .CalculateRebars([zone], slab);
@@ -101,12 +115,13 @@ public class WorkingAreaTests
       double edgeCoverMm,
       double openingClearanceMm,
       Polygon? opening,
-      IReadOnlyList<SlabEdge>? edges) => new()
+      IReadOnlyList<SlabEdge>? edges,
+      double coverMm = 30) => new()
       {
         OuterBoundary = Rectangle(0, 0, 2000, 1000),
         Openings = opening is null ? [] : [opening],
         ThicknessMm = 220,
-        CoverMm = 30,
+        CoverMm = coverMm,
         EdgeCoverMm = edgeCoverMm,
         OpeningClearanceMm = openingClearanceMm,
         ConcreteClass = "B25",

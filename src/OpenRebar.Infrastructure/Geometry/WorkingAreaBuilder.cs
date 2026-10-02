@@ -4,20 +4,22 @@ using OpenRebar.Domain.Ports;
 namespace OpenRebar.Infrastructure.Geometry;
 
 /// <summary>
-/// Free sides are inset by the edge cover. A support grows outward. Openings are then removed.
+/// Free sides are inset by cover + d/2, or by the edge cover when that is larger.
+/// A support grows outward. Openings are then removed.
 /// </summary>
 public static class WorkingAreaBuilder
 {
-  public static PlanarRegion Build(SlabGeometry slab, IPlanarGeometry geometry)
+  public static PlanarRegion Build(SlabGeometry slab, IPlanarGeometry geometry, double diameterMm = 0)
   {
     PlanarRegion area;
     if (SlabEdges.HasDeclaredSupport(slab))
-      area = Region(SlabEdges.WorkingRectangle(slab));
+      area = Region(SlabEdges.WorkingRectangle(slab, diameterMm));
     else
     {
       area = Region(slab.OuterBoundary);
-      if (slab.EdgeCoverMm > 1e-9)
-        area = geometry.Buffer(area, -slab.EdgeCoverMm, BufferJoin.Mitre);
+      double inset = SlabEdges.FreeInsetMm(slab, diameterMm);
+      if (inset > 1e-9)
+        area = geometry.Buffer(area, -inset, BufferJoin.Mitre);
     }
 
     foreach (var opening in slab.Openings)

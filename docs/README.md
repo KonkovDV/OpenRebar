@@ -16,7 +16,7 @@ OpenRebar distinguishes between three documentation classes:
 | Class | Purpose | Files |
 |---|---|---|
 | Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md`, `VALIDATION_BASELINE.md` |
-| Current plan | The work queue. One file. | `OPENREBAR_AGENT_PLAN_r7_2026_10_02.md` |
+| Current plan | The work queue. One file. | `OPENREBAR_AGENT_PLAN_r9_2026_10_02.md` |
 | Archive | April 2026 audits and plans. Not the source of truth. | `archive/` |
 
 ## Read By Goal
@@ -30,11 +30,12 @@ OpenRebar distinguishes between three documentation classes:
 ### Review repository quality and evidence
 
 - [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): canonical executable validation baseline
+- [TRIAGE_REPORT_2026-10-02.md](TRIAGE_REPORT_2026-10-02.md): triage of 2026-10-02. The code on `main` wins if they disagree
 - [.github/workflows/release.yml](../.github/workflows/release.yml) and [.github/dependabot.yml](../.github/dependabot.yml): CI token scope and dependency-update coverage
 
 ### Understand the work queue
 
-- [OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](OPENREBAR_AGENT_PLAN_r7_2026_10_02.md): the current plan
+- [OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](OPENREBAR_AGENT_PLAN_r9_2026_10_02.md): the current plan
 - [archive/](archive/): April 2026 audits and execution plans. Historical, not the source of truth.
 
 ## Scope Rules

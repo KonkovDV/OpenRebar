@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (triage 2026-10-02)
+
+- A free edge insets the bar axis by `max(coverEdgeMm, coverMm + d/2)`. `coverEdgeMm` below `coverMm` is reported as `EdgeCoverBelowCover`. The default edge cover of 0 no longer leaves the axis on the concrete face.
+- A bar that is longer than every stock length and cannot be lapped is now a critical error (`BarExceedsMaxStock`, exit code 3). Before, it was dropped from cutting and the plan looked complete.
+- Revit: bar axes sit at cover + d/2, the inner direction of a face lies on the outer one (`LayerElevations`), and the top cover comes from `CLEAR_COVER_TOP`. Bent bars are refused with an error instead of being drawn as straight lines.
+- Clause 10.3.30 (Amendment 1): adjacent laps closer than 2 ds or 30 mm are a hard `lapClearance` clash. `lapClearDistance.status` is `enforced`.
+- Clause 10.3.5: top bars need a 30 mm clear distance (bottom stays 25 mm). Minimum ratio 0.1% moved to clause 10.3.6.
+- ML service: upload read in chunks with the limit, file type from magic bytes (PNG/JPEG only), `min_area` validated, docs bind to 127.0.0.1.
+- README: PNG path is described as exact RGB matching; Revit limits are stated.
+
+### Added (triage 2026-10-02)
+
+- `tools/verify/hand_checks.py`: hand checks of anchorage, laps, bend arcs, lengths and masses without .NET.
+
 ### Changed
 
 - Microsoft.Extensions packages are 10.0.12. ImageSharp stays 3.1.x and FluentAssertions stays 7.x.

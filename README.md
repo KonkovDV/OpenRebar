@@ -68,7 +68,7 @@ OpenRebar implements a reproducible pipeline:
 3. Calculate reinforcement layout per zone (spacing, diameter, anchorage rules)
 4. Optimize cutting (1D CSP) to reduce waste (exact small-instance path + column-generation baseline for larger instances)
 5. Persist auditable machine-readable artifacts for downstream BIM systems
-6. (When enabled) place shape-driven Rebar elements in Revit and generate tags / bending-shape tracking
+6. (When enabled) place straight Rebar elements in Revit and generate tags. Bent bars are refused with an error until bent shapes are supported
 
 The target is to reduce routine slab reinforcement placement from engineer-weeks to engineer-hours **under validated assumptions** and with a stable, reviewable output contract.
 
@@ -152,7 +152,7 @@ Reported `WasteMm` / `WastePercent` are kerf-aware: they measure residual stock 
 ### DXF/PNG Color Recognition
 
 - **DXF:** AutoCAD ACI palette (256 colors) + ByLayer resolution
-- **PNG:** CIE L\*a\*b\* ΔE\*76 color matching (ISO/CIE 11664-4)
+- **PNG:** exact RGB match against the legend in the deterministic path; anti-aliased edge pixels stay unlabeled. CIE L\*a\*b\* ΔE\*76 is used to check legend color separation and to match ML-segmented zones (ISO/CIE 11664-4)
 - Optional ML segmentation for PNG via FastAPI (`ml/`)
 
 ## Build and Test
@@ -168,7 +168,7 @@ dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj
 dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Current regression status (those five commands): **377/377 tests passing**.
+Current regression status (those five commands): **392/392 tests passing**.
 
 ## CI Quality Gates
 
@@ -205,7 +205,7 @@ Still open relative to [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_
 - Column generation packs a single stock length. A dual bound is published only when `boundStatus` is `Proven`.
 - The schedule is a CSV specification and a steel-mass sheet. XLSX is not written. IFC export has no `IfcReinforcingBarType` and no bar geometry.
 - Raster input requires calibration. The optional ML service ships with an empty model manifest.
-- A 50 mm grid rejects a layout when any cell is short of the specified area (`Passed` only at zero deficit). Development is measured from the placed end, so an edge without room for anchorage fails the check. Holes are still part of the checked area. `examples/dxf/simple-slab` stays failed because its edges are Free, the required area runs to the edge, and a hook is not credited: `edgeDevelopmentAreaM2` is 6.8 and `realDeficitAreaM2` is 0.
+- A 50 mm grid rejects a layout when any cell is short of the specified area (`Passed` only at zero deficit). Development is measured from the placed end, so an edge without room for anchorage fails the check. Holes are still part of the checked area. `examples/dxf/simple-slab` stays failed because its edges are Free, the required area runs to the edge, and a hook is not credited. A free edge also insets the axis by cover + d/2 (40 mm for Ø20 and 30 mm cover): `edgeDevelopmentAreaM2` is 6.12, `realDeficitAreaM2` is 0.99, and `underReinforcedAreaM2` is 7.11.
 
 ## CLI Quickstart
 
@@ -286,13 +286,15 @@ The repository includes:
 - placement implementation using `Rebar.CreateFromCurves`
 - tag creation pass (`IndependentTag.Create`)
 - bending-shape tracking (element creation is intentionally left as an explicit TODO boundary)
+- bar axes at cover + d/2, with the inner direction of a face on top of the outer one; top cover is read from `CLEAR_COVER_TOP`
+- safe mode: a bar with a hook, L, or U end is not placed as a straight line. It is reported as an error, and the schedule and IFC stay the source of truth
 
 ## Project Docs
 
 - Documentation router: [docs/README.md](docs/README.md)
 - **Normative Traceability**: [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — mapping of SP 63 clauses to code and tests
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
-- Current plan: [docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md)
+- Current plan: [docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md) (on top of r8 and r7)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)

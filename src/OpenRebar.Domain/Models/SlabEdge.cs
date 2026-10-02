@@ -33,6 +33,9 @@ public static class SlabEdges
   public const string EdgeKindDefaulted =
       "EdgeKindDefaulted: edges that were not set are Free. Anchorage is not carried into a support.";
 
+  public const string EdgeCoverBelowCover =
+      "EdgeCoverBelowCover: coverEdgeMm is below coverMm. A free edge is inset by max(coverEdgeMm, coverMm + d/2).";
+
   public const string ContinuousSpanNotProvided =
       "A Continuous edge is extended like a support. The adjacent span is not in this input.";
 
@@ -76,6 +79,10 @@ public static class SlabEdges
     if (AnyDefaulted(slab))
       notes.Add(EdgeKindDefaulted);
 
+    if (slab.EdgeCoverMm + 1e-9 < slab.CoverMm
+        && Segments.Any(segment => Kind(slab, segment) == SlabEdgeKind.Free))
+      notes.Add(EdgeCoverBelowCover);
+
     foreach (string segment in Segments)
     {
       var edge = Find(slab, segment);
@@ -90,16 +97,28 @@ public static class SlabEdges
   }
 
   /// <summary>
-  /// Axis-aligned working outline. Free sides are inset by the edge cover.
+  /// How far a free edge pulls the bar axis in, mm.
+  /// The axis sits at cover + d/2 unless the explicit edge cover is larger.
+  /// </summary>
+  public static double FreeInsetMm(SlabGeometry slab, double diameterMm)
+  {
+    if (diameterMm < 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "Diameter cannot be negative.");
+
+    return Math.Max(slab.EdgeCoverMm, slab.CoverMm + diameterMm / 2.0);
+  }
+
+  /// <summary>
+  /// Axis-aligned working outline. Free sides are inset by <see cref="FreeInsetMm"/>.
   /// Supported and Continuous sides grow outward by the usable support depth.
   /// </summary>
-  public static Polygon WorkingRectangle(SlabGeometry slab)
+  public static Polygon WorkingRectangle(SlabGeometry slab, double diameterMm)
   {
     var box = slab.OuterBoundary.GetBoundingBox();
-    double minX = Bound(box.Min.X, slab, "minX", outwardIsNegative: true);
-    double maxX = Bound(box.Max.X, slab, "maxX", outwardIsNegative: false);
-    double minY = Bound(box.Min.Y, slab, "minY", outwardIsNegative: true);
-    double maxY = Bound(box.Max.Y, slab, "maxY", outwardIsNegative: false);
+    double minX = Bound(box.Min.X, slab, "minX", outwardIsNegative: true, diameterMm);
+    double maxX = Bound(box.Max.X, slab, "maxX", outwardIsNegative: false, diameterMm);
+    double minY = Bound(box.Min.Y, slab, "minY", outwardIsNegative: true, diameterMm);
+    double maxY = Bound(box.Max.Y, slab, "maxY", outwardIsNegative: false, diameterMm);
     return new Polygon(
     [
         new Point2D(minX, minY),
@@ -131,7 +150,7 @@ public static class SlabEdges
   private static SlabEdge? Find(SlabGeometry slab, string segment) =>
       slab.Edges.FirstOrDefault(edge => string.Equals(edge.Segment, segment, StringComparison.OrdinalIgnoreCase));
 
-  private static double Bound(double side, SlabGeometry slab, string segment, bool outwardIsNegative)
+  private static double Bound(double side, SlabGeometry slab, string segment, bool outwardIsNegative, double diameterMm)
   {
     if (Kind(slab, segment) != SlabEdgeKind.Free)
     {
@@ -139,6 +158,7 @@ public static class SlabEdges
       return outwardIsNegative ? side - outwardMm : side + outwardMm;
     }
 
-    return outwardIsNegative ? side + slab.EdgeCoverMm : side - slab.EdgeCoverMm;
+    double inset = FreeInsetMm(slab, diameterMm);
+    return outwardIsNegative ? side + inset : side - inset;
   }
 }
