@@ -17,6 +17,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint-workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Lint workflow files
+        run: |
+          curl -sSfL -o actionlint.tar.gz "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tar.gz" | sha256sum -c
+          tar -xzf actionlint.tar.gz actionlint
+          ./actionlint -color
+
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -189,4 +203,5 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Corpus is outside the push lane
-        run: echo "corpus: NotEvaluated" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "corpus: NotEvaluated" >> "$GITHUB_STEP_SUMMARY"
