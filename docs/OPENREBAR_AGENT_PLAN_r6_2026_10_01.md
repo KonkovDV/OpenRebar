@@ -36,7 +36,7 @@
 | Что | Факт в `main` @ `1ffce09` | Следствие |
 |---|---|---|
 | История | 3 коммита. Все PR #47–#96 закрыты (Dependabot, ветки исчезли после переписывания истории). Открытых PR и issues нет | Утверждение «Анализ 2» про «14 открытых Dependabot PR, #90 открыт» устарело. Но см. следующую строку |
-| `dependabot.yml` | Игнор `FluentAssertions >= 8` только для 3 тест-проектов. **Нет** игнора `SixLabors.ImageSharp >= 4`. **Нет** записи для `tests/OpenRebar.TestCorpus` | Бот снова откроет ImageSharp 4 (проверка лицензии при сборке) на ближайшем недельном прогоне. Закрыть в P0-2. В TestCorpus FluentAssertions 7.1.0 есть |
+| `dependabot.yml` | Игнор `FluentAssertions >= 8` на четырёх тест-проектах. Игнор `SixLabors.ImageSharp >= 4` на Infrastructure и TestCorpus. Группа `Microsoft.Extensions.*` | P0-2 закрыт. Q-5 по-прежнему держит ImageSharp 3.1.x |
 | TFM | `Infrastructure` `net8.0`; `RevitPlugin` `net8.0-windows`, ссылка на Revit SDK 2025 закомментирована | A11 не начат |
 | CI (`ci.yml`) | На `1ffce09` прогон был без `-p:Platform=x64` и увидел 6/6. В рабочем дереве флаг добавлен в restore, build, test, publish и оба отдельных прогона. Локальная проверка README после этого: 358/358 | Зелёным Actions станут только после push. `python-smoke` останется красным, пока в lockfile нет хэша `cuda-toolkit` |
 | Пакеты | Highs.Native 1.14.0, NTS 2.6.0, ImageSharp 3.1.12, Xbim.Essentials 6.0.587, IxMilia.Dxf 0.8.4 | Совпадает с «Анализ 2» |
