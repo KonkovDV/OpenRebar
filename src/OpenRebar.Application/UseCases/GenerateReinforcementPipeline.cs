@@ -235,7 +235,35 @@ public sealed class GenerateReinforcementPipeline
       return Finish();
     }
 
-    stages.Complete("ZoneDetection", "bar-runs/v1", processed: classifiedZones.Count);
+    var decompositionFailures = EvaluateDecompositionQuality(classifiedZones, input.DecompositionQualityGate);
+    failures.AddRange(decompositionFailures);
+    var decompositionReasons = decompositionFailures
+        .Select(failure => StageRecorder.Reason(ReasonCode.StructuralLimit, failure.ErrorMessage, context: failure.ExceptionType))
+        .ToList();
+
+    if (decompositionFailures.Any(failure => failure.IsCritical))
+    {
+      stages.Fail("ZoneDetection", decompositionReasons.ToArray());
+      _logger.Error(
+          "Polygon decomposition quality gate failed; aborting before reinforcement calculation",
+          new InvalidOperationException("Decomposition quality gate failed."),
+          ("violationCount", decompositionFailures.Count));
+      result.Report = Publish(BuildPartialReport(input, failures, result));
+      if (input.PersistReport)
+      {
+        var outputPath = ResolveReportOutputPath(input);
+        result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+      }
+
+      return Finish();
+    }
+
+    stages.Complete(
+        "ZoneDetection",
+        "bar-runs/v1",
+        processed: classifiedZones.Count,
+        reasons: decompositionReasons,
+        partial: decompositionReasons.Count > 0);
 
     var layoutPlan = BackgroundLayoutPlanner.Apply(
         classifiedZones,
@@ -630,6 +658,45 @@ public sealed class GenerateReinforcementPipeline
         ("failureCount", failures.Count));
 
     return Finish();
+  }
+
+  private static IReadOnlyList<PipelineFailureDiagnostic> EvaluateDecompositionQuality(
+      IReadOnlyList<ReinforcementZone> zones,
+      DecompositionQualityGateSettings gate)
+  {
+    if (!gate.Enabled)
+      return [];
+    if (!double.IsFinite(gate.MinCoverageRatio) || gate.MinCoverageRatio is < 0 or > 1)
+      throw new ArgumentOutOfRangeException(nameof(gate), "Minimum coverage ratio must be finite and between 0 and 1.");
+    if (!double.IsFinite(gate.MaxOverCoverageRatio) || gate.MaxOverCoverageRatio is < 0 or > 1)
+      throw new ArgumentOutOfRangeException(nameof(gate), "Maximum over-coverage ratio must be finite and between 0 and 1.");
+
+    var failures = new List<PipelineFailureDiagnostic>();
+    foreach (var zone in zones.Where(zone => zone.ZoneType == ZoneType.Complex))
+    {
+      var metrics = zone.DecompositionMetrics;
+      bool invalid = metrics is null
+          || !double.IsFinite(metrics.CoverageRatio)
+          || !double.IsFinite(metrics.OverCoverageRatio)
+          || metrics.CoverageRatio < gate.MinCoverageRatio
+          || metrics.OverCoverageRatio > gate.MaxOverCoverageRatio;
+      if (!invalid)
+        continue;
+
+      string evidence = metrics is null
+          ? "metrics are missing"
+          : $"coverage={metrics.CoverageRatio:F4}, overCoverage={metrics.OverCoverageRatio:F4}";
+      failures.Add(new PipelineFailureDiagnostic
+      {
+        Stage = "ZoneDetection",
+        ErrorMessage = $"Zone {zone.Id} failed decomposition quality gate: {evidence}; required coverage >= {gate.MinCoverageRatio:F4} and over-coverage <= {gate.MaxOverCoverageRatio:F4}.",
+        ExceptionType = "DecompositionQualityViolation",
+        OccurredAtUtc = DateTimeOffset.UtcNow,
+        IsCritical = gate.TreatViolationsAsCritical
+      });
+    }
+
+    return failures;
   }
 
   private static bool TryBuildFallbackCuttingPlans(

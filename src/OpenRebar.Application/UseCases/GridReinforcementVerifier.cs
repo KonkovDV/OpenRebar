@@ -76,9 +76,14 @@ public sealed class GridReinforcementVerifier : IReinforcementVerifier
 
     if (samples.Count == 0)
     {
+      bool hasPositiveAreaZone = zones.Any(zone =>
+      {
+        var bbox = zone.Boundary.GetBoundingBox();
+        return bbox.Width > 0 && bbox.Height > 0;
+      });
       return new ReinforcementVerificationResult
       {
-        Status = VerificationStatuses.Passed,
+        Status = hasPositiveAreaZone ? VerificationStatuses.Failed : VerificationStatuses.Passed,
         UnderReinforcedAreaM2 = 0,
         EdgeDevelopmentAreaM2 = 0,
         RealDeficitAreaM2 = 0,
