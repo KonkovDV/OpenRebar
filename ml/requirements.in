@@ -2,9 +2,12 @@
 # Isoline image segmentation service for PNG processing.
 # Generated from audit finding ML-1 (ML Supply-Chain Hardening)
 #
-# To generate requirements.locked.txt with hashes:
-#   pip install pip-tools
-#   pip-compile --generate-hashes -o requirements.locked.txt requirements.in
+# To generate requirements.locked.txt with hashes for the Ubuntu CI
+# interpreter, from ml/:
+#   python -m piptools compile --allow-unsafe --generate-hashes --newline lf \
+#     --output-file=requirements.locked.txt \
+#     --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --implementation cp --abi cp311 --only-binary=:all:" \
+#     requirements.in
 
 # Core scientific computing
 numpy>=1.26,<2.0
@@ -12,22 +15,13 @@ opencv-python-headless>=4.9,<5.0
 Pillow>=10.2,<11.0
 scikit-image>=0.22,<1.0
 
-# Deep learning and model serving
-torch>=2.2,<3.0
-torchvision>=0.17,<1.0
+# CPU wheels only. The ML lane is offline and does not use CUDA.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.11.0+cpu
+torchvision==0.26.0+cpu
 onnx>=1.16,<2.0
 onnxscript>=0.1,<1.0
 onnxruntime>=1.17,<2.0
-
-# Linux-only transitive runtime deps for torch wheels on GitHub ubuntu-latest.
-# Keep these explicit so requirements.locked.txt includes hashes for require-hashes mode.
-cuda-bindings>=13.0.3,<14; platform_system == "Linux"
-cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"
-nvidia-cudnn-cu13==9.19.0.56; platform_system == "Linux"
-nvidia-cusparselt-cu13==0.8.0; platform_system == "Linux"
-nvidia-nccl-cu13==2.28.9; platform_system == "Linux"
-nvidia-nvshmem-cu13==3.4.5; platform_system == "Linux"
-triton==3.6.0; platform_system == "Linux"
 
 # REST API framework
 fastapi>=0.110,<1.0

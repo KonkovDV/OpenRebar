@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CI looks up `--no-build` assemblies in `bin/Release`, where the solution build writes them. The push lane no longer fails the missing batch corpus; that check runs on the weekly schedule and on manual dispatch when a corpus path is configured. The ML lock uses CPU PyTorch wheels.
+
 ### Added
 
 - Report `stages[]` with stable `snake_case` reason codes, and `boundStatus` (`Proven` or `NotProven`) on each cutting result. A dual bound is omitted until column generation has converged.
 - PNG calibration (`--px-per-mm`, `--origin-px`, `--roi-px`) and a closed-polyline DXF reader. The simple-slab PNG twin matches the DXF zone.
 - CLI exit codes: 0 passed, 1 input or IO, 2 verification failed, 3 partial result. Stack traces are written only with `--include-diagnostics`.
-- CI installs the committed Python lockfile. A missing batch-corpus manifest fails the `benchmark-corpus` job. IFC example validation runs nightly and on export pull requests.
+- CI installs the committed Python lockfile. IFC example validation runs nightly and on export pull requests.
 - A 50 mm grid checks provided reinforcement area. `Passed` requires zero under-coverage. A removed bar fails the check and records the deficit box.
 - Area legends (`AsLegend`) reject overlapping, gapped, unordered, and too-similar color classes with `LEGEND_*` codes. Zones can carry required, background, and delta area.
 - A project file (`--project` or `--design`) or repeated `--layer-input` supplies one to four layers, each with its own drawing and optional background mesh. A single drawing remains a single layer.

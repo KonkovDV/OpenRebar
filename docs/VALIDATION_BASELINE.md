@@ -76,14 +76,14 @@ Run from `ml/`:
 
 ```bash
 python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
-python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in
+python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
 ```
 
 Why this exists:
 
-- PyTorch 2.11 introduces Linux-only sidecar dependencies.
-- A Windows-only local refresh can miss Linux-only hashes.
-- Ubuntu CI therefore refreshes the lock before installation using the pinned `pip-tools` bootstrap.
+- The ML lane uses CPU PyTorch wheels (`torch==2.11.0+cpu`). CUDA packages are not in the lock.
+- A Windows-only local refresh can miss Linux wheel hashes.
+- CI installs the committed lock with `--require-hashes` on Python 3.11. It does not rewrite the lock.
 
 ## Optional Integrity and Governance Checks
 

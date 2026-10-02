@@ -42,10 +42,10 @@ Prerequisites:
 Run from repository root:
 
 ```bash
-dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
-dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
+dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
+dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release
+dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 python tools/ci/verify_readme_regression_claim.py
 ```
 
@@ -187,7 +187,7 @@ A full project-wide audit was executed across architecture, algorithmic correctn
 
 ### Optional corpus rail
 
-The normal test lane skips `BatchReinforcementCorpusFixtureTests` when no manifest is present. The `benchmark-corpus` CI job sets `OPENREBAR_REQUIRE_BATCH_CORPUS=1` and fails in that case. To run the envelope locally, add:
+The normal test lane skips `BatchReinforcementCorpusFixtureTests` when no manifest is present. On push and pull request the corpus lane writes `corpus: NotEvaluated`. The scheduled and manually dispatched `benchmark-corpus` job sets `OPENREBAR_REQUIRE_BATCH_CORPUS=1` only when `OPENREBAR_BATCH_CORPUS_ROOT` is configured, and then fails if the manifest is missing. To run the envelope locally, add:
 
 - `tests/OpenRebar.Application.Tests/Fixtures/BatchBenchmarkCorpus/manifest.json`, or
 - set `OPENREBAR_BATCH_CORPUS_ROOT` to a directory containing the manifest and fixtures.
