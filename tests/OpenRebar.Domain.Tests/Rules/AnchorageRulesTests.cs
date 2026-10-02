@@ -71,14 +71,36 @@ public class AnchorageRulesTests
   public void ColdDeformedBar_UsesEta1OfTwo()
   {
     double rs = AnchorageRules.GetDesignStrength("B500");
-    rs.Should().Be(435, "B500 design strength stays at the v1 value until table 6.14 is quoted");
+    rs.Should().Be(415);
     double expected = rs * 12.0 / (4.0 * 2.0 * 1.0 * 1.05);
 
     AnchorageRules.CalculateBasicAnchorageLength(12, "B500", "B25")
         .Should().BeApproximately(expected, 0.05);
     RoundUp(Math.Max(expected, Math.Max(0.3 * expected, Math.Max(15.0 * 12, 200.0))))
-        .Should().Be(630);
-    AnchorageRules.CalculateAnchorageLength(12, "B500", "B25").Should().Be(630);
+        .Should().Be(600);
+    AnchorageRules.CalculateAnchorageLength(12, "B500", "B25").Should().Be(600);
+  }
+
+  [Fact]
+  public void A400BasicAnchorage_ScalesWithTheAmendedDesignStrength()
+  {
+    const double eta1 = 2.5;
+    const double eta2 = 1.0;
+    const double bond = 1.05;
+    const int diameterMm = 12;
+    double previous = 355.0 * diameterMm / (4.0 * eta1 * eta2 * bond);
+    double amended = 340.0 * diameterMm / (4.0 * eta1 * eta2 * bond);
+
+    double actual = AnchorageRules.CalculateBasicAnchorageLength(diameterMm, "A400", "B25");
+
+    actual.Should().BeApproximately(amended, 0.05);
+    (actual / previous).Should().BeApproximately(340.0 / 355.0, 1e-9);
+    NormativeProfiles.GetDesignCompressionStrength("A400").Should().Be(350);
+    NormativeProfiles.GetDesignCompressionStrength("A400", shortTerm: true).Should().Be(350);
+    NormativeProfiles.GetDesignCompressionStrength("A500").Should().Be(435);
+    NormativeProfiles.GetDesignCompressionStrength("A500", shortTerm: true).Should().Be(400);
+    NormativeProfiles.GetDesignCompressionStrength("B500").Should().Be(415);
+    NormativeProfiles.GetDesignCompressionStrength("B500", shortTerm: true).Should().Be(380);
   }
 
   [Fact]

@@ -267,7 +267,7 @@ public class CliProgramIntegrationTests
         ProfileId = "ru.sp63.2018",
         Jurisdiction = "RU",
         DesignCode = "SP 63.13330.2018",
-        TablesVersion = "ru.sp63.2018.tables.v2"
+        TablesVersion = "ru.sp63.2018.tables.v3"
       },
       AnalysisProvenance = new AnalysisProvenanceExecutionReport
       {

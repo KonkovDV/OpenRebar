@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- SP 63 table 6.14 from Amendment 1: Rs is A400 340 MPa and B500 415 MPa. A500 stays 435 MPa, so the A500C examples keep the same bar lengths and masses. Rsc is stored from the TECHNO NICOL copy (A400 350 MPa). A second public transcription prints A400 Rsc as 340, and the official order text was not opened. Anchorage still uses Rs.
+
 ### Fixed
 
 - CI looks up `--no-build` assemblies in `bin/Release`, where the solution build writes them. The push lane no longer fails the missing batch corpus; that check runs on the weekly schedule and on manual dispatch when a corpus path is configured. The ML lock uses CPU PyTorch wheels.

@@ -81,7 +81,7 @@ The repository treats the machine-readable outputs as first-class artifacts.
 
 The canonical report explicitly persists:
 
-- `normativeProfile` (for example `ru.sp63.2018`) and a versioned table-set id (for example `ru.sp63.2018.tables.v2`)
+- `normativeProfile` (for example `ru.sp63.2018`) and a versioned table-set id (for example `ru.sp63.2018.tables.v3`)
 - `analysisProvenance` for geometry decomposition and cutting optimisation (algorithm ids, thresholds, and fallbacks)
 - per-cutting-plan `sawCutWidthMm`, so downstream consumers can independently recompute kerf-aware `wasteMm` / `wastePercent`
 - per-diameter `dualBound` / `gap` quality-bound telemetry when available from the optimizer; heuristic fallback-master runs intentionally suppress these fields (`null`) because LP lower-bound guarantees do not apply
@@ -158,7 +158,7 @@ dotnet format OpenRebar.sln --verify-no-changes --no-restore
 dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **358/358 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **362/362 tests passing**.
 
 ## CI Quality Gates
 
@@ -199,7 +199,6 @@ Still open relative to [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_
 - A single drawing is still one layer. A project file can name up to four drawings. Anchorage is drawn only as far as the working area allows. A hook is the centerline arc of the bend and has no straight tail. A bar longer than stock is lapped. Couplers are not modeled. Holes are counted rather than cut out of the zone.
 - Column generation packs a single stock length. A dual bound is published only when `boundStatus` is `Proven`.
 - The schedule is a CSV specification and a steel-mass sheet. XLSX is not written. IFC export has no `IfcReinforcingBarType` and no bar geometry.
-- Design strengths for A400 and B500 stay at the embedded table until a quoted extract of SP 63 table 6.14 is added.
 - Raster input requires calibration. The optional ML service ships with an empty model manifest.
 - A 50 mm grid rejects a layout when any cell is short of the specified area (`Passed` only at zero deficit). Development is measured from the placed end, so an edge without room for anchorage fails the check. Holes are still part of the checked area.
 

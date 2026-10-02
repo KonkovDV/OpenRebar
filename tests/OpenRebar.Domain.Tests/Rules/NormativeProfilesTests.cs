@@ -11,10 +11,14 @@ public class NormativeProfilesTests
   {
     var profile = NormativeProfiles.Sp63_2018;
 
-    profile.ProfileId.Should().Be("ru.sp63.2018");
+    profile.ProfileId.Should().Be("ru.sp63.2018+A1+A2");
+    NormativeProfiles.DefaultProfileId.Should().Be("ru.sp63.2018");
     profile.Jurisdiction.Should().Be("RU");
     profile.DesignCode.Should().Be("SP 63.13330.2018");
-    profile.TablesVersion.Should().Be("ru.sp63.2018.tables.v2");
+    profile.TablesVersion.Should().Be("ru.sp63.2018.tables.v3");
+    profile.DesignStrengthClauseId.Should().Be("SP63.13330.2018+A1:table6.14");
+    profile.DesignStrengthAccessedUtc.Should().Be("2026-10-02");
+    profile.DesignStrengthSourceUrl.Should().Be("https://nav.tn.ru/documents/regulatory/ast_s_sp_63_13330_2018_izm1/");
   }
 
   [Fact(DisplayName = "SP 63 §N-9.1 — Normative Profile Version Tracking")]
@@ -40,9 +44,12 @@ public class NormativeProfilesTests
   [Theory(DisplayName = "SP 63 §5.2.1 — Rebar Design Strength by Steel Class")]
   [InlineData("A240", 210)]
   [InlineData("A-I", 210)]
-  [InlineData("A400", 355)]
+  [InlineData("A400", 340)]
+  [InlineData("A-III", 340)]
   [InlineData("A500C", 435)]
   [InlineData("A600", 520)]
+  [InlineData("B500", 415)]
+  [InlineData("B500C", 415)]
   public void DesignStrengthLookup_ShouldMatchGoldenValues(string steelClass, double expected)
   {
     AnchorageRules.GetDesignStrength(steelClass).Should().Be(expected);

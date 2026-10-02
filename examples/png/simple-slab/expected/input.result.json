@@ -11,15 +11,15 @@
     "countryCode": "RU",
     "designCode": "SP 63.13330.2018",
     "normativeProfileId": "ru.sp63.2018",
-    "normativeTablesVersion": "ru.sp63.2018.tables.v2"
+    "normativeTablesVersion": "ru.sp63.2018.tables.v3"
   },
   "normativeProfile": {
     "profileId": "ru.sp63.2018",
     "id": "ru.sp63.2018",
     "jurisdiction": "RU",
     "designCode": "SP 63.13330.2018",
-    "tablesVersion": "ru.sp63.2018.tables.v2",
-    "version": "ru.sp63.2018.tables.v2",
+    "tablesVersion": "ru.sp63.2018.tables.v3",
+    "version": "ru.sp63.2018.tables.v3",
     "topBarAnchorageFactor": 1
   },
   "analysisProvenance": {

@@ -27,7 +27,7 @@ public static class NormativeTraceability
     }
 
     builder.AppendLine();
-    builder.AppendLine("Design strengths of A400 (355 MPa) and B500 (435 MPa) are unchanged. Table 6.14 was not available as a citable extract.");
+    builder.AppendLine("Table 6.14 of Amendment 1, from the TECHNO NICOL copy accessed 2026-10-02: Rs is A240 210, A400 340, A500 435, B500 415 MPa. Rsc is A240 210, A400 350, A500 435 (400), B500 415 (380) MPa. Parenthetical Rsc is for short-term load only. A second public transcription prints A400 Rsc as 340. The official order text was not opened. Anchorage uses Rs.");
     builder.AppendLine();
     builder.AppendLine("The clear distance between adjacent laps in the amendment to clause 10.3.30 is not enforced. That amendment text is not in this repository.");
     builder.AppendLine();

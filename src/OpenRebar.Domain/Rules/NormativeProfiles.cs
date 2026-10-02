@@ -49,6 +49,12 @@ public sealed record NormativeProfileData
   public required IReadOnlyList<NormativeTraceabilityRow> Traceability { get; init; }
   public required IReadOnlyDictionary<string, double> BondStressByConcreteClass { get; init; }
   public required IReadOnlyDictionary<string, double> DesignStrengthBySteelClass { get; init; }
+  public required IReadOnlyDictionary<string, double> DesignCompressionStrengthBySteelClass { get; init; }
+  public required IReadOnlyDictionary<string, double> DesignCompressionStrengthShortTermBySteelClass { get; init; }
+  public required string DesignStrengthClauseId { get; init; }
+  public required string DesignStrengthSourceQuote { get; init; }
+  public required string DesignStrengthSourceUrl { get; init; }
+  public required string DesignStrengthAccessedUtc { get; init; }
   public required IReadOnlyDictionary<int, double> LinearMassKgPerMByDiameter { get; init; }
   public required IReadOnlyList<int> StandardDiametersMm { get; init; }
   public required IReadOnlyList<int> StandardSpacingsMm { get; init; }
@@ -60,9 +66,9 @@ public sealed record NormativeProfileData
 public static class NormativeProfiles
 {
   public const string DefaultProfileId = "ru.sp63.2018";
-  public const string DefaultTablesVersion = "ru.sp63.2018.tables.v2";
+  public const string DefaultTablesVersion = "ru.sp63.2018.tables.v3";
 
-  private const string DefaultResourceName = "OpenRebar.Domain.Rules.Data.ru.sp63.2018.tables.v2.json";
+  private const string DefaultResourceName = "OpenRebar.Domain.Rules.Data.ru.sp63.2018.tables.v3.json";
   private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
   private static readonly Lazy<NormativeProfileData> DefaultProfile = new(LoadDefaultProfile);
 
@@ -84,6 +90,19 @@ public static class NormativeProfiles
     return profile.DesignStrengthBySteelClass.TryGetValue(lookup, out double value)
         ? value
         : profile.DesignStrengthBySteelClass[profile.DefaultSteelClass];
+  }
+
+  public static double? GetDesignCompressionStrength(string steelClass, bool shortTerm = false)
+  {
+    var profile = Sp63_2018;
+    string lookup = NormalizeKey(steelClass, profile.DefaultSteelClass);
+    if (shortTerm
+        && profile.DesignCompressionStrengthShortTermBySteelClass.TryGetValue(lookup, out double shortTermValue))
+      return shortTermValue;
+
+    return profile.DesignCompressionStrengthBySteelClass.TryGetValue(lookup, out double value)
+        ? value
+        : null;
   }
 
   public static bool IsPeriodicProfile(string steelClass)
@@ -178,6 +197,12 @@ public static class NormativeProfiles
       Traceability = resource.Traceability,
       BondStressByConcreteClass = new Dictionary<string, double>(resource.BondStressByConcreteClass, StringComparer.OrdinalIgnoreCase),
       DesignStrengthBySteelClass = new Dictionary<string, double>(resource.DesignStrengthBySteelClass, StringComparer.OrdinalIgnoreCase),
+      DesignCompressionStrengthBySteelClass = new Dictionary<string, double>(resource.DesignCompressionStrengthBySteelClass, StringComparer.OrdinalIgnoreCase),
+      DesignCompressionStrengthShortTermBySteelClass = new Dictionary<string, double>(resource.DesignCompressionStrengthShortTermBySteelClass, StringComparer.OrdinalIgnoreCase),
+      DesignStrengthClauseId = resource.DesignStrengthReview.ClauseId,
+      DesignStrengthSourceQuote = resource.DesignStrengthReview.SourceQuote,
+      DesignStrengthSourceUrl = resource.DesignStrengthReview.SourceUrl,
+      DesignStrengthAccessedUtc = resource.DesignStrengthReview.AccessedUtc,
       LinearMassKgPerMByDiameter = resource.LinearMassKgPerM.ToDictionary(
             pair => int.Parse(pair.Key, CultureInfo.InvariantCulture),
             pair => pair.Value),
@@ -203,6 +228,9 @@ public static class NormativeProfiles
     public required string DefaultSteelClass { get; init; }
     public required Dictionary<string, double> BondStressByConcreteClass { get; init; }
     public required Dictionary<string, double> DesignStrengthBySteelClass { get; init; }
+    public required Dictionary<string, double> DesignCompressionStrengthBySteelClass { get; init; }
+    public required Dictionary<string, double> DesignCompressionStrengthShortTermBySteelClass { get; init; }
+    public required DesignStrengthReviewResource DesignStrengthReview { get; init; }
     public required Dictionary<string, double> LinearMassKgPerM { get; init; }
     public required Dictionary<string, string> BarTypeByClass { get; init; }
     public required Eta1Resource Eta1 { get; init; }
@@ -269,6 +297,14 @@ public static class NormativeProfiles
   {
     public required double Ratio { get; init; }
     public required string SectionHeight { get; init; }
+  }
+
+  private sealed record DesignStrengthReviewResource
+  {
+    public required string ClauseId { get; init; }
+    public required string SourceQuote { get; init; }
+    public required string SourceUrl { get; init; }
+    public required string AccessedUtc { get; init; }
   }
 
   private sealed record MandrelResource
