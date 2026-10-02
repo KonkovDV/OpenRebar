@@ -12,7 +12,7 @@
 # Core scientific computing
 numpy>=1.26,<2.0
 opencv-python-headless>=4.9,<5.0
-Pillow>=10.2,<11.0
+Pillow>=12.3.0,<13.0
 scikit-image>=0.22,<1.0
 
 # CPU wheels only. The ML lane is offline and does not use CUDA.
