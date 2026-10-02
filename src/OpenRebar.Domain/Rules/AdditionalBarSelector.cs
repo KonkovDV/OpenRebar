@@ -15,6 +15,9 @@ public sealed class AdditionalBarSelector : IAdditionalBarSelector
 
   public AdditionalBarSelection Select(AdditionalBarRequest request)
   {
+    if (!double.IsFinite(request.DeltaAsMm2PerM) || request.DeltaAsMm2PerM < 0)
+      return new AdditionalBarSelection(NeedsHumanDecision, null, null, 0);
+
     if (request.DeltaAsMm2PerM <= 1e-6)
     {
       return new AdditionalBarSelection(NotRequired, null, null, 0);

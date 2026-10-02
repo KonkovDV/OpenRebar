@@ -804,7 +804,8 @@ public class GenerateReinforcementPipelineTests
 
     result.Report.Should().NotBeNull();
     result.Report!.PartialResult.Should().BeFalse();
-    result.Report.Errors.Should().NotContain(e => e.ExceptionType == "DecompositionQualityViolation");
+    result.Report.Errors.Should().ContainSingle(e =>
+        e.ExceptionType == "DecompositionQualityViolation" && !e.IsCritical);
     _calculator.Received().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), input.Slab);
   }
 
@@ -842,9 +843,18 @@ public class GenerateReinforcementPipelineTests
     var result = await sut.ExecuteAsync(input);
 
     result.Report.Should().NotBeNull();
-    result.Report!.PartialResult.Should().BeFalse();
-    result.Report.Errors.Should().NotContain(e => e.ExceptionType == "DecompositionQualityViolation");
-    _calculator.Received().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), Arg.Any<SlabGeometry>());
+    result.Report!.PartialResult.Should().BeTrue();
+    result.Report.Errors.Should().ContainSingle(e =>
+        e.ExceptionType == "DecompositionQualityViolation" && e.IsCritical);
+    _calculator.DidNotReceive().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), Arg.Any<SlabGeometry>());
+    _optimizer.DidNotReceive().Optimize(
+        Arg.Any<IReadOnlyList<double>>(),
+        Arg.Any<IReadOnlyList<StockLength>>(),
+        Arg.Any<OptimizationSettings>());
+    await _placer.DidNotReceive().PlaceReinforcementAsync(
+        Arg.Any<IReadOnlyList<ReinforcementZone>>(),
+        Arg.Any<PlacementSettings>(),
+        Arg.Any<CancellationToken>());
   }
 
   private static PipelineInput CreateInput(string filePath, bool placeInRevit)
