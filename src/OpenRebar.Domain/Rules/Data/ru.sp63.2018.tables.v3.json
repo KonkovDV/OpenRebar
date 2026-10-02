@@ -1,8 +1,8 @@
 {
-  "profileId": "ru.sp63.2018",
+  "profileId": "ru.sp63.2018+A1+A2",
   "jurisdiction": "RU",
   "designCode": "SP 63.13330.2018",
-  "tablesVersion": "ru.sp63.2018.tables.v2",
+  "tablesVersion": "ru.sp63.2018.tables.v3",
   "defaultConcreteClass": "B25",
   "defaultSteelClass": "A500C",
   "barTypeByClass": {
@@ -71,9 +71,10 @@
     "sourceQuote": "The minimum reinforcement ratio 0.1% is applied to the effective depth h0."
   },
   "designStrengthReview": {
-    "clauseId": "SP63.13330.2018:6.14",
-    "status": "unchangedPendingQuotedTable",
-    "sourceQuote": "A400 stays 355 MPa and B500 stays 435 MPa. Table 6.14 was not available as a citable extract, so those values were not revised."
+    "clauseId": "SP63.13330.2018+A1:table6.14",
+    "sourceUrl": "https://nav.tn.ru/documents/regulatory/ast_s_sp_63_13330_2018_izm1/",
+    "accessedUtc": "2026-10-02",
+    "sourceQuote": "Amendment 1 table 6.14, TECHNO NICOL copy: Rs/Rsc MPa are A240 210/210, A400 340/350, A500 435/435 (400), B500 415/415 (380). Parenthetical Rsc is for short-term load only. A second public transcription prints A400 Rsc as 340. The official order text was not opened."
   },
   "mandrel": {
     "splitDiameterMm": 20,
@@ -114,14 +115,32 @@
   "designStrengthBySteelClass": {
     "A240": 210,
     "A-I": 210,
-    "A400": 355,
-    "A-III": 355,
+    "A400": 340,
+    "A-III": 340,
     "A500": 435,
     "A500C": 435,
     "A500SP": 435,
     "A600": 520,
-    "B500": 435,
-    "B500C": 435
+    "B500": 415,
+    "B500C": 415
+  },
+  "designCompressionStrengthBySteelClass": {
+    "A240": 210,
+    "A-I": 210,
+    "A400": 350,
+    "A-III": 350,
+    "A500": 435,
+    "A500C": 435,
+    "A500SP": 435,
+    "B500": 415,
+    "B500C": 415
+  },
+  "designCompressionStrengthShortTermBySteelClass": {
+    "A500": 400,
+    "A500C": 400,
+    "A500SP": 400,
+    "B500": 380,
+    "B500C": 380
   },
   "linearMassKgPerM": {
     "6": 0.222,
@@ -173,10 +192,10 @@
       "sourceQuote": "Minimum steel area is 0.1% of b·h0."
     },
     {
-      "clauseId": "SP63.13330.2018:6.14",
+      "clauseId": "SP63.13330.2018+A1:table6.14",
       "method": "NormativeProfiles.GetDesignStrength",
       "test": "NormativeProfilesTests.DesignStrengthLookup_ShouldMatchGoldenValues",
-      "sourceQuote": "A400 stays 355 MPa and B500 stays 435 MPa until table 6.14 is quoted."
+      "sourceQuote": "Amendment 1 table 6.14: Rs is A240 210, A400 340, A500 435, B500 415 MPa. Rsc is A240 210, A400 350, A500 435 (400), B500 415 (380) MPa."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.33",
