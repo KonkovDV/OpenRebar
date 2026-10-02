@@ -11,6 +11,18 @@ Use this baseline when you need to support one of the following with executable 
 - supply-chain or dependency-governance statements,
 - benchmark or report-derived engineering claims.
 
+## Counted test total
+
+The README claim is the sum of `test-results.trx` files written by the CI step named Test:
+
+- `OpenRebar.Domain.Tests`, `OpenRebar.Infrastructure.Tests`, and `OpenRebar.TestCorpus` on `net8.0`
+- `OpenRebar.Application.Tests` on `net8.0`
+- `OpenRebar.Cli.Tests` on `net10.0`
+
+The same library and Application tests run again on `net10.0` and write `tfm-net10-results.trx`. That file is not added to the README total. `tools/ci/verify_readme_regression_claim.py` sums every `test-results.trx` and ignores the other TRX names.
+
+`tools/ci/compare_tfm_hashes.py` checks that net8 and net10 write the same SHA-256 for the schedule, corpus A0, and every example under `examples/`. The example hashes cover normalized `result.json`, `schedule.csv`, and `reinforcement.ifc` (no `IfcOwnerHistory`, timestamps, or GlobalId).
+
 ## Core Repository Baseline
 
 Run these commands from the repository root unless noted otherwise:
