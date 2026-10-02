@@ -243,7 +243,7 @@ public sealed class GenerateReinforcementPipeline
 
     if (decompositionFailures.Any(failure => failure.IsCritical))
     {
-      stages.Fail("ZoneDetection", decompositionReasons.ToArray());
+      stages.Fail("ZoneDetection", decompositionReasons[0]);
       _logger.Error(
           "Polygon decomposition quality gate failed; aborting before reinforcement calculation",
           new InvalidOperationException("Decomposition quality gate failed."),
