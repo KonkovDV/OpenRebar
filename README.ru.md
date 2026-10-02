@@ -3,11 +3,12 @@
 [![CI](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg)](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge)](https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-purple)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Русский | [English](README.md)
 
-OpenRebar — кодовая база на .NET 8 для генерации раскладки арматуры в плоских железобетонных плитах по входным данным в формате изолиний (DXF или PNG). Репозиторий спроектирован так, чтобы **инженерная логика была тестируемой вне Revit**, но при этом сохранялась возможность выхода на границу плагина Revit 2025.
+OpenRebar генерирует раскладку арматуры в плоских железобетонных плитах по изолиниям (DXF или PNG). Ядро собирается под .NET 8 и .NET 10, CLI поставляется на .NET 10. Инженерная логика тестируется вне Revit. Надстройка Revit — две сборки по рантайму процесса: `RevitNet8`, пока Revit на .NET 8, и `RevitNet10` для .NET 10.
 
 В репозитории поддерживаются три поверхности исполнения:
 
@@ -36,7 +37,7 @@ OpenRebar — кодовая база на .NET 8 для генерации ра
 
 Предварительные требования:
 
-- .NET SDK 8.x
+- .NET SDK 8.x и .NET SDK 10.x (CLI и библиотеки `net10.0` требуют SDK 10; сборка Revit под .NET 8 требует SDK 8)
 - Python 3.11+ (для `tools/ci/*.py` и опционального модуля `ml/`)
 - Git с корректной обработкой LF
 
@@ -46,7 +47,10 @@ OpenRebar — кодовая база на .NET 8 для генерации ра
 dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
+dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0
 python tools/ci/verify_readme_regression_claim.py
 ```
 
@@ -156,10 +160,13 @@ Domain (pure) ← Application (use cases) ← Infrastructure (adapters) ← Host
 dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
 dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
+dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Текущий регрессионный статус (локальный `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **371/371 тестов проходят**.
+Текущий регрессионный статус (эти четыре команды): **376/376 тестов проходят**.
 
 ## Контрольные проверки CI
 
@@ -264,7 +271,7 @@ uvicorn src.api.server:app --port 8101
 
 ## Граница Revit-хоста
 
-Revit-хост компилируется под `#if REVIT_SDK` и требует локальных Autodesk Revit references.
+Revit-хост компилируется под `#if REVIT_SDK` и требует локальных ссылок Autodesk Revit. Папку `addin/RevitNet8` кладут рядом со сборкой `net8.0-windows`, пока процесс Revit на .NET 8; `addin/RevitNet10` — рядом со сборкой `net10.0-windows`, когда рантайм уже .NET 10. См. [RELEASE_POLICY.md](RELEASE_POLICY.md).
 В репозитории присутствуют:
 
 - DI composition root (`src/OpenRebar.RevitPlugin/Bootstrap.cs`)
@@ -301,8 +308,11 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 Минимальный репозиторный набор проверок:
 
 ```bash
-dotnet build OpenRebar.sln --configuration Release
-dotnet test OpenRebar.sln --configuration Release
+dotnet build OpenRebar.sln --configuration Release -p:EnableWindowsTargeting=true
+dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --configuration Release -f net10.0
 cd ml
 python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q

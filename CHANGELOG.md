@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Core libraries build for `net8.0` and `net10.0`. The CLI ships on `net10.0`. Revit is `RevitNet8` or `RevitNet10`, chosen by the process runtime. After 10 November 2026, `net8.0` stays only for Revit that has not moved to .NET 10; that exception is reviewed on 1 June 2027.
 - The April 2026 audits and execution plans moved to `docs/archive/`. They are historical and are not the source of truth. The current plan is `docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md`.
 - A slab edge is `Free`, `Supported`, or `Continuous`. An omitted edge is `Free`, and the report says `EdgeKindDefaulted`. Anchorage may run into a support; a hook is still not credited. The coverage check lists `edgeDevelopmentAreaM2` apart from `realDeficitAreaM2`. `examples/fe-field/supported-slab.csv` is a slab on walls and passes.
 - Report `stages[]` with stable `snake_case` reason codes, and `boundStatus` (`Proven` or `NotProven`) on each cutting result. A dual bound is omitted until column generation has converged.

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
@@ -112,6 +113,49 @@ public class CsvScheduleExporterTests
       lines.Should().Contain("[BottomX]");
       lines.Should().Contain("1;;Ø20 A500C l = 7660;27;18.92;форма 00");
       lines.Should().Contain("A500C;20;510.85");
+    }
+    finally
+    {
+      if (File.Exists(outputPath))
+        File.Delete(outputPath);
+    }
+  }
+
+  [Fact]
+  public async Task Schedule_HashFile_IsWrittenWhenRequested()
+  {
+    var exporter = new CsvScheduleExporter();
+    var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schedule-hash-{Guid.NewGuid():N}.csv");
+    var bars = Enumerable.Range(0, 27)
+        .Select(index => MakeRebar(20, 7660, index * 150.0))
+        .ToList();
+    IReadOnlyList<ReinforcementZone> zones =
+    [
+        new ReinforcementZone
+        {
+          Id = "Z-001",
+          Boundary = MakeRect(0, 0, 6000, 4000),
+          Spec = new ReinforcementSpec { DiameterMm = 20, SpacingMm = 150, SteelClass = "A500C" },
+          Direction = RebarDirection.X,
+          Layer = RebarLayer.Bottom,
+          ZoneType = ZoneType.Simple,
+          Rebars = bars
+        }
+    ];
+    PositionAssigner.Assign(zones);
+
+    try
+    {
+      await exporter.ExportAsync(zones, outputPath, ScheduleNumberCulture.Invariant);
+      string text = (await File.ReadAllTextAsync(outputPath, Encoding.UTF8)).Replace("\r\n", "\n", StringComparison.Ordinal);
+      string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
+      hash.Should().HaveLength(64);
+      string? directory = Environment.GetEnvironmentVariable("OPENREBAR_TFM_HASH_DIR");
+      if (string.IsNullOrWhiteSpace(directory))
+        return;
+
+      Directory.CreateDirectory(directory);
+      await File.WriteAllTextAsync(Path.Combine(directory, "schedule.sha256"), hash + "\n");
     }
     finally
     {

@@ -15,16 +15,18 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
-      - name: Setup .NET 8
+      - name: Setup .NET 8 and 10
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
@@ -33,7 +35,14 @@ jobs:
         run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
 
       - name: Test
-        run: dotnet test OpenRebar.sln --no-build --configuration Release --verbosity normal
+        run: |
+          dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal
+          dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0 --verbosity normal
+          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal
+          dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal
+          dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net10.0 --verbosity normal
 
   python-smoke:
     runs-on: ubuntu-latest
@@ -71,10 +80,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
-      - name: Setup .NET 8
+      - name: Setup .NET 8 and 10
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true

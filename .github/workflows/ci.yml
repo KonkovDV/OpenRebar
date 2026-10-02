@@ -19,16 +19,18 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
-      - name: Setup .NET 8
+      - name: Setup .NET 8 and 10
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
@@ -40,10 +42,30 @@ jobs:
         run: dotnet format OpenRebar.sln --verify-no-changes --no-restore
 
       - name: Test
-        run: dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64 --verbosity normal --logger "trx;LogFileName=test-results.trx"
+        run: |
+          dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
+          dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
+          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
       - name: Verify README regression claim
         run: python tools/ci/verify_readme_regression_claim.py
+
+      - name: Test libraries on net10
+        env:
+          OPENREBAR_TFM_HASH_DIR: ${{ github.workspace }}/artifacts/tfm/net10
+        run: |
+          mkdir -p artifacts/tfm/net10
+          dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
+          dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net10.0 --logger "trx;LogFileName=tfm-net10-results.trx"
+
+      - name: Compare net8 and net10 outputs
+        run: |
+          mkdir -p artifacts/tfm/net8
+          OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~Schedule_HashFile
+          OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~CorpusA0_HashFile
+          python tools/ci/compare_tfm_hashes.py artifacts/tfm/net8 artifacts/tfm/net10
 
       - name: Generate dependency governance reports
         run: |
@@ -56,7 +78,7 @@ jobs:
           OPENREBAR_BENCH_SUMMARY_PATH: artifacts/benchmark/column-generation-summary.json
         run: |
           mkdir -p artifacts/benchmark
-          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
+          dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
 
       - name: Upload test results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -137,10 +159,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
-      - name: Setup .NET 8
+      - name: Setup .NET 8 and 10
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Restore
         run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
@@ -157,7 +181,7 @@ jobs:
             exit 0
           fi
           export OPENREBAR_REQUIRE_BATCH_CORPUS=1
-          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release --filter FullyQualifiedName~BatchReinforcementCorpusFixtureTests
+          dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0 --filter FullyQualifiedName~BatchReinforcementCorpusFixtureTests
 
   corpus-note:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
