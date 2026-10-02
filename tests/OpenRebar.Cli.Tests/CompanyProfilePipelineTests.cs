@@ -1,7 +1,7 @@
 using System.Text.Json;
 using FluentAssertions;
 
-namespace OpenRebar.Application.Tests;
+namespace OpenRebar.Cli.Tests;
 
 public class CompanyProfilePipelineTests
 {

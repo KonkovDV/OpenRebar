@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -12,13 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\src\OpenRebar.RevitPlugin\RevitRuntimeSelector.cs" Link="RevitRuntimeSelector.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\src\OpenRebar.Domain\OpenRebar.Domain.csproj" />
     <ProjectReference Include="..\..\src\OpenRebar.Application\OpenRebar.Application.csproj" />
     <ProjectReference Include="..\..\src\OpenRebar.Infrastructure\OpenRebar.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\OpenRebar.Cli\OpenRebar.Cli.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,7 +24,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="FluentAssertions" Version="7.1.0" />
     <PackageReference Include="IxMilia.Dxf" Version="0.8.4" />
-    <PackageReference Include="NSubstitute" Version="5.3.0" />
   </ItemGroup>
 
 </Project>
