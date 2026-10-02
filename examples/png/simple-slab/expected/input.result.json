@@ -1,7 +1,7 @@
 {
   "contractId": "OpenRebar.reinforcement.report.v2",
   "schemaVersion": "2.0.0",
-  "generatedAtUtc": "2026-10-01T18:41:31.3013221+00:00",
+  "generatedAtUtc": "2026-10-02T05:35:17.7882552+00:00",
   "metadata": {
     "projectCode": "OpenRebar-CLI",
     "slabId": "input",
@@ -371,14 +371,15 @@
     "estimatedCost": null
   },
   "warnings": [
-    "Anchorage stays inside the working area. Ends that cannot take the full length: NeedsHook 54."
+    "Anchorage stays inside the working area. Ends that cannot take the full length: NeedsHook 54.",
+    "EdgeKindDefaulted: edges that were not set are Free. Anchorage is not carried into a support."
   ],
   "errors": [
     {
       "stage": "Verification",
       "errorMessage": "Under-reinforced region in PNG-0001 at (0, 0)-(850, 4000) mm.",
       "exceptionType": "VerificationFailed",
-      "occurredAtUtc": "2026-10-01T18:41:31.2469386+00:00",
+      "occurredAtUtc": "2026-10-02T05:35:17.7517353+00:00",
       "stackTrace": null,
       "isCritical": true
     }
@@ -404,7 +405,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 138.4829,
+      "durationMs": 139.3737,
       "algorithmId": "png",
       "counters": {
         "processed": 1,
@@ -418,7 +419,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 0.4854,
+      "durationMs": 0.4342,
       "algorithmId": null,
       "counters": {
         "processed": 1,
@@ -432,7 +433,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 8.4901,
+      "durationMs": 8.4614,
       "algorithmId": "bar-runs/v1",
       "counters": {
         "processed": 1,
@@ -446,7 +447,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 77.6109,
+      "durationMs": 77.5062,
       "algorithmId": null,
       "counters": {
         "processed": 27,
@@ -460,7 +461,7 @@
       "complete": false,
       "budgetExhausted": false,
       "partialResults": true,
-      "durationMs": 28.3232,
+      "durationMs": 46.2687,
       "algorithmId": "grid-as-v0",
       "counters": {
         "processed": 0,
@@ -481,7 +482,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 52.7018,
+      "durationMs": 34.9347,
       "algorithmId": "column-generation-relaxation-v2",
       "counters": {
         "processed": 1,
@@ -495,7 +496,7 @@
       "complete": false,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 0.0254,
+      "durationMs": 0.0259,
       "algorithmId": null,
       "counters": {
         "processed": 0,
@@ -507,6 +508,13 @@
   "verification": {
     "status": "Failed",
     "underReinforcedAreaM2": 6.8,
+    "edgeDevelopmentAreaM2": 6.8,
+    "realDeficitAreaM2": 0,
+    "remedy": [
+      "anchorIntoSupport",
+      "uBarAtFreeEdge",
+      "reduceAsReqNearEdge(input)"
+    ],
     "checkedAreaM2": 24,
     "minMarginMm2PerM": -2031.3109125620751,
     "minProvisionRatio": 0.030120481927710843,

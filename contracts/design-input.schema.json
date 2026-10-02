@@ -31,7 +31,21 @@
         "coverMm": { "type": "number", "minimum": 0 },
         "coverEdgeMm": { "type": "number", "minimum": 0 },
         "openingClearanceMm": { "type": "number", "minimum": 0 },
-        "concreteClass": { "type": "string", "minLength": 1 }
+        "concreteClass": { "type": "string", "minLength": 1 },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/slabEdge" }
+        }
+      }
+    },
+    "slabEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segment", "kind"],
+      "properties": {
+        "segment": { "type": "string", "enum": ["minX", "maxX", "minY", "maxY"] },
+        "kind": { "type": "string", "enum": ["Free", "Supported", "Continuous"] },
+        "supportDepthMm": { "type": "number", "minimum": 0 }
       }
     },
     "layer": {

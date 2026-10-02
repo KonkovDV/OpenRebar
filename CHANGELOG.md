@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A slab edge is `Free`, `Supported`, or `Continuous`. An omitted edge is `Free`, and the report says `EdgeKindDefaulted`. Anchorage may run into a support; a hook is still not credited. The coverage check lists `edgeDevelopmentAreaM2` apart from `realDeficitAreaM2`. `examples/fe-field/supported-slab.csv` is a slab on walls and passes.
 - Report `stages[]` with stable `snake_case` reason codes, and `boundStatus` (`Proven` or `NotProven`) on each cutting result. A dual bound is omitted until column generation has converged.
 - PNG calibration (`--px-per-mm`, `--origin-px`, `--roi-px`) and a closed-polyline DXF reader. The simple-slab PNG twin matches the DXF zone.
 - CLI exit codes: 0 passed, 1 input or IO, 2 verification failed, 3 partial result. Stack traces are written only with `--include-diagnostics`.

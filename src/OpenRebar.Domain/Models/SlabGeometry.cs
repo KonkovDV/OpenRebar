@@ -50,6 +50,9 @@ public sealed class SlabGeometry
   /// <summary>Extra gap added around each slab opening, mm.</summary>
   public double OpeningClearanceMm { get; init; }
 
+  /// <summary>Sides of the outline. An omitted side is Free.</summary>
+  public IReadOnlyList<SlabEdge> Edges { get; init; } = [];
+
   /// <summary>Effective depth d₀ = h - a (mm).</summary>
   public double EffectiveDepthMm => ThicknessMm - CoverMm;
 }

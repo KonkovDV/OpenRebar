@@ -101,6 +101,31 @@ public class AsFieldZoneBuilderTests
     bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(437.82, 0.1);
   }
 
+  [Fact]
+  public async Task SupportedSlab_OnWalls_Passes()
+  {
+    string directory = Path.Combine(Path.GetTempPath(), $"openrebar-supported-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(directory);
+    string input = Path.Combine(directory, "supported-slab.csv");
+    string project = Path.Combine(directory, "supported-slab.project.json");
+    File.Copy(Path.Combine(RepoRoot(), "examples", "fe-field", "supported-slab.csv"), input);
+    File.Copy(Path.Combine(RepoRoot(), "examples", "fe-field", "supported-slab.project.json"), project);
+
+    int exit = await global::OpenRebar.Cli.Program.Main([input, "--project", project]);
+
+    exit.Should().Be(0);
+    using var report = JsonDocument.Parse(await File.ReadAllTextAsync(Path.ChangeExtension(input, ".result.json")));
+    var verification = report.RootElement.GetProperty("verification");
+    verification.GetProperty("status").GetString().Should().Be("Passed");
+    verification.GetProperty("edgeDevelopmentAreaM2").GetDouble().Should().Be(0);
+    verification.GetProperty("realDeficitAreaM2").GetDouble().Should().Be(0);
+    verification.GetProperty("underReinforcedAreaM2").GetDouble().Should().Be(0);
+    report.RootElement.GetProperty("warnings").EnumerateArray()
+        .Should().NotContain(warning => warning.GetString()!.Contains("EdgeKindDefaulted", StringComparison.Ordinal));
+    report.RootElement.GetProperty("clashes").EnumerateArray()
+        .Should().NotContain(clash => clash.GetProperty("kind").GetString() == "barOutsideWorkingArea");
+  }
+
   private static AsField Field(params AsFieldElement[] elements) => new()
   {
     AdapterId = "test",

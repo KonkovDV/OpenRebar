@@ -30,7 +30,8 @@ public static class VerificationHeatmapWriter
         layer = cell.Layer,
         x = cell.X,
         y = cell.Y,
-        marginMm2PerM = cell.MarginMm2PerM
+        marginMm2PerM = cell.MarginMm2PerM,
+        status = cell.Status
       })
     };
     Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(jsonPath)) ?? ".");

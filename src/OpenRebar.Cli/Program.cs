@@ -156,9 +156,10 @@ public static class Program
       return 1;
     }
 
-    if (projectPath is not null && hasPositionalFile)
+    if (projectPath is not null && hasPositionalFile
+        && !args[0].EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
     {
-      Console.Error.WriteLine("Error: pass either a drawing or --project, not both.");
+      Console.Error.WriteLine("Error: pass either a drawing or --project, not both. A CSV field may be combined with --project.");
       return 1;
     }
 
@@ -423,7 +424,8 @@ public static class Program
         CoverMm = cover,
         EdgeCoverMm = edgeCover,
         OpeningClearanceMm = openingClearance,
-        ConcreteClass = concreteClass
+        ConcreteClass = concreteClass,
+        Edges = project?.Slab.ParsedEdges ?? []
       };
 
       var input = new PipelineInput
@@ -622,6 +624,7 @@ Options:
     --aerobim-storage-dir <path>
                                                 Copy the canonical report into an AeroBIM storage root and emit a handoff manifest.
   --project <path>     Project file (slab, materials, layers). --design is the same flag.
+                       A CSV field may be passed with it. A drawing may not.
   --profile <path>     Company profile. Default: profiles/generic.json.
                        profile init | validate | diff  — see profile --help.
   --norm <id>          Normative profile id. Currently ru.sp63.2018.

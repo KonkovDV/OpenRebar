@@ -158,7 +158,7 @@ dotnet format OpenRebar.sln --verify-no-changes --no-restore
 dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 ```
 
-Current regression status (local `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **362/362 tests passing**.
+Current regression status (local `dotnet test OpenRebar.sln --configuration Release -p:Platform=x64`): **371/371 tests passing**.
 
 ## CI Quality Gates
 
@@ -200,7 +200,7 @@ Still open relative to [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_
 - Column generation packs a single stock length. A dual bound is published only when `boundStatus` is `Proven`.
 - The schedule is a CSV specification and a steel-mass sheet. XLSX is not written. IFC export has no `IfcReinforcingBarType` and no bar geometry.
 - Raster input requires calibration. The optional ML service ships with an empty model manifest.
-- A 50 mm grid rejects a layout when any cell is short of the specified area (`Passed` only at zero deficit). Development is measured from the placed end, so an edge without room for anchorage fails the check. Holes are still part of the checked area.
+- A 50 mm grid rejects a layout when any cell is short of the specified area (`Passed` only at zero deficit). Development is measured from the placed end, so an edge without room for anchorage fails the check. Holes are still part of the checked area. `examples/dxf/simple-slab` stays failed because its edges are Free, the required area runs to the edge, and a hook is not credited: `edgeDevelopmentAreaM2` is 6.8 and `realDeficitAreaM2` is 0.
 
 ## CLI Quickstart
 
@@ -223,6 +223,7 @@ The repository now ships canonical reproducible examples under `examples/`:
 
 - `examples/dxf/simple-slab/input.dxf`
 - `examples/png/simple-slab/input.png`
+- `examples/fe-field/supported-slab.csv` with `supported-slab.project.json` (slab on walls, verification passed)
 
 Each example has committed expected snapshots:
 
