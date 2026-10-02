@@ -41,7 +41,7 @@
 | CI (`ci.yml`) | На `1ffce09` прогон был без `-p:Platform=x64` и увидел 6/6. В рабочем дереве флаг добавлен в restore, build, test, publish и оба отдельных прогона. Локальная проверка README после этого: 358/358 | Зелёным Actions станут только после push. `python-smoke` останется красным, пока в lockfile нет хэша `cuda-toolkit` |
 | Пакеты | Highs.Native 1.14.0, NTS 2.6.0, ImageSharp 3.1.12, Xbim.Essentials 6.0.587, IxMilia.Dxf 0.8.4 | Совпадает с «Анализ 2» |
 | Агентские файлы | В корне нет `AGENTS.md` / `CLAUDE.md`. Есть `docs/agent/plans/2026-10-01-p0-1.md` | A14 не начат |
-| `docs/` | Рядом с планом лежат 4 устаревших плана/аудита: `ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md`, `COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md`, `HYPER_DEEP_AUDIT_REPORT.md`, `OPENREBAR_EXECUTION_PLAN_2026_04_26.md` | Любой новый агент рискует прочитать их как актуальные (P0-4) |
+| `docs/` | Четыре аудита апреля 2026 перенесены в `docs/archive/` (P0-4). Это `ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md`, `COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md`, `HYPER_DEEP_AUDIT_REPORT.md`, `OPENREBAR_EXECUTION_PLAN_2026_04_26.md` | Источник истины — r7, не архив |
 | E1 | `AnchorageExtender.cs`. После E3 `TotalLength` = уложенная длина + дуга по оси. `Start`/`End` остаются уложенными торцами | Ведомость и раскрой берут рез. Revit-линия берёт `Start`/`End`. Подтверждено в рабочем дереве |
 | E2 | `LapPlanner.cs` + `LapPlannerTests.cs` | Работает, но с дефектами N-2…N-5 (§4) |
 | E3, E4 | В рабочем дереве, не в `main` | Два отдельных коммита, когда будет команда (P0-1) |

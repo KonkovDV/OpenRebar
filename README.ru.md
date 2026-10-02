@@ -24,6 +24,7 @@ OpenRebar — кодовая база на .NET 8 для генерации ра
 - [Доменные порты](#доменные-порты)
 - [Сборка и тесты](#сборка-и-тесты)
 - [Контрольные проверки CI](#контрольные-проверки-ci)
+- [История](#история)
 - [Известные ограничения](#известные-ограничения)
 - [Канонические примеры и снапшоты](#канонические-примеры-и-снапшоты)
 - [Python ML модуль (опционально)](#python-ml-модуль-опционально)
@@ -176,16 +177,11 @@ dotnet test OpenRebar.sln --no-build --configuration Release -p:Platform=x64
 
 Для аудит-уровня используйте [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
-## Комплексный аудит (2026-04-25)
+## История
 
-Проведён полный аудит проекта по уровням: архитектура, алгоритмическая корректность, качество CI/CD, supply-chain безопасность, уязвимости зависимостей и качество документации.
+Аудиты и планы апреля 2026 года исторические и не являются источником истины. Они лежат в [docs/archive/](docs/archive/). Текущий план — [docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
 
-- Отчёт аудита: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
-- Ключевой технический фикс: cost-aware non-regression guard в `ColumnGenerationOptimizer` + отдельный регрессионный тест
-- Дополнительный фикс: mixed-stock constructive packing для heterogeneous stock catalog, закрывающий large-batch single-stock regression и расширяющий покрытие бенчмарков за пределы exact-search envelope
-- Базовый стек верификации: `git fsck --full`, `dotnet build`, `dotnet test`, `dotnet list package --vulnerable --include-transitive` и формат-гейт `dotnet format --verify-no-changes`
-
-### Опциональный контур корпусных данных
+## Опциональный контур корпусных данных
 
 Обычный тест-лейн пропускает `BatchReinforcementCorpusFixtureTests`, если манифеста нет. На push и pull request линия корпуса пишет `corpus: NotEvaluated`. По расписанию и при ручном запуске задача `benchmark-corpus` ставит `OPENREBAR_REQUIRE_BATCH_CORPUS=1` только если задан `OPENREBAR_BATCH_CORPUS_ROOT`, и тогда падает без манифеста. Чтобы прогнать конверт локально, добавьте:
 
@@ -280,9 +276,8 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 
 - Роутер документации: [docs/README.md](docs/README.md)
 - Архитектурные заметки: [docs/architecture.md](docs/architecture.md)
-- Комплексный аудит: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
+- Текущий план: [docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Архив аудита и дорожной карты: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)

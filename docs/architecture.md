@@ -6,7 +6,7 @@ This document describes the current architectural model of OpenRebar as an imple
 
 For executable validation expectations, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
 
-For dated audit evidence, use [COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md).
+Dated April 2026 audits live in [archive/](archive/) and are not the source of truth.
 
 ## Overview
 

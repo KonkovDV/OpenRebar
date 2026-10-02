@@ -1,3 +1,5 @@
+> Historical. Not the source of truth. The current plan is [r7](../OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
+
 # Р¤СѓРЅРґР°РјРµРЅС‚Р°Р»СЊРЅС‹Р№ РђРєР°РґРµРјРёС‡РµСЃРєРёР№ РђСѓРґРёС‚: OpenRebar-Reinforcement + РЎРІСЏР·РєР° СЃ AeroBIM
 
 **Р”Р°С‚Р° Р°СѓРґРёС‚Р°:** 2026-04-11

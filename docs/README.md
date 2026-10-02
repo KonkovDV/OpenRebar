@@ -16,8 +16,8 @@ OpenRebar distinguishes between three documentation classes:
 | Class | Purpose | Files |
 |---|---|---|
 | Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md`, `VALIDATION_BASELINE.md` |
-| Evidence and audits | Time-bounded verification snapshots, findings, and remediation evidence | `COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md`, `HYPER_DEEP_AUDIT_REPORT.md` |
-| Roadmaps and execution plans | Planned work, historical execution intent, and backlog framing | `ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md`, `OPENREBAR_EXECUTION_PLAN_2026_04_26.md`, `TASKS.md` |
+| Current plan | The work queue. One file. | `OPENREBAR_AGENT_PLAN_r7_2026_10_02.md` |
+| Archive | April 2026 audits and plans. Not the source of truth. | `archive/` |
 
 ## Read By Goal
 
@@ -29,15 +29,13 @@ OpenRebar distinguishes between three documentation classes:
 
 ### Review repository quality and evidence
 
-- [COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md): latest repository-wide audit with evidence snapshot and remediation status
-- [HYPER_DEEP_AUDIT_REPORT.md](HYPER_DEEP_AUDIT_REPORT.md): deeper architectural and academic audit narrative, including integration framing
-- [.github/workflows/release.yml](../.github/workflows/release.yml), [.github/dependabot.yml](../.github/dependabot.yml), and [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): operational governance surfaces for CI token scope and dependency-update coverage
+- [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): canonical executable validation baseline
+- [.github/workflows/release.yml](../.github/workflows/release.yml) and [.github/dependabot.yml](../.github/dependabot.yml): CI token scope and dependency-update coverage
 
-### Understand roadmap and planned work
+### Understand the work queue
 
-- [ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md](ACADEMIC_REVIEW_AND_EXECUTION_PLAN_2026_04_12.md): review-driven execution framing and phased recommendations
-- [OPENREBAR_EXECUTION_PLAN_2026_04_26.md](OPENREBAR_EXECUTION_PLAN_2026_04_26.md): active April 2026 execution wave (CI claim gate, examples/snapshots, benchmark/dependency artifacts)
-- [TASKS.md](TASKS.md): detailed work backlog, implementation notes, and historical execution plan
+- [OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](OPENREBAR_AGENT_PLAN_r7_2026_10_02.md): the current plan
+- [archive/](archive/): April 2026 audits and execution plans. Historical, not the source of truth.
 
 ## Scope Rules
 
@@ -53,7 +51,7 @@ Use this order when updating or validating documentation claims:
 1. `README.md` + `README.ru.md` (public current-state claim surface)
 2. `docs/VALIDATION_BASELINE.md` (canonical executable evidence baseline)
 3. `docs/architecture.md` and `docs/NORMATIVE_TRACEABILITY.md` (stable technical reference)
-4. Dated audits and plans in `docs/` (historical evidence and roadmap context)
+4. [archive/](archive/) (historical evidence; not the source of truth)
 
 If a statement conflicts across levels, update the lower-priority document to match the higher-priority canonical source.
 

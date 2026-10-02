@@ -1,3 +1,5 @@
+> Historical. Not the source of truth. The current plan is [r7](../OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
+
 # OpenRebar Execution Plan (2026-04-26)
 
 ## Scope

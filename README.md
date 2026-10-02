@@ -24,6 +24,7 @@ This repo ships three execution surfaces:
 - [Domain Ports](#domain-ports)
 - [Build and Test](#build-and-test)
 - [CI Quality Gates](#ci-quality-gates)
+- [History](#history)
 - [Known limitations](#known-limitations)
 - [Canonical Examples and Snapshots](#canonical-examples-and-snapshots)
 - [Python ML Module (Optional)](#python-ml-module-optional)
@@ -176,16 +177,11 @@ The `build-and-test` workflow enforces claim-driven checks, not only compilation
 
 For audit-grade closure, use [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
-## Comprehensive Audit (2026-04-25)
+## History
 
-A full project-wide audit was executed across architecture, algorithmic correctness, build/release reliability, supply-chain security, dependency risk, and documentation quality.
+The April 2026 audits and execution plans are historical and are not the source of truth. They are in [docs/archive/](docs/archive/). The current plan is [docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
 
-- Audit report: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
-- Key fix delivered: cost-aware non-regression guard in `ColumnGenerationOptimizer` with dedicated regression test coverage
-- Follow-up fix delivered: mixed-stock constructive packing for heterogeneous stock catalogs, closing the large-batch single-stock regression and extending benchmark coverage beyond the exact-search envelope
-- Verification baseline: `git fsck --full`, `dotnet build`, `dotnet test`, `dotnet list package --vulnerable --include-transitive`, and formatting gate check (`dotnet format --verify-no-changes`)
-
-### Optional corpus rail
+## Optional corpus rail
 
 The normal test lane skips `BatchReinforcementCorpusFixtureTests` when no manifest is present. On push and pull request the corpus lane writes `corpus: NotEvaluated`. The scheduled and manually dispatched `benchmark-corpus` job sets `OPENREBAR_REQUIRE_BATCH_CORPUS=1` only when `OPENREBAR_BATCH_CORPUS_ROOT` is configured, and then fails if the manifest is missing. To run the envelope locally, add:
 
@@ -287,8 +283,7 @@ The repository includes:
 - Documentation router: [docs/README.md](docs/README.md)
 - **Normative Traceability**: [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — mapping of SP 63 clauses to code and tests
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
-- Comprehensive audit: [docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md](docs/COMPREHENSIVE_PROJECT_AUDIT_2026_04_25.md)
-- Audit and roadmap archive: [docs/HYPER_DEEP_AUDIT_REPORT.md](docs/HYPER_DEEP_AUDIT_REPORT.md), [docs/TASKS.md](docs/TASKS.md)
+- Current plan: [docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)
