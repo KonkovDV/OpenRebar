@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
 
-namespace OpenRebar.Application.Tests;
+namespace OpenRebar.Cli.Tests;
 
 public class ExamplesSnapshotTests
 {

@@ -50,7 +50,8 @@ dotnet format OpenRebar.sln --verify-no-changes --no-restore
 dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
 dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
 dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 python tools/ci/verify_readme_regression_claim.py
 ```
 
@@ -163,10 +164,11 @@ dotnet format OpenRebar.sln --verify-no-changes --no-restore
 dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
 dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
 dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net10.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Текущий регрессионный статус (эти четыре команды): **376/376 тестов проходят**.
+Текущий регрессионный статус (эти пять команд): **377/377 тестов проходят**.
 
 ## Контрольные проверки CI
 
@@ -243,7 +245,7 @@ bash tools/examples/generate_expected_outputs.sh
 powershell -ExecutionPolicy Bypass -File tools/examples/generate_expected_outputs.ps1
 ```
 
-Проверка снапшотов выполняется тестами `ExamplesSnapshotTests` (`tests/OpenRebar.Application.Tests`).
+Проверка снапшотов выполняется тестами `ExamplesSnapshotTests` (`tests/OpenRebar.Cli.Tests`).
 
 ## Python ML модуль (опционально)
 
@@ -312,7 +314,8 @@ dotnet build OpenRebar.sln --configuration Release -p:EnableWindowsTargeting=tru
 dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --configuration Release -f net8.0
 dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --configuration Release -f net8.0
 dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --configuration Release -f net10.0
+dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --configuration Release -f net8.0
+dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --configuration Release -f net10.0
 cd ml
 python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q
