@@ -15,11 +15,22 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
-      - name: Checkout
+      - name: Checkout tagged source
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+
+      - name: Require release commit from main
+        shell: bash
+        run: |
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "Release tag must point to a commit reachable from main." >&2
+            exit 1
+          fi
 
       - name: Setup .NET 8 and 10
         uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
@@ -43,6 +54,34 @@ jobs:
           dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal
           dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net10.0 --verbosity normal
           dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net10.0 --verbosity normal
+
+      - name: Publish tested CLI graph
+        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --no-restore --configuration Release --output ./publish/cli
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb
+        with:
+          path: ./publish/cli
+          artifact-name: OpenRebar-sbom.spdx.json
+          output-file: ./publish/OpenRebar-sbom.spdx.json
+
+      - name: Package immutable release inputs
+        shell: bash
+        run: |
+          archive="OpenRebar-cli-${GITHUB_REF_NAME}.zip"
+          (cd publish/cli && zip -X -r "../${archive}" .)
+          (cd publish && sha256sum "${archive}" OpenRebar-sbom.spdx.json > SHA256SUMS)
+
+      - name: Upload immutable release inputs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-inputs-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            publish/OpenRebar-cli-${{ github.ref_name }}.zip
+            publish/OpenRebar-sbom.spdx.json
+            publish/SHA256SUMS
 
   python-smoke:
     runs-on: ubuntu-latest
@@ -69,54 +108,38 @@ jobs:
   publish:
     needs: [build-and-test, python-smoke]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
+    environment: release
     permissions:
       contents: write
       id-token: write
       attestations: write
-      packages: read
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-
-      - name: Setup .NET 8 and 10
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9
+      - name: Download immutable release inputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          dotnet-version: |
-            8.0.x
-            10.0.x
+          name: release-inputs-${{ github.sha }}
+          path: ./publish
 
-      - name: Restore
-        run: dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
+      - name: Verify release bundle checksums
+        working-directory: publish
+        run: sha256sum --check SHA256SUMS
 
-      - name: Build (Release)
-        run: dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
-
-      - name: Pack CLI tool
-        run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --configuration Release --output ./publish/cli
-
-      - name: Generate SBOM
-        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb
-        with:
-          path: ./publish/cli
-          artifact-name: OpenRebar-sbom.spdx.json
-          output-file: ./publish/OpenRebar-sbom.spdx.json
-
-      - name: Attest build provenance
+      - name: Attest final release artifacts
         uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1
         with:
-          subject-path: ./publish/cli/*
+          subject-path: |
+            ./publish/OpenRebar-cli-${{ github.ref_name }}.zip
+            ./publish/OpenRebar-sbom.spdx.json
+            ./publish/SHA256SUMS
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
         with:
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
+            ./publish/OpenRebar-cli-${{ github.ref_name }}.zip
             ./publish/OpenRebar-sbom.spdx.json
-
-      - name: Upload CLI artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: OpenRebar-cli-${{ github.ref_name }}
-          path: ./publish/cli/
+            ./publish/SHA256SUMS
