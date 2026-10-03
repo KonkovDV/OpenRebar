@@ -2,7 +2,7 @@
 
 **Audit Finding**: ML-1 (ML Supply-Chain Hardening)  
 **Date**: 2026-04-25  
-**Status**: Implemented
+**Status**: Implemented and runtime-enforced
 
 ## Overview
 
@@ -62,13 +62,16 @@ The repository keeps this manifest in git even when the model registry is empty;
 
 ### Verifying Model Integrity
 
-```bash
-# Verify a downloaded model
-sha256sum unet_segmentation_v1.onnx
-# Compare output against MANIFEST.json entry for your model_id
+The API verifies the selected model **before** deserialization. By default the resolved model path must match a safe relative `filename` in `MANIFEST.json`, and the streamed SHA-256 digest must match that entry. A mismatch, missing registration, absolute path, or `..` traversal prevents startup.
 
-# Or use openssl
-openssl dgst -sha256 unet_segmentation_v1.onnx
+For a model mounted from an external read-only volume, set `OpenRebar_MODEL_SHA256` to the trusted lowercase digest. This explicit digest is the only supported manifest bypass.
+
+```bash
+# Validate manifest structure in a source checkout
+python ml/scripts/validate_model_manifest.py ml/models/MANIFEST.json
+
+# In a downloaded release bundle, verify every listed model file
+python ml/scripts/validate_model_manifest.py --verify-files ml/models/MANIFEST.json
 ```
 
 ### Model Deployment
@@ -245,5 +248,5 @@ sha256sum unet_segmentation_v1.onnx
 ---
 
 **Custodian**: OpenRebar ML Team  
-**Last Updated**: 2026-04-25  
+**Last Updated**: 2026-10-03  
 **Review Interval**: Quarterly
