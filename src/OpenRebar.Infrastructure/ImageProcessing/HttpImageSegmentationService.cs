@@ -15,6 +15,9 @@ namespace OpenRebar.Infrastructure.ImageProcessing;
 public sealed class HttpImageSegmentationService : IImageSegmentationService, IDisposable
 {
   private const string CircuitOpenMessagePrefix = "ML segmentation circuit is open";
+  private const long MaxUploadBytes = 20L * 1024 * 1024;
+  private const long MaxResponseBytes = 10L * 1024 * 1024;
+  private const long MaxHealthResponseBytes = 64L * 1024;
 
   private readonly HttpClient _httpClient;
   private readonly double _minArea;
@@ -45,13 +48,14 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
       TimeProvider? timeProvider = null,
       HttpMessageHandler? messageHandler = null)
   {
+    ValidateConfiguration(baseUrl, minArea, timeoutSeconds);
     _minArea = minArea;
     _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
     _failureThreshold = Math.Max(1, failureThreshold);
     _circuitBreakDuration = TimeSpan.FromSeconds(Math.Max(1, circuitBreakSeconds));
     _timeProvider = timeProvider ?? TimeProvider.System;
     _httpClient = messageHandler is null ? new HttpClient() : new HttpClient(messageHandler);
-    _httpClient.BaseAddress = new Uri(baseUrl);
+    _httpClient.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
     _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     _ownsHttpClient = true;
   }
@@ -64,6 +68,8 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
       int circuitBreakSeconds = 30,
       TimeProvider? timeProvider = null)
   {
+    if (!double.IsFinite(minArea) || minArea < 0)
+      throw new ArgumentOutOfRangeException(nameof(minArea));
     _httpClient = httpClient;
     _minArea = minArea;
     _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
@@ -79,6 +85,10 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   {
     if (!File.Exists(imagePath))
       throw new FileNotFoundException($"Image file not found: {imagePath}");
+    var fileInfo = new FileInfo(imagePath);
+    if (fileInfo.Length > MaxUploadBytes)
+      throw new ImageSegmentationServiceException(
+          $"Image file exceeds the {MaxUploadBytes} byte ML upload limit: {fileInfo.Length} bytes.");
 
     ThrowIfCircuitOpen();
 
@@ -89,25 +99,34 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
         await EnsureServiceHealthyAsync(ct);
 
         using var content = new MultipartFormDataContent();
-        var fileBytes = await File.ReadAllBytesAsync(imagePath, ct);
-        var fileContent = new ByteArrayContent(fileBytes);
+        await using var fileStream = new FileStream(
+            imagePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            useAsync: true);
+        var fileContent = new StreamContent(fileStream);
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
         content.Add(fileContent, "file", Path.GetFileName(imagePath));
 
         string requestPath = string.Create(
                   CultureInfo.InvariantCulture,
                   $"/segment?min_area={_minArea}");
-
-        var response = await _httpClient.PostAsync(
-                  requestPath,
-                  content,
-                  ct);
-
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestPath)
+        {
+          Content = content
+        };
+        using var response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            ct);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<SegmentationResponseDto>(
-                  JsonOptions,
-                  ct);
+        return await ReadJsonLimitedAsync<SegmentationResponseDto>(
+            response.Content,
+            MaxResponseBytes,
+            ct);
       }, cancellationToken);
 
       RecordSuccess();
@@ -128,14 +147,59 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
 
   private async Task EnsureServiceHealthyAsync(CancellationToken ct)
   {
-    var response = await _httpClient.GetAsync("/health", ct);
+    using var response = await _httpClient.GetAsync(
+        "/health",
+        HttpCompletionOption.ResponseHeadersRead,
+        ct);
     response.EnsureSuccessStatusCode();
 
-    var health = await response.Content.ReadFromJsonAsync<HealthDto>(JsonOptions, ct);
+    var health = await ReadJsonLimitedAsync<HealthDto>(
+        response.Content,
+        MaxHealthResponseBytes,
+        ct);
     if (health?.Status != "ok")
       throw new ImageSegmentationServiceException(
           $"ML segmentation service is not ready. Status: {health?.Status ?? "unknown"}. " +
           "Ensure the model checkpoint is placed at ml/models/isoline_unet.pt");
+  }
+
+  private static async Task<T?> ReadJsonLimitedAsync<T>(
+      HttpContent content,
+      long maxBytes,
+      CancellationToken ct)
+  {
+    if (content.Headers.ContentLength is long declared && declared > maxBytes)
+      throw new ImageSegmentationServiceException(
+          $"ML service response exceeds the {maxBytes} byte limit.");
+
+    try
+    {
+      await content.LoadIntoBufferAsync(maxBytes, ct);
+    }
+    catch (HttpRequestException ex)
+    {
+      throw new ImageSegmentationServiceException(
+          $"ML service response exceeds the {maxBytes} byte limit.",
+          ex);
+    }
+
+    return await content.ReadFromJsonAsync<T>(JsonOptions, ct);
+  }
+
+  private static void ValidateConfiguration(string baseUrl, double minArea, int timeoutSeconds)
+  {
+    if (!double.IsFinite(minArea) || minArea < 0)
+      throw new ArgumentOutOfRangeException(nameof(minArea));
+    if (timeoutSeconds <= 0)
+      throw new ArgumentOutOfRangeException(nameof(timeoutSeconds));
+    if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
+        || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+        || !string.IsNullOrEmpty(uri.UserInfo))
+    {
+      throw new ArgumentException(
+          "ML service URL must be an absolute HTTP(S) URL without user information.",
+          nameof(baseUrl));
+    }
   }
 
   private async Task<T> ExecuteWithRetriesAsync<T>(

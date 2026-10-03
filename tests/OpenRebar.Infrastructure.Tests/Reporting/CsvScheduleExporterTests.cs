@@ -122,6 +122,33 @@ public class CsvScheduleExporterTests
   }
 
   [Fact]
+  public async Task ExportAsync_QuotesDelimitersAndNeutralizesSpreadsheetFormulas()
+  {
+    var exporter = new CsvScheduleExporter();
+    var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schedule-untrusted-{Guid.NewGuid():N}.csv");
+    IReadOnlyList<ReinforcementZone> zones =
+    [
+        Zone("=HYPERLINK(\"https://example.invalid\");evil", 12, MakeRebar(12, 1000, 0))
+    ];
+    PositionAssigner.Assign(zones);
+
+    try
+    {
+      await exporter.ExportAsync(zones, outputPath, ScheduleNumberCulture.Invariant);
+      string text = await File.ReadAllTextAsync(outputPath, Encoding.UTF8);
+
+      text.Split('\n').Should().NotContain(line => line.StartsWith("=", StringComparison.Ordinal));
+      text.Should().Contain("\"'=HYPERLINK(\"\"https://example.invalid\"\");evil\"");
+      text.Should().NotContain("\n=HYPERLINK", "a spreadsheet must not receive an executable formula cell");
+    }
+    finally
+    {
+      if (File.Exists(outputPath))
+        File.Delete(outputPath);
+    }
+  }
+
+  [Fact]
   public async Task Schedule_HashFile_IsWrittenWhenRequested()
   {
     var exporter = new CsvScheduleExporter();
