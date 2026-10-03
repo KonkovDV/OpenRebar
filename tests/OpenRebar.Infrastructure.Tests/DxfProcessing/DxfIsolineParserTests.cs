@@ -238,6 +238,64 @@ public class DxfIsolineParserTests
   }
 
   [Fact]
+  public async Task ParseAsync_InsertArray_ExpandsWithinBudget()
+  {
+    var parser = new DxfIsolineParser();
+    var block = new IxMilia.Dxf.Blocks.DxfBlock
+    {
+      Name = "ZONE"
+    };
+    block.Entities.Add(ClosedRectangle(0, 0, 10, 5));
+    var insert = new DxfInsert
+    {
+      Name = "ZONE",
+      RowCount = 2,
+      ColumnCount = 3,
+      RowSpacing = 20,
+      ColumnSpacing = 20,
+      Color = DxfColor.FromIndex(1)
+    };
+
+    var zones = await ParseEntitiesAsync(
+        [insert],
+        parser,
+        CreateLegend(new IsolineColor(255, 0, 0)),
+        file => file.Blocks.Add(block));
+
+    zones.Should().HaveCount(6);
+  }
+
+  [Fact]
+  public async Task ParseAsync_InsertArrayBeyondBudget_IsRejectedBeforeExpansion()
+  {
+    var parser = new DxfIsolineParser();
+    var block = new IxMilia.Dxf.Blocks.DxfBlock
+    {
+      Name = "ZONE"
+    };
+    block.Entities.Add(ClosedRectangle(0, 0, 10, 5));
+    var insert = new DxfInsert
+    {
+      Name = "ZONE",
+      RowCount = 1_001,
+      ColumnCount = 101,
+      RowSpacing = 20,
+      ColumnSpacing = 20,
+      Color = DxfColor.FromIndex(1)
+    };
+
+    Func<Task> act = async () => await ParseEntitiesAsync(
+        [insert],
+        parser,
+        CreateLegend(new IsolineColor(255, 0, 0)),
+        file => file.Blocks.Add(block));
+
+    await act.Should()
+        .ThrowAsync<InvalidIsolineFileException>()
+        .WithMessage("*100000*zone candidate limit*");
+  }
+
+  [Fact]
   public async Task ParseAsync_Spline_IsCountedInsteadOfSkippedSilently()
   {
     var parser = new DxfIsolineParser();
