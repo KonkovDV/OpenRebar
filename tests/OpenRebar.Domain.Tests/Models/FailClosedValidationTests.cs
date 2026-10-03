@@ -1,6 +1,7 @@
 using FluentAssertions;
 using OpenRebar.Domain.Exceptions;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Ports;
 using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Domain.Tests.Models;
@@ -15,11 +16,17 @@ public class FailClosedValidationTests
   {
     var badThickness = () => new SlabGeometry
     {
-      OuterBoundary = Square(), ThicknessMm = value, CoverMm = 30, ConcreteClass = "B25"
+      OuterBoundary = Square(),
+      ThicknessMm = value,
+      CoverMm = 30,
+      ConcreteClass = "B25"
     };
     var badCover = () => new SlabGeometry
     {
-      OuterBoundary = Square(), ThicknessMm = 200, CoverMm = value, ConcreteClass = "B25"
+      OuterBoundary = Square(),
+      ThicknessMm = 200,
+      CoverMm = value,
+      ConcreteClass = "B25"
     };
 
     badThickness.Should().Throw<ArgumentOutOfRangeException>();
