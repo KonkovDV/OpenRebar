@@ -817,8 +817,7 @@ public sealed class GenerateReinforcementPipeline
         .Select(o => o.EstimatedCost!.Value)
         .ToList();
 
-    // Effective depth uses the governing (largest) bar diameter placed in the slab.
-    // SP 63.13330.2018 §10.3: d₀ = h − cover − d/2.
+    // One slab figure: distance from the opposite face to the axis of the largest placed bar.
     int maxDiameterMm = zonesWithRebars
         .SelectMany(z => z.Rebars)
         .Select(r => r.DiameterMm)
@@ -944,7 +943,7 @@ public sealed class GenerateReinforcementPipeline
   /// <summary>
   /// Build a minimal report when pipeline aborts early due to critical failure.
   /// Includes diagnostic information but minimal execution details.
-  /// EffectiveDepthMm uses h-cover (conservative) because bar diameter is not yet known.
+  /// EffectiveDepthMm stays h - cover here: no bar has been placed, so d/2 is not subtracted.
   /// </summary>
   private static ReinforcementExecutionReport BuildPartialReport(
       PipelineInput input,

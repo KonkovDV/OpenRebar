@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The slab report records the distance from the opposite face to the axis of the largest placed bar: `h − cover − d/2`. On simple-slab, Ø20, that figure moves from 190 mm to 180 mm. Lengths and masses are unchanged. A report written before any bar exists still records `h − cover`.
 - A hooked bar can be drawn as its straight axis plus the semicircle already counted in the cut length. The straight tail stays 0 until a profile sets `hooks.tailDiameters`. L and U bars are still not drawn. The simple-slab lengths and masses are unchanged.
 - The IFC example check accepts exit 2 and exit 3. Those runs still write an IFC file. Exit 1 still fails the check.
 - Schedule mass uses the exact cut length. The catalogue length stays rounded to 1 mm, and the CSV rounds only when it prints. On simple-slab the position total moves from 432.48465 kg to 432.51710653222267 kg. `summary.totalMassKg` stays 432.5171065322226 kg; the last bit differs because the certificate multiplies the zone length once and the position sums 27 bars. The printed steel total moves from 432.48 kg to 432.52 kg. The per-piece cell stays 16.02 kg.

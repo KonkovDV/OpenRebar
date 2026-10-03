@@ -54,17 +54,24 @@ public sealed class SlabGeometry
   public IReadOnlyList<SlabEdge> Edges { get; init; } = [];
 
   /// <summary>
-  /// Conservative effective depth d₀ = h − a (mm), computed without a bar diameter.
-  /// Use this only when the actual bar diameter is not yet known (e.g. in partial reports).
-  /// For the final report use <see cref="EffectiveDepthFor"/>.
+  /// Slab thickness minus cover, mm. A partial report uses this because no bar
+  /// has been placed yet, so d/2 is not subtracted.
   /// </summary>
   public double EffectiveDepthMm => ThicknessMm - CoverMm;
 
   /// <summary>
-  /// Effective depth d₀ = h − a − d/2 (mm) per SP 63.13330.2018 §10.3.
-  /// The bar axis sits at cover + d/2 from the face, so the structural
-  /// lever arm from the compression face is h − cover − d/2.
+  /// Distance from the opposite face to the axis of an outer bar, mm.
+  /// The axis sits at cover + d/2 from the near face.
   /// </summary>
-  /// <param name="diameterMm">Nominal bar diameter in mm.</param>
-  public double EffectiveDepthFor(int diameterMm) => ThicknessMm - CoverMm - diameterMm / 2.0;
+  public double EffectiveDepthFor(int diameterMm)
+  {
+    if (diameterMm < 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "Diameter cannot be negative.");
+
+    double depth = ThicknessMm - CoverMm - diameterMm / 2.0;
+    if (depth <= 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "The bar does not fit in the slab.");
+
+    return depth;
+  }
 }
