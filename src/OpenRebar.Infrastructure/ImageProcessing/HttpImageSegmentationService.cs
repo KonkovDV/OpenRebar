@@ -15,6 +15,13 @@ namespace OpenRebar.Infrastructure.ImageProcessing;
 public sealed class HttpImageSegmentationService : IImageSegmentationService, IDisposable
 {
   private const string CircuitOpenMessagePrefix = "ML segmentation circuit is open";
+  private const long MaxUploadBytes = 20L * 1024 * 1024;
+  private const long MaxResponseBytes = 10L * 1024 * 1024;
+  private const long MaxHealthResponseBytes = 64L * 1024;
+  private const int MaxZones = 10_000;
+  private const int MaxVerticesPerZone = 200_000;
+  private const int MaxTotalVertices = 1_000_000;
+  private const int MaxCoordinateMagnitude = 50_000_000;
 
   private readonly HttpClient _httpClient;
   private readonly double _minArea;
@@ -45,13 +52,14 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
       TimeProvider? timeProvider = null,
       HttpMessageHandler? messageHandler = null)
   {
+    ValidateConfiguration(baseUrl, minArea, timeoutSeconds);
     _minArea = minArea;
     _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
     _failureThreshold = Math.Max(1, failureThreshold);
     _circuitBreakDuration = TimeSpan.FromSeconds(Math.Max(1, circuitBreakSeconds));
     _timeProvider = timeProvider ?? TimeProvider.System;
     _httpClient = messageHandler is null ? new HttpClient() : new HttpClient(messageHandler);
-    _httpClient.BaseAddress = new Uri(baseUrl);
+    _httpClient.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
     _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     _ownsHttpClient = true;
   }
@@ -64,6 +72,8 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
       int circuitBreakSeconds = 30,
       TimeProvider? timeProvider = null)
   {
+    if (!double.IsFinite(minArea) || minArea < 0)
+      throw new ArgumentOutOfRangeException(nameof(minArea));
     _httpClient = httpClient;
     _minArea = minArea;
     _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
@@ -79,6 +89,10 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   {
     if (!File.Exists(imagePath))
       throw new FileNotFoundException($"Image file not found: {imagePath}");
+    var fileInfo = new FileInfo(imagePath);
+    if (fileInfo.Length > MaxUploadBytes)
+      throw new ImageSegmentationServiceException(
+          $"Image file exceeds the {MaxUploadBytes} byte ML upload limit: {fileInfo.Length} bytes.");
 
     ThrowIfCircuitOpen();
 
@@ -89,25 +103,34 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
         await EnsureServiceHealthyAsync(ct);
 
         using var content = new MultipartFormDataContent();
-        var fileBytes = await File.ReadAllBytesAsync(imagePath, ct);
-        var fileContent = new ByteArrayContent(fileBytes);
+        await using var fileStream = new FileStream(
+            imagePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            useAsync: true);
+        var fileContent = new StreamContent(fileStream);
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
         content.Add(fileContent, "file", Path.GetFileName(imagePath));
 
         string requestPath = string.Create(
                   CultureInfo.InvariantCulture,
                   $"/segment?min_area={_minArea}");
-
-        var response = await _httpClient.PostAsync(
-                  requestPath,
-                  content,
-                  ct);
-
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestPath)
+        {
+          Content = content
+        };
+        using var response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            ct);
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<SegmentationResponseDto>(
-                  JsonOptions,
-                  ct);
+        return await ReadJsonLimitedAsync<SegmentationResponseDto>(
+            response.Content,
+            MaxResponseBytes,
+            ct);
       }, cancellationToken);
 
       RecordSuccess();
@@ -128,14 +151,68 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
 
   private async Task EnsureServiceHealthyAsync(CancellationToken ct)
   {
-    var response = await _httpClient.GetAsync("/health", ct);
+    using var response = await _httpClient.GetAsync(
+        "/health",
+        HttpCompletionOption.ResponseHeadersRead,
+        ct);
     response.EnsureSuccessStatusCode();
 
-    var health = await response.Content.ReadFromJsonAsync<HealthDto>(JsonOptions, ct);
+    var health = await ReadJsonLimitedAsync<HealthDto>(
+        response.Content,
+        MaxHealthResponseBytes,
+        ct);
     if (health?.Status != "ok")
       throw new ImageSegmentationServiceException(
           $"ML segmentation service is not ready. Status: {health?.Status ?? "unknown"}. " +
           "Ensure the model checkpoint is placed at ml/models/isoline_unet.pt");
+  }
+
+  private static async Task<T?> ReadJsonLimitedAsync<T>(
+      HttpContent content,
+      long maxBytes,
+      CancellationToken ct)
+  {
+    if (content.Headers.ContentLength is long declared && declared > maxBytes)
+      throw new ImageSegmentationServiceException(
+          $"ML service response exceeds the {maxBytes} byte limit.");
+
+    await using var source = await content.ReadAsStreamAsync(ct);
+    await using var buffer = new MemoryStream(capacity: (int)Math.Min(maxBytes, 64 * 1024));
+    var chunk = new byte[64 * 1024];
+    long totalBytes = 0;
+
+    while (true)
+    {
+      int bytesRead = await source.ReadAsync(chunk.AsMemory(), ct);
+      if (bytesRead == 0)
+        break;
+
+      totalBytes += bytesRead;
+      if (totalBytes > maxBytes)
+        throw new ImageSegmentationServiceException(
+            $"ML service response exceeds the {maxBytes} byte limit.");
+
+      await buffer.WriteAsync(chunk.AsMemory(0, bytesRead), ct);
+    }
+
+    buffer.Position = 0;
+    return await JsonSerializer.DeserializeAsync<T>(buffer, JsonOptions, ct);
+  }
+
+  private static void ValidateConfiguration(string baseUrl, double minArea, int timeoutSeconds)
+  {
+    if (!double.IsFinite(minArea) || minArea < 0)
+      throw new ArgumentOutOfRangeException(nameof(minArea));
+    if (timeoutSeconds <= 0)
+      throw new ArgumentOutOfRangeException(nameof(timeoutSeconds));
+    if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri)
+        || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+        || !string.IsNullOrEmpty(uri.UserInfo))
+    {
+      throw new ArgumentException(
+          "ML service URL must be an absolute HTTP(S) URL without user information.",
+          nameof(baseUrl));
+    }
   }
 
   private async Task<T> ExecuteWithRetriesAsync<T>(
@@ -233,15 +310,40 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   private static IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)> ConvertToPolygons(
       IReadOnlyList<PolygonZoneDto> zones)
   {
+    if (zones.Count > MaxZones)
+      throw new ImageSegmentationServiceException(
+          $"ML response contains {zones.Count} zones; limit is {MaxZones}.");
+
     var result = new List<(Polygon, IsolineColor)>();
+    int totalVertices = 0;
 
     foreach (var zone in zones)
     {
-      if (zone.Polygon.Count < 3) continue;
+      if (zone.ClassId is < 1 or > 7)
+        throw new ImageSegmentationServiceException($"ML response has unknown class_id {zone.ClassId}.");
+      if (!double.IsFinite(zone.Area) || zone.Area < 0 || zone.Bbox.Length != 4)
+        throw new ImageSegmentationServiceException("ML response has invalid area or bbox metadata.");
+      if (zone.Polygon.Count < 3 || zone.Polygon.Count > MaxVerticesPerZone)
+        throw new ImageSegmentationServiceException(
+            $"ML polygon vertex count {zone.Polygon.Count} is outside the allowed range.");
 
-      var vertices = zone.Polygon
-          .Select(p => new Point2D(p[0], p[1]))
-          .ToList();
+      totalVertices = checked(totalVertices + zone.Polygon.Count);
+      if (totalVertices > MaxTotalVertices)
+        throw new ImageSegmentationServiceException(
+            $"ML response exceeds the {MaxTotalVertices} total vertex limit.");
+
+      var vertices = new List<Point2D>(zone.Polygon.Count);
+      foreach (var point in zone.Polygon)
+      {
+        if (point.Length != 2
+            || Math.Abs((long)point[0]) > MaxCoordinateMagnitude
+            || Math.Abs((long)point[1]) > MaxCoordinateMagnitude)
+        {
+          throw new ImageSegmentationServiceException(
+              "ML response contains an invalid or out-of-range polygon point.");
+        }
+        vertices.Add(new Point2D(point[0], point[1]));
+      }
 
       var polygon = new Polygon(vertices);
 

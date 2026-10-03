@@ -78,12 +78,15 @@ public sealed class CsvScheduleExporter : IScheduleExporter
       {
         double massPerPiece = ReinforcementLimits.GetLinearMass(group.DiameterMm) * (group.LengthMm / 1000.0);
         builder.AppendLine(string.Join(";",
-            group.Mark,
-            "",
-            $"Ø{group.DiameterMm} {group.SteelClass} l = {group.LengthMm}",
-            group.Quantity.ToString(CultureInfo.InvariantCulture),
-            massPerPiece.ToString("F2", culture),
-            $"форма {group.ShapeCode}"));
+            new[]
+            {
+              group.Mark,
+              "",
+              $"Ø{group.DiameterMm} {group.SteelClass} l = {group.LengthMm}",
+              group.Quantity.ToString(CultureInfo.InvariantCulture),
+              massPerPiece.ToString("F2", culture),
+              $"форма {group.ShapeCode}"
+            }.Select(CsvCell)));
       }
     }
 
@@ -106,12 +109,27 @@ public sealed class CsvScheduleExporter : IScheduleExporter
     foreach (var item in steelTotals)
     {
       builder.AppendLine(string.Join(";",
-          item.Steel,
-          item.Diameter.ToString(CultureInfo.InvariantCulture),
-          item.Mass.ToString("F2", culture)));
+          new[]
+          {
+            item.Steel,
+            item.Diameter.ToString(CultureInfo.InvariantCulture),
+            item.Mass.ToString("F2", culture)
+          }.Select(CsvCell)));
     }
 
     await File.WriteAllTextAsync(outputPath, builder.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), ct);
+  }
+
+  private static string CsvCell(string value)
+  {
+    string safe = value;
+    if (safe.Length > 0 && safe[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+      safe = "'" + safe;
+
+    if (safe.IndexOfAny([';', '"', '\r', '\n']) >= 0)
+      return "\"" + safe.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"";
+
+    return safe;
   }
 
   private static readonly string[] LayerOrder = ["BottomX", "BottomY", "TopX", "TopY"];
