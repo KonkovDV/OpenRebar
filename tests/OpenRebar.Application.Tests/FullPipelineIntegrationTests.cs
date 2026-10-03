@@ -19,7 +19,7 @@ namespace OpenRebar.Application.Tests;
 public class FullPipelineIntegrationTests
 {
   [Fact]
-  public async Task ExecuteAsync_WithRealAdapters_ShouldParseOptimizePlaceAndPersistReport()
+  public async Task ExecuteAsync_WithRealAdapters_ShouldParseOptimizeBlockUnsafePlacementAndPersistReport()
   {
     var tempDirectory = Path.Combine(Path.GetTempPath(), $"OpenRebar-e2e-{Guid.NewGuid():N}");
     Directory.CreateDirectory(tempDirectory);
@@ -66,9 +66,9 @@ public class FullPipelineIntegrationTests
       result.OptimizationResults.Should().ContainKey(12);
       result.TotalWastePercent.Should().BeLessThan(30.0);
 
-      result.PlacementResult.Should().NotBeNull();
-      result.PlacementResult!.TotalRebarsPlaced.Should().Be(result.TotalRebarSegments);
-      result.PlacementResult.Warnings.Should().ContainSingle(warning => warning.Contains("StubRevitPlacer"));
+      result.PlacementResult.Should().BeNull();
+      result.Stages.Should().ContainSingle(stage =>
+          stage.Name == "Placement" && stage.Status == "Skipped");
 
       result.ClassifiedZones
           .SelectMany(zone => zone.Rebars)
