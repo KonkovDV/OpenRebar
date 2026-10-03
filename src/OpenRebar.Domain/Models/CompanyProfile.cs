@@ -22,6 +22,30 @@ public sealed record CompanyProfile
   public required VerificationProfile Verification { get; init; }
   public required SafetyProfile Safety { get; init; }
   public required IReadOnlyList<LegendSwatch> Legend { get; init; }
+
+  /// <summary>Straight tail after a hook. Omitted profiles keep a zero tail.</summary>
+  public HooksProfile Hooks { get; init; } = new();
+}
+
+/// <summary>
+/// Straight length after the bend, in bar diameters. Zero until an owner sets it.
+/// The bend arc itself comes from clause 10.3.33 and is not stored here.
+/// </summary>
+public sealed record HooksProfile
+{
+  public double TailDiameters { get; init; }
+
+  /// <summary><c>default</c> until a profile supplies the value.</summary>
+  public string Source { get; init; } = "default";
+
+  public double TailLengthMm(int diameterMm)
+  {
+    if (diameterMm < 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "Diameter cannot be negative.");
+    if (TailDiameters < 0)
+      throw new ArgumentOutOfRangeException(nameof(TailDiameters), TailDiameters, "Hook tail cannot be negative.");
+    return TailDiameters * diameterMm;
+  }
 }
 
 public sealed record AdditionalReinforcementProfile

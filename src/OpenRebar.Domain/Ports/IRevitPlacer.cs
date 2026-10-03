@@ -45,6 +45,19 @@ public sealed record PlacementSettings
   /// <summary>Host slab elevation offset in Revit internal feet.</summary>
   public double ElevationOffsetFeet { get; init; }
 
+  /// <summary>Straight tail after a hook, in bar diameters. Zero draws the arc only.</summary>
+  public double HookTailDiameters
+  {
+    get => _hookTailDiameters;
+    init
+    {
+      if (value < 0)
+        throw new ArgumentOutOfRangeException(nameof(HookTailDiameters), value, "Hook tail cannot be negative.");
+      _hookTailDiameters = value;
+    }
+  }
+  private readonly double _hookTailDiameters;
+
   /// <summary>Maximum number of rebars committed per Revit transaction batch.</summary>
   public int MaxRebarsPerTransaction
   {
