@@ -137,7 +137,7 @@ jobs:
         run: dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release --output ./publish/cli
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@fc46e51fd3cb168ffb36c6d1915723c47db58abb
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26
         with:
           path: ./publish/cli
           artifact-name: OpenRebar-sbom.spdx.json
