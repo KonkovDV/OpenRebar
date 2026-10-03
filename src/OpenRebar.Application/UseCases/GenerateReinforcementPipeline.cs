@@ -817,6 +817,14 @@ public sealed class GenerateReinforcementPipeline
         .Select(o => o.EstimatedCost!.Value)
         .ToList();
 
+    // Effective depth uses the governing (largest) bar diameter placed in the slab.
+    // SP 63.13330.2018 §10.3: d₀ = h − cover − d/2.
+    int maxDiameterMm = zonesWithRebars
+        .SelectMany(z => z.Rebars)
+        .Select(r => r.DiameterMm)
+        .DefaultIfEmpty(0)
+        .Max();
+
     return new ReinforcementExecutionReport
     {
       GeneratedAtUtc = DateTimeOffset.UtcNow,
@@ -837,7 +845,7 @@ public sealed class GenerateReinforcementPipeline
         ConcreteClass = input.Slab.ConcreteClass,
         ThicknessMm = input.Slab.ThicknessMm,
         CoverMm = input.Slab.CoverMm,
-        EffectiveDepthMm = input.Slab.EffectiveDepthMm,
+        EffectiveDepthMm = input.Slab.EffectiveDepthFor(maxDiameterMm),
         AreaMm2 = input.Slab.OuterBoundary.CalculateArea(),
         OpeningCount = input.Slab.Openings.Count,
         BoundingBox = ToBoundingBoxReport(slabBox)
@@ -936,6 +944,7 @@ public sealed class GenerateReinforcementPipeline
   /// <summary>
   /// Build a minimal report when pipeline aborts early due to critical failure.
   /// Includes diagnostic information but minimal execution details.
+  /// EffectiveDepthMm uses h-cover (conservative) because bar diameter is not yet known.
   /// </summary>
   private static ReinforcementExecutionReport BuildPartialReport(
       PipelineInput input,
