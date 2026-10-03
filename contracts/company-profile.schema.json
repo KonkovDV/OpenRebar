@@ -90,6 +90,14 @@
         "maxSpacingMm": { "type": ["number", "null"], "exclusiveMinimum": 0, "maximum": 400 }
       }
     },
+    "hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tailDiameters": { "type": "number", "minimum": 0 },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    },
     "legend": {
       "type": "array",
       "minItems": 1,
