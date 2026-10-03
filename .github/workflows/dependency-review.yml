@@ -20,5 +20,6 @@ jobs:
       - name: Dependency review
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48
         with:
-          fail-on-severity: high
+          fail-on-severity: moderate
           comment-summary-in-pr: on-failure
+          deny-licenses: AGPL-1.0-only, AGPL-1.0-or-later, SSPL-1.0

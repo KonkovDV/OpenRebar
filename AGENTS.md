@@ -27,7 +27,9 @@ OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.Inf
 OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~CorpusA0_HashFile
 OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~Examples_WriteNormalizedArtifactHashes
 python tools/ci/compare_tfm_hashes.py artifacts/tfm/net8 artifacts/tfm/net10
-dotnet list OpenRebar.sln package --include-transitive --vulnerable > artifacts/dependency-audit/deps-vulnerable.txt || true
+dotnet sln OpenRebar.audit.sln remove src/OpenRebar.RevitPlugin/OpenRebar.RevitPlugin.csproj
+dotnet list OpenRebar.audit.sln package --include-transitive --vulnerable --format json --no-restore > artifacts/dependency-audit/deps-vulnerable.json
+python tools/ci/check_dotnet_vulnerabilities.py artifacts/dependency-audit/deps-vulnerable.json --threshold high
 dotnet list OpenRebar.sln package --outdated > artifacts/dependency-audit/deps-outdated.txt || true
 dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests --logger "trx;LogFileName=benchmark-results.trx"
 dotnet publish src/OpenRebar.Cli/OpenRebar.Cli.csproj --no-build --configuration Release --output ./publish/cli
