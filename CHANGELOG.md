@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (triage 2026-10-03)
+
+- **PR-6 (P0-r9c):** `PositionAssigner` now computes `TotalMassKg` and
+  `MassPerPieceKg` from the exact `TotalLength` of every bar in the
+  position, not from the rounded position key length. Before this fix,
+  bars whose length ended in a fractional millimetre (e.g. 6565.49 mm
+  rounds to 6565 mm) produced a systematic drift between the schedule
+  CSV and the `result.json` certificate. For the simple-slab example
+  (27 × Ø20 A500C): 437.820 kg (old schedule) vs 437.852 kg (correct).
+  The grouping key and catalogue `LengthMm` column remain rounded to
+  the nearest mm. Regression test: `Assign_TotalMassUsesExactLength`.
+
 ### Fixed (triage 2026-10-02)
 
 - A free edge insets the bar axis by `max(coverEdgeMm, coverMm + d/2)`. `coverEdgeMm` below `coverMm` is reported as `EdgeCoverBelowCover`. The default edge cover of 0 no longer leaves the axis on the concrete face.
