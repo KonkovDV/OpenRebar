@@ -15,6 +15,8 @@ public sealed class DxfIsolineParser : IIsolineParser
 {
   private static readonly GeometryTolerance ComputationalTolerance = GeometryTolerance.Computational;
   private static readonly AsyncLocal<DxfParseSession?> ActiveSession = new();
+  private const int MaxParsedEntities = 250_000;
+  private const int MaxExpandedCandidates = 100_000;
 
   public IReadOnlyList<string> SupportedExtensions => [".dxf"];
 
@@ -55,7 +57,7 @@ public sealed class DxfIsolineParser : IIsolineParser
     if (!File.Exists(filePath))
       throw new InvalidIsolineFileException(filePath, "File not found.");
 
-    var session = new DxfParseSession();
+    var session = new DxfParseSession(cancellationToken);
     ActiveSession.Value = session;
     try
     {
@@ -99,7 +101,7 @@ public sealed class DxfIsolineParser : IIsolineParser
       DxfParseSession session,
       HashSet<string> blockStack)
   {
-    session.ParsedEntityCount++;
+    session.VisitEntity(MaxParsedEntities);
 
     if (entity is DxfInsert insert)
     {
@@ -120,6 +122,10 @@ public sealed class DxfIsolineParser : IIsolineParser
     var legendEntry = legend.FindClosest(color.Value);
     if (legendEntry is null)
       return;
+
+    if (candidates.Count >= MaxExpandedCandidates)
+      throw new InvalidOperationException(
+          $"DXF geometry exceeds the {MaxExpandedCandidates} zone candidate limit.");
 
     candidates.Add(new ZoneCandidate(
         polygon,
@@ -625,14 +631,25 @@ public sealed class DxfIsolineParser : IIsolineParser
       blockStack.Remove(insert.Name);
     }
 
+    int templateCount = candidates.Count - before;
+    int rowCount = Math.Max(1, (int)insert.RowCount);
+    int columnCount = Math.Max(1, (int)insert.ColumnCount);
+    long expandedCount = checked((long)templateCount * rowCount * columnCount);
+    long resultingCount = checked((long)before + expandedCount);
+    if (resultingCount > MaxExpandedCandidates)
+      throw new InvalidOperationException(
+          $"DXF INSERT expansion exceeds the {MaxExpandedCandidates} zone candidate limit.");
+
     var placement = InsertPlacement.FromInsert(insert);
-    var placed = new List<ZoneCandidate>();
+    var placed = new List<ZoneCandidate>((int)expandedCount);
     for (int i = before; i < candidates.Count; i++)
     {
-      for (int row = 0; row < Math.Max(1, (int)insert.RowCount); row++)
+      for (int row = 0; row < rowCount; row++)
       {
-        for (int column = 0; column < Math.Max(1, (int)insert.ColumnCount); column++)
+        session.ThrowIfCancellationRequested();
+        for (int column = 0; column < columnCount; column++)
         {
+          session.ThrowIfCancellationRequested();
           var shift = placement.WithGrid(column * insert.ColumnSpacing, row * insert.RowSpacing);
           placed.Add(candidates[i] with
           {
@@ -729,12 +746,31 @@ public sealed class DxfIsolineParser : IIsolineParser
   private sealed class DxfParseSession
   {
     private readonly Dictionary<string, int> _ignored = new(StringComparer.Ordinal);
+    private readonly CancellationToken _cancellationToken;
+
+    public DxfParseSession(CancellationToken cancellationToken)
+    {
+      _cancellationToken = cancellationToken;
+    }
 
     public int ParsedEntityCount { get; set; }
     public double ScaleToMillimetres { get; set; } = 1.0;
     public bool UnitsAssumed { get; set; }
     public string? AssumedUnits { get; set; }
     public DxfUnits UnitsWhenUnset { get; set; } = DxfUnits.Millimeters;
+
+    public void VisitEntity(int maxParsedEntities)
+    {
+      _cancellationToken.ThrowIfCancellationRequested();
+      if (ParsedEntityCount >= maxParsedEntities)
+        throw new InvalidOperationException(
+            $"DXF entity expansion exceeds the {maxParsedEntities} entity limit.");
+
+      ParsedEntityCount++;
+    }
+
+    public void ThrowIfCancellationRequested()
+        => _cancellationToken.ThrowIfCancellationRequested();
 
     public void Add(string reason, int count = 1)
     {
