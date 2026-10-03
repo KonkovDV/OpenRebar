@@ -59,10 +59,19 @@ public static class PositionAssigner
         .Select(group =>
         {
           var key = group.Key;
-          double massPerPiece = ReinforcementLimits.GetLinearMass(key.DiameterMm) * (key.RoundedLengthMm / 1000.0);
+          // Compute mass from the exact TotalLength of every bar in the position,
+          // not from the rounded position key length. This ensures that the schedule
+          // total matches the certificate total (result.json) to floating-point
+          // precision, eliminating the systematic sub-mm rounding drift (PR-6).
+          var items = group.ToList();
+          double exactTotalLengthMm = items.Sum(item => item.Rebar.TotalLength);
+          int count = items.Count;
+          double linearMass = ReinforcementLimits.GetLinearMass(key.DiameterMm);
+          double totalMassKg = linearMass * exactTotalLengthMm / 1000.0;
+          double massPerPiece = count > 0 ? totalMassKg / count : 0.0;
           string layer = string.Join(
               "+",
-              group.Select(item => LayerLabel(item.Zone)).Distinct(StringComparer.Ordinal).OrderBy(label => label, StringComparer.Ordinal));
+              items.Select(item => LayerLabel(item.Zone)).Distinct(StringComparer.Ordinal).OrderBy(label => label, StringComparer.Ordinal));
           return new PositionExecutionReport
           {
             Mark = markByKey[key],
@@ -70,9 +79,9 @@ public static class PositionAssigner
             SteelClass = key.SteelClass,
             ShapeCode = key.ShapeCode,
             LengthMm = key.RoundedLengthMm,
-            Quantity = group.Count(),
+            Quantity = count,
             MassPerPieceKg = massPerPiece,
-            TotalMassKg = massPerPiece * group.Count(),
+            TotalMassKg = totalMassKg,
             Layer = layer
           };
         })

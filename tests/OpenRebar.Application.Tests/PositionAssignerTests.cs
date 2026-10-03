@@ -1,5 +1,6 @@
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using FluentAssertions;
 
 namespace OpenRebar.Application.Tests;
@@ -70,6 +71,55 @@ public class PositionAssignerTests
     positions[3].LengthMm.Should().Be(2000);
   }
 
+  /// <summary>
+  /// PR-6: TotalMassKg must be computed from the exact TotalLength of each bar,
+  /// not from the rounded position key length.  The 0.49 mm arc tail is enough
+  /// to produce a 0.032 kg drift on 27 Ø20 bars that each round to the same mm.
+  /// </summary>
+  [Fact]
+  public void Assign_TotalMassUsesExactLength()
+  {
+    // Ø20 A500C — bars 6565.49 mm long (fractional arc tail; rounds to 6565)
+    const int diameter = 20;
+    const double exactLengthMm = 6565.49;
+    const int n = 27;
+    var rebars = Enumerable.Range(0, n)
+        .Select(i => MakeRebarExact(diameter, exactLengthMm, i * 200.0))
+        .ToList();
+
+    var zone = new ReinforcementZone
+    {
+      Id = "simple-slab",
+      Boundary = MakeRect(0, 0, 6000, 6000),
+      Spec = new ReinforcementSpec { DiameterMm = diameter, SpacingMm = 200, SteelClass = "A500C" },
+      Direction = RebarDirection.X,
+      Layer = RebarLayer.Bottom,
+      ZoneType = ZoneType.Simple,
+      Rebars = rebars
+    };
+
+    var positions = PositionAssigner.Assign([zone]);
+
+    positions.Should().ContainSingle("all bars share one position");
+    var pos = positions[0];
+    pos.LengthMm.Should().Be(6565, "rounded position length is the catalogue length");
+    pos.Quantity.Should().Be(n);
+
+    double linearMass = ReinforcementLimits.GetLinearMass(diameter);
+    double expectedTotal = linearMass * n * exactLengthMm / 1000.0;
+    double expectedPerPiece = expectedTotal / n;
+
+    pos.TotalMassKg.Should().BeApproximately(expectedTotal, 1e-6,
+        "TotalMassKg must use exact bar lengths, not the rounded position key");
+    pos.MassPerPieceKg.Should().BeApproximately(expectedPerPiece, 1e-6,
+        "MassPerPieceKg is TotalMassKg / count");
+
+    // Verify the old (wrong) value is different: 27 * 6.565 * linearMass != expectedTotal
+    double oldTotal = linearMass * n * 6565.0 / 1000.0;
+    oldTotal.Should().NotBeApproximately(expectedTotal, 1e-4,
+        "rounded length produces a different total mass, confirming the regression is meaningful");
+  }
+
   private static ReinforcementZone Zone(
       string id,
       RebarLayer layer,
@@ -102,4 +152,25 @@ public class PositionAssignerTests
     AnchorageLengthStart = totalLengthMm >= 400 ? 200 : 0,
     AnchorageLengthEnd = totalLengthMm >= 400 ? 200 : 0
   };
+
+  /// <summary>
+  /// Creates a bar with a fractional TotalLength that does not equal End.X - Start.X.
+  /// We simulate this by placing the bar's End such that the straight distance is
+  /// (exactLengthMm - 0.01) and then storing extra arc mm in BendArcMm, so that
+  /// TotalLength = |End - Start| + BendArcMm == exactLengthMm.
+  /// </summary>
+  private static RebarSegment MakeRebarExact(int diameterMm, double exactLengthMm, double y)
+  {
+    const double arcMm = 0.49; // simulated bend arc tail
+    double straightMm = exactLengthMm - arcMm;
+    return new RebarSegment
+    {
+      Start = new Point2D(0, y),
+      End = new Point2D(straightMm, y),
+      DiameterMm = diameterMm,
+      AnchorageLengthStart = 200,
+      AnchorageLengthEnd = 200,
+      BendArcMm = arcMm
+    };
+  }
 }
