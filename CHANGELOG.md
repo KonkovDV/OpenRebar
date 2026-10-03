@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A strict decomposition quality gate stops calculation, cutting, and placement. Warning-only mode keeps the diagnostic. A zone with area and no sampled cell fails verification instead of passing. Non-finite slab thickness, cover, legend intervals, and additional-area demand are rejected.
+
 ### Fixed (triage 2026-10-02)
 
 - A free edge insets the bar axis by `max(coverEdgeMm, coverMm + d/2)`. `coverEdgeMm` below `coverMm` is reported as `EdgeCoverBelowCover`. The default edge cover of 0 no longer leaves the axis on the concrete face.
