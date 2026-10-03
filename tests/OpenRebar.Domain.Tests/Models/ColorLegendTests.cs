@@ -227,6 +227,64 @@ public class SlabGeometryTests
   }
 
   [Fact]
+  public void EffectiveDepthFor_SubtractsHalfTheDiameter()
+  {
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = MakeRect(),
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+
+    slab.EffectiveDepthFor(20).Should().Be(180);
+  }
+
+  [Fact]
+  public void EffectiveDepthFor_KeepsTheHalfMillimetre()
+  {
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = MakeRect(),
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+
+    slab.EffectiveDepthFor(25).Should().Be(177.5);
+  }
+
+  [Fact]
+  public void EffectiveDepthFor_RejectsANegativeDiameter()
+  {
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = MakeRect(),
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+
+    var act = () => slab.EffectiveDepthFor(-1);
+    act.Should().Throw<ArgumentOutOfRangeException>();
+  }
+
+  [Fact]
+  public void EffectiveDepthFor_RejectsABarThatDoesNotFit()
+  {
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = MakeRect(),
+      ThicknessMm = 200,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+
+    var act = () => slab.EffectiveDepthFor(340);
+    act.Should().Throw<ArgumentOutOfRangeException>();
+  }
+
+  [Fact]
   public void CoverGreaterThanThickness_ShouldThrow()
   {
     var act = () => new SlabGeometry
