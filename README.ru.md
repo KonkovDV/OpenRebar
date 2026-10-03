@@ -168,7 +168,7 @@ dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj
 dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Текущий регрессионный статус (эти пять команд): **407/407 тестов проходят**.
+Текущий регрессионный статус (эти пять команд): **409/409 тестов проходят**.
 
 ## Контрольные проверки CI
 
