@@ -23,6 +23,32 @@ public class CompanyProfileLoaderTests
   }
 
   [Fact]
+  public void GenericProfile_OmitsTheHookTail()
+  {
+    var hooks = CompanyProfileLoader.Load(Profile("generic.json")).Profile.Hooks;
+
+    hooks.TailDiameters.Should().Be(0);
+    hooks.Source.Should().Be("default");
+    hooks.TailLengthMm(20).Should().Be(0);
+  }
+
+  [Fact]
+  public void Profile_NegativeHookTail_Fails()
+  {
+    string path = Write("""
+      {
+        "id": "tail",
+        "version": "1",
+        "extends": "generic",
+        "hooks": { "tailDiameters": -1 }
+      }
+      """);
+
+    var act = () => CompanyProfileLoader.Load(path);
+    act.Should().Throw<CompanyProfileLoadException>().WithMessage("*tailDiameters*");
+  }
+
+  [Fact]
   public void Profile_UnknownField_Fails()
   {
     string path = Write("""
