@@ -176,18 +176,27 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
       throw new ImageSegmentationServiceException(
           $"ML service response exceeds the {maxBytes} byte limit.");
 
-    try
+    await using var source = await content.ReadAsStreamAsync(ct);
+    await using var buffer = new MemoryStream(capacity: (int)Math.Min(maxBytes, 64 * 1024));
+    var chunk = new byte[64 * 1024];
+    long totalBytes = 0;
+
+    while (true)
     {
-      await content.LoadIntoBufferAsync(maxBytes, ct);
-    }
-    catch (HttpRequestException ex)
-    {
-      throw new ImageSegmentationServiceException(
-          $"ML service response exceeds the {maxBytes} byte limit.",
-          ex);
+      int bytesRead = await source.ReadAsync(chunk.AsMemory(), ct);
+      if (bytesRead == 0)
+        break;
+
+      totalBytes += bytesRead;
+      if (totalBytes > maxBytes)
+        throw new ImageSegmentationServiceException(
+            $"ML service response exceeds the {maxBytes} byte limit.");
+
+      await buffer.WriteAsync(chunk.AsMemory(0, bytesRead), ct);
     }
 
-    return await content.ReadFromJsonAsync<T>(JsonOptions, ct);
+    buffer.Position = 0;
+    return await JsonSerializer.DeserializeAsync<T>(buffer, JsonOptions, ct);
   }
 
   private static void ValidateConfiguration(string baseUrl, double minArea, int timeoutSeconds)
@@ -312,7 +321,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
     {
       if (zone.ClassId is < 1 or > 7)
         throw new ImageSegmentationServiceException($"ML response has unknown class_id {zone.ClassId}.");
-      if (!double.IsFinite(zone.Area) || zone.Area < 0 || zone.Bbox.Count != 4)
+      if (!double.IsFinite(zone.Area) || zone.Area < 0 || zone.Bbox.Length != 4)
         throw new ImageSegmentationServiceException("ML response has invalid area or bbox metadata.");
       if (zone.Polygon.Count < 3 || zone.Polygon.Count > MaxVerticesPerZone)
         throw new ImageSegmentationServiceException(
