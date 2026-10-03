@@ -75,6 +75,14 @@ updates:
         versions: [">=8.0.0"]
 
   - package-ecosystem: "nuget"
+    directory: "/tests/OpenRebar.Cli.Tests"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "FluentAssertions"
+        versions: [">=8.0.0"]
+
+  - package-ecosystem: "nuget"
     directory: "/tests/OpenRebar.TestCorpus"
     schedule:
       interval: "weekly"
