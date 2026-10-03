@@ -67,7 +67,7 @@ public sealed class AsLegend
   {
     if (classes.Count == 0)
       throw new LegendValidationException(Empty, "An area legend needs at least one class.");
-    if (minSeparationDeltaE < 0)
+    if (!double.IsFinite(minSeparationDeltaE) || minSeparationDeltaE < 0)
       throw new ArgumentOutOfRangeException(nameof(minSeparationDeltaE));
 
     var seenIds = new HashSet<string>(StringComparer.Ordinal);
@@ -84,7 +84,10 @@ public sealed class AsLegend
       if (!seenColors.Add(rgb))
         throw new LegendValidationException(DuplicateColor, $"Legend color {item.Color.R},{item.Color.G},{item.Color.B} is duplicated.");
 
-      if (item.As.LowerMm2PerM < 0 || item.As.UpperMm2PerM <= item.As.LowerMm2PerM)
+      if (!double.IsFinite(item.As.LowerMm2PerM)
+          || !double.IsFinite(item.As.UpperMm2PerM)
+          || item.As.LowerMm2PerM < 0
+          || item.As.UpperMm2PerM <= item.As.LowerMm2PerM)
         throw new LegendValidationException(IntervalInvalid, $"Legend class '{item.ClassId}' has an empty area interval.");
 
       if (i > 0 && item.As.LowerMm2PerM + 1e-9 < classes[i - 1].As.LowerMm2PerM)

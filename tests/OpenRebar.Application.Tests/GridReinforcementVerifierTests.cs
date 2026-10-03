@@ -20,6 +20,24 @@ public class GridReinforcementVerifierTests
     result.CellSizeMm.Should().Be(50);
   }
 
+
+  [Fact]
+  public void Verify_PositiveAreaZoneWithoutAnySample_FailsClosed()
+  {
+    var narrowStrip = new Polygon(
+    [
+        new Point2D(0, 0),
+        new Point2D(1000, 0),
+        new Point2D(1000, 20),
+        new Point2D(0, 20)
+    ]);
+
+    var result = _verifier.Verify([Zone([], narrowStrip)]);
+
+    result.Status.Should().Be(VerificationStatuses.Failed);
+    result.CheckedAreaM2.Should().Be(0);
+  }
+
   [Fact]
   public void Verify_RemovedBar_FailsAndReportsTheGap()
   {
