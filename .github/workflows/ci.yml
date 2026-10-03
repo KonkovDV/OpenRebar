@@ -90,7 +90,13 @@ jobs:
       - name: Enforce NuGet vulnerability gate
         run: |
           mkdir -p artifacts/dependency-audit
-          dotnet list OpenRebar.sln package --include-transitive --vulnerable --format json > artifacts/dependency-audit/deps-vulnerable.json
+          # dotnet package list currently crashes on the Windows/WPF aggregate project.
+          # Its package references and transitives are duplicated by Infrastructure/CLI,
+          # so audit a temporary solution containing every independently auditable project.
+          cp OpenRebar.sln OpenRebar.audit.sln
+          trap 'rm -f OpenRebar.audit.sln' EXIT
+          dotnet sln OpenRebar.audit.sln remove src/OpenRebar.RevitPlugin/OpenRebar.RevitPlugin.csproj
+          dotnet list OpenRebar.audit.sln package --include-transitive --vulnerable --format json --no-restore > artifacts/dependency-audit/deps-vulnerable.json
           python tools/ci/check_dotnet_vulnerabilities.py artifacts/dependency-audit/deps-vulnerable.json --threshold high
 
       - name: Generate informational outdated report

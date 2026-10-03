@@ -41,6 +41,20 @@ def main() -> int:
     args = parser.parse_args()
 
     payload = json.loads(args.report.read_text(encoding="utf-8"))
+    audit_errors = [
+        problem
+        for problem in payload.get("problems", [])
+        if str(problem.get("level", "")).lower() == "error"
+    ]
+    if audit_errors:
+        print(f"BLOCKED: NuGet audit reported {len(audit_errors)} error(s)")
+        for problem in audit_errors:
+            print(
+                f"- {problem.get('project', 'unknown-project')}: "
+                f"{problem.get('text', 'unknown audit error')}"
+            )
+        return 1
+
     blocked = findings(payload, args.threshold)
     if not blocked:
         print(f"OK: no NuGet vulnerabilities at {args.threshold} severity or higher")
