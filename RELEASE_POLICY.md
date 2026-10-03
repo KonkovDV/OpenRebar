@@ -30,6 +30,15 @@ Include:
 - contract/schema impact;
 - explicit known limitations.
 
+## Release Integrity
+
+- Protect the `v*` tag namespace with a repository ruleset. Only the audited release role may create tags; updates and deletions are forbidden.
+- A release tag must point to a commit reachable from `main`. The workflow enforces this again before building.
+- Configure the `release` GitHub Environment with a required human reviewer and no broad deployment-branch bypass.
+- The build job restores once, builds once, runs tests, and publishes with `--no-build --no-restore`. The privileged publication job only downloads that immutable workflow artifact.
+- GitHub Releases contain the CLI ZIP, SPDX SBOM, and `SHA256SUMS`. Provenance attestation covers exactly those final files.
+- Do not publish directly from a workstation or recreate binaries after tests.
+
 ## Target frameworks
 
 The core libraries (`Domain`, `Application`, `Infrastructure`) build for `net8.0` and `net10.0`. The CLI ships on `net10.0`. Revit is two builds chosen by the process runtime, not by the product year:
