@@ -87,11 +87,21 @@ jobs:
           OPENREBAR_TFM_HASH_DIR="$PWD/artifacts/tfm/net8" dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0 --filter FullyQualifiedName~Examples_WriteNormalizedArtifactHashes
           python tools/ci/compare_tfm_hashes.py artifacts/tfm/net8 artifacts/tfm/net10
 
-      - name: Generate dependency governance reports
+      - name: Enforce NuGet vulnerability gate
         run: |
           mkdir -p artifacts/dependency-audit
-          dotnet list OpenRebar.sln package --include-transitive --vulnerable > artifacts/dependency-audit/deps-vulnerable.txt || true
-          dotnet list OpenRebar.sln package --outdated > artifacts/dependency-audit/deps-outdated.txt || true
+          # dotnet package list currently crashes on the Windows/WPF aggregate project.
+          # Its package references and transitives are duplicated by Infrastructure/CLI,
+          # so audit a temporary solution containing every independently auditable project.
+          cp OpenRebar.sln OpenRebar.audit.sln
+          trap 'rm -f OpenRebar.audit.sln' EXIT
+          dotnet sln OpenRebar.audit.sln remove src/OpenRebar.RevitPlugin/OpenRebar.RevitPlugin.csproj
+          dotnet list OpenRebar.audit.sln package --include-transitive --vulnerable --format json --no-restore > artifacts/dependency-audit/deps-vulnerable.json
+          python tools/ci/check_dotnet_vulnerabilities.py artifacts/dependency-audit/deps-vulnerable.json --threshold high
+
+      - name: Generate informational outdated report
+        if: always()
+        run: dotnet list OpenRebar.sln package --outdated > artifacts/dependency-audit/deps-outdated.txt || true
 
       - name: Run benchmark gate and export summary
         env:
