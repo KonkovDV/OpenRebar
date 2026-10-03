@@ -17,7 +17,7 @@ public sealed class SlabGeometry
     get => _thicknessMm;
     init
     {
-      if (value is <= 0 or > 2000)
+      if (!double.IsFinite(value) || value is <= 0 or > 2000)
         throw new ArgumentOutOfRangeException(nameof(ThicknessMm), value, "Slab thickness must be between 0 and 2000mm.");
       if (_coverMm > 0 && value <= _coverMm)
         throw new ArgumentException("Slab thickness must be greater than cover.", nameof(ThicknessMm));
@@ -32,7 +32,7 @@ public sealed class SlabGeometry
     get => _coverMm;
     init
     {
-      if (value is < 0 or > 200)
+      if (!double.IsFinite(value) || value is < 0 or > 200)
         throw new ArgumentOutOfRangeException(nameof(CoverMm), value, "Concrete cover must be between 0 and 200mm.");
       if (_thicknessMm > 0 && value >= _thicknessMm)
         throw new ArgumentException("Concrete cover must be smaller than slab thickness.", nameof(CoverMm));
