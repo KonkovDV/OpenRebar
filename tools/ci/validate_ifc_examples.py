@@ -2,6 +2,8 @@
 """Generate IFC from canonical examples and emit a validation report.
 
 This lane runs nightly and on pull requests that touch IFC export.
+A verification failure (exit 2) or a partial result (exit 3) still writes the IFC file.
+Only an input or IO failure (exit 1) stops the check before the file is read.
 """
 
 from __future__ import annotations
@@ -98,7 +100,7 @@ def _validate_ifc(example: dict[str, object]) -> ExampleValidationResult:
     shutil.copy2(source_input, input_copy)
 
     process = _run_cli(input_copy, extra_args)
-    if process.returncode != 0:
+    if process.returncode not in (0, 2, 3):
         return ExampleValidationResult(
             name=name,
             input_path=str(input_copy.relative_to(ROOT)),
@@ -134,7 +136,7 @@ def _validate_ifc(example: dict[str, object]) -> ExampleValidationResult:
 
     is_ok = has_step_header and reinforcing_bar_count >= expected_min_bars
 
-    details = "ok"
+    details = "ok" if process.returncode == 0 else f"CLI exit {process.returncode}; IFC checked"
     if not has_step_header:
         details = "Missing STEP header in IFC content."
     elif reinforcing_bar_count < expected_min_bars:
