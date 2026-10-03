@@ -696,10 +696,10 @@ public class GenerateReinforcementPipelineTests
   }
 
   [Fact]
-  public async Task BarThatCannotBeLapped_IsCriticalAndListedAsUnoptimized()
+  public async Task BarThatCannotBeLapped_IsCriticalAndBlocksPlacement()
   {
     var sut = CreateSut();
-    var input = CreateInput("plan.dxf", placeInRevit: false);
+    var input = CreateInput("plan.dxf", placeInRevit: true);
     var zone = CreateZone("Z-1");
     zone.Rebars =
     [
@@ -732,6 +732,13 @@ public class GenerateReinforcementPipelineTests
     result.Report!.PartialResult.Should().BeTrue();
     result.Report.UnoptimizedBars.Should().NotBeEmpty();
     result.Report.Errors.Should().Contain(error => error.ExceptionType == "BarExceedsMaxStock" && error.IsCritical);
+    result.PlacementResult.Should().BeNull();
+    await _placer.DidNotReceive().PlaceReinforcementAsync(
+        Arg.Any<IReadOnlyList<ReinforcementZone>>(),
+        Arg.Any<PlacementSettings>(),
+        Arg.Any<CancellationToken>());
+    result.Stages.Should().ContainSingle(stage =>
+        stage.Name == "Placement" && stage.Status == "Skipped");
   }
 
   [Fact]
