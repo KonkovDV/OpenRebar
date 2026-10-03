@@ -26,8 +26,9 @@ public static class CompanyProfileLoader
     [
         "id", "version", "extends", "example", "description", "steelClass", "concreteClass",
         "additional", "ends", "laps", "positions", "schedule", "supply", "smoothing",
-        "verification", "safety", "legend"
+        "verification", "safety", "legend", "hooks"
     ],
+    ["hooks"] = ["tailDiameters", "source"],
     ["additional"] = ["diametersMm", "spacingMode", "maxDiameterCount"],
     ["ends"] = ["condition", "shapeStandard"],
     ["laps"] = ["jointRatioMax", "couplers"],
@@ -271,6 +272,8 @@ public static class CompanyProfileLoader
       throw new CompanyProfileLoadException("supply.stockLengthsMm must list positive lengths.");
     if (profile.Legend.Count == 0)
       throw new CompanyProfileLoadException("legend must contain at least one swatch.");
+    if (profile.Hooks.TailDiameters < 0)
+      throw new CompanyProfileLoadException("hooks.tailDiameters cannot be negative. The unset tail is 0.");
   }
 
   private static JsonObject Flatten(CompanyProfile profile)

@@ -103,50 +103,41 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                         continue;
                     }
 
-                    // The Revit placer draws one straight line. A bent bar would lose its arcs here,
-                    // so the model would disagree with the schedule. Refuse it instead.
-                    if (segment.Shape != BarShape.Straight || segment.BendArcMm > 1e-6)
+                    // Cover is measured to the bar surface. The axis is d/2 inside it, and the
+                    // inner direction of a face sits on the outer one.
+                    double outerDiameter = layerDiameters.GetValueOrDefault((zone.Layer, RebarDirection.X), segment.DiameterMm);
+                    double innerDiameter = layerDiameters.GetValueOrDefault((zone.Layer, RebarDirection.Y), segment.DiameterMm);
+                    if (zone.Direction == RebarDirection.X)
+                        outerDiameter = Math.Max(outerDiameter, segment.DiameterMm);
+                    else
+                        innerDiameter = Math.Max(innerDiameter, segment.DiameterMm);
+                    double axisMm = LayerElevations.AxisElevationMm(
+                        zone.Layer,
+                        zone.Direction,
+                        thicknessMm,
+                        coverBottomMm,
+                        coverTopMm,
+                        outerDiameter,
+                        innerDiameter);
+                    double tailMm = settings.HookTailDiameters * segment.DiameterMm;
+                    if (!HookCenterline.TryBuild(
+                            segment,
+                            axisMm,
+                            tailMm,
+                            bendUp: zone.Layer != RebarLayer.Top,
+                            out var spans,
+                            out var skip))
                     {
                         bentSkipped++;
+                        warnings.Add($"Zone {zone.Id}, mark {segment.Mark}: {skip}");
                         continue;
                     }
 
                     try
                     {
-                        var startPoint = new XYZ(
-                            segment.Start.X * MillimetersToFeet,
-                            segment.Start.Y * MillimetersToFeet,
-                            0);
-                        var endPoint = new XYZ(
-                            segment.End.X * MillimetersToFeet,
-                            segment.End.Y * MillimetersToFeet,
-                            0);
-
-                        // Cover is measured to the bar surface. The axis is d/2 inside it, and the
-                        // inner direction of a face sits on the outer one.
-                        double outerDiameter = layerDiameters.GetValueOrDefault((zone.Layer, RebarDirection.X), segment.DiameterMm);
-                        double innerDiameter = layerDiameters.GetValueOrDefault((zone.Layer, RebarDirection.Y), segment.DiameterMm);
-                        if (zone.Direction == RebarDirection.X)
-                            outerDiameter = Math.Max(outerDiameter, segment.DiameterMm);
-                        else
-                            innerDiameter = Math.Max(innerDiameter, segment.DiameterMm);
-                        double axisMm = LayerElevations.AxisElevationMm(
-                            zone.Layer,
-                            zone.Direction,
-                            thicknessMm,
-                            coverBottomMm,
-                            coverTopMm,
-                            outerDiameter,
-                            innerDiameter);
-                        double zFeet = settings.ElevationOffsetFeet + axisMm * MillimetersToFeet;
-
-                        startPoint = new XYZ(startPoint.X, startPoint.Y, zFeet);
-                        endPoint = new XYZ(endPoint.X, endPoint.Y, zFeet);
-
-                        var curves = new List<Curve>
-                        {
-                            Line.CreateBound(startPoint, endPoint)
-                        };
+                        var curves = spans
+                            .Select(span => ToRevitCurve(span, MillimetersToFeet, settings.ElevationOffsetFeet))
+                            .ToList();
 
                         var rebar = Rebar.CreateFromCurves(
                             doc,
@@ -188,7 +179,7 @@ public sealed class RevitRebarPlacer : IRevitPlacer
 
             if (bentSkipped > 0)
             {
-                errors.Add($"{bentSkipped} bent bar(s) were not placed. The Revit placer only draws straight bars; hooks and bends stay in the schedule and IFC. Do not use this model for detailing until bent shapes are supported.");
+                warnings.Add($"{bentSkipped} bar(s) were not placed. L and U shapes stay in the schedule and IFC.");
             }
 
             // P1: Tag creation pass
@@ -442,6 +433,21 @@ public sealed class RevitRebarPlacer : IRevitPlacer
             .OrderBy(candidate => candidate.Delta)
             .Select(candidate => candidate.BarType)
             .FirstOrDefault();
+    }
+
+    private static Curve ToRevitCurve(HookCenterline.Span span, double millimetersToFeet, double elevationOffsetFeet)
+    {
+        XYZ Map(HookCenterline.Point point) => new(
+            point.X * millimetersToFeet,
+            point.Y * millimetersToFeet,
+            point.Z * millimetersToFeet + elevationOffsetFeet);
+
+        var start = Map(span.Start);
+        var end = Map(span.End);
+        if (span.Through is HookCenterline.Point through)
+            return Arc.Create(start, end, Map(through));
+
+        return Line.CreateBound(start, end);
     }
 }
 #else
