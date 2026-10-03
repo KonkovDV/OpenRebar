@@ -53,6 +53,18 @@ public sealed class SlabGeometry
   /// <summary>Sides of the outline. An omitted side is Free.</summary>
   public IReadOnlyList<SlabEdge> Edges { get; init; } = [];
 
-  /// <summary>Effective depth d₀ = h - a (mm).</summary>
+  /// <summary>
+  /// Conservative effective depth d₀ = h − a (mm), computed without a bar diameter.
+  /// Use this only when the actual bar diameter is not yet known (e.g. in partial reports).
+  /// For the final report use <see cref="EffectiveDepthFor"/>.
+  /// </summary>
   public double EffectiveDepthMm => ThicknessMm - CoverMm;
+
+  /// <summary>
+  /// Effective depth d₀ = h − a − d/2 (mm) per SP 63.13330.2018 §10.3.
+  /// The bar axis sits at cover + d/2 from the face, so the structural
+  /// lever arm from the compression face is h − cover − d/2.
+  /// </summary>
+  /// <param name="diameterMm">Nominal bar diameter in mm.</param>
+  public double EffectiveDepthFor(int diameterMm) => ThicknessMm - CoverMm - diameterMm / 2.0;
 }

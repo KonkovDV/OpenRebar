@@ -53,7 +53,7 @@
     "concreteClass": "B25",
     "thicknessMm": 220,
     "coverMm": 30,
-    "effectiveDepthMm": 190,
+    "effectiveDepthMm": 180,
     "areaMm2": 24000000,
     "openingCount": 0,
     "boundingBox": {
