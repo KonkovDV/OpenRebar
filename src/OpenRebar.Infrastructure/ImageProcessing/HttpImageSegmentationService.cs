@@ -18,6 +18,10 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   private const long MaxUploadBytes = 20L * 1024 * 1024;
   private const long MaxResponseBytes = 10L * 1024 * 1024;
   private const long MaxHealthResponseBytes = 64L * 1024;
+  private const int MaxZones = 10_000;
+  private const int MaxVerticesPerZone = 200_000;
+  private const int MaxTotalVertices = 1_000_000;
+  private const int MaxCoordinateMagnitude = 50_000_000;
 
   private readonly HttpClient _httpClient;
   private readonly double _minArea;
@@ -297,15 +301,40 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   private static IReadOnlyList<(Polygon Boundary, IsolineColor DominantColor)> ConvertToPolygons(
       IReadOnlyList<PolygonZoneDto> zones)
   {
+    if (zones.Count > MaxZones)
+      throw new ImageSegmentationServiceException(
+          $"ML response contains {zones.Count} zones; limit is {MaxZones}.");
+
     var result = new List<(Polygon, IsolineColor)>();
+    int totalVertices = 0;
 
     foreach (var zone in zones)
     {
-      if (zone.Polygon.Count < 3) continue;
+      if (zone.ClassId is < 1 or > 7)
+        throw new ImageSegmentationServiceException($"ML response has unknown class_id {zone.ClassId}.");
+      if (!double.IsFinite(zone.Area) || zone.Area < 0 || zone.Bbox.Count != 4)
+        throw new ImageSegmentationServiceException("ML response has invalid area or bbox metadata.");
+      if (zone.Polygon.Count < 3 || zone.Polygon.Count > MaxVerticesPerZone)
+        throw new ImageSegmentationServiceException(
+            $"ML polygon vertex count {zone.Polygon.Count} is outside the allowed range.");
 
-      var vertices = zone.Polygon
-          .Select(p => new Point2D(p[0], p[1]))
-          .ToList();
+      totalVertices = checked(totalVertices + zone.Polygon.Count);
+      if (totalVertices > MaxTotalVertices)
+        throw new ImageSegmentationServiceException(
+            $"ML response exceeds the {MaxTotalVertices} total vertex limit.");
+
+      var vertices = new List<Point2D>(zone.Polygon.Count);
+      foreach (var point in zone.Polygon)
+      {
+        if (point.Length != 2
+            || Math.Abs((long)point[0]) > MaxCoordinateMagnitude
+            || Math.Abs((long)point[1]) > MaxCoordinateMagnitude)
+        {
+          throw new ImageSegmentationServiceException(
+              "ML response contains an invalid or out-of-range polygon point.");
+        }
+        vertices.Add(new Point2D(point[0], point[1]));
+      }
 
       var polygon = new Polygon(vertices);
 

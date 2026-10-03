@@ -110,6 +110,38 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
   }
 
   [Fact]
+  public async Task SegmentAsync_RejectsMalformedPolygonPoint()
+  {
+    var handler = new CountingHttpMessageHandler(request =>
+    {
+      string json = request.RequestUri!.AbsolutePath == "/health"
+          ? "{\"status\":\"ok\"}"
+          : "{\"zones\":[{\"class_id\":1,\"polygon\":[[0,0],[1],[0,1]],\"area\":1,\"bbox\":[0,0,1,1]}],\"total_zones\":1}";
+      return new HttpResponseMessage(HttpStatusCode.OK)
+      {
+        Content = new StringContent(json, Encoding.UTF8, "application/json")
+      };
+    });
+    using var service = new HttpImageSegmentationService(
+        baseUrl: "http://ml-server:9000",
+        maxRetryAttempts: 1,
+        messageHandler: handler);
+    var tmpFile = Path.GetTempFileName() + ".png";
+    await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
+
+    try
+    {
+      await service.Invoking(sut => sut.SegmentAsync(tmpFile))
+          .Should().ThrowAsync<ImageSegmentationServiceException>()
+          .WithMessage("*polygon point*");
+    }
+    finally
+    {
+      File.Delete(tmpFile);
+    }
+  }
+
+  [Fact]
   public async Task SegmentAsync_AfterRepeatedFailures_ShouldOpenCircuit()
   {
     var handler = new CountingHttpMessageHandler(_ => throw new HttpRequestException("connection refused"));
