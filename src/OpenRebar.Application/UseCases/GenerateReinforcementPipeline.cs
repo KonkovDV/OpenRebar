@@ -588,10 +588,17 @@ public sealed class GenerateReinforcementPipeline
         reasons: optimizationReasons,
         partial: optimizationReasons.Count > 0);
 
-    // 6. Place in Revit (if requested)
-    if (!input.PlaceInRevit)
+    // 6. Place in Revit only when every safety gate passed.
+    bool placementBlocked = failures.Any(failure => failure.IsCritical);
+    if (!input.PlaceInRevit || placementBlocked)
     {
       stages.Skip("Placement");
+      if (placementBlocked && input.PlaceInRevit)
+      {
+        _logger.Warn(
+            "Revit placement blocked by critical pipeline diagnostics",
+            ("criticalFailureCount", failures.Count(failure => failure.IsCritical)));
+      }
     }
     else
     {
