@@ -61,6 +61,54 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
     service.Should().NotBeNull();
   }
 
+  [Theory]
+  [InlineData("file:///tmp/model")]
+  [InlineData("ftp://ml.example/model")]
+  [InlineData("http://user:password@ml.example")]
+  public void Constructor_RejectsUnsafeServiceUrls(string url)
+  {
+    var act = () => new HttpImageSegmentationService(baseUrl: url);
+
+    act.Should().Throw<ArgumentException>();
+  }
+
+  [Fact]
+  public async Task SegmentAsync_RejectsOversizedResponseBeforeDeserialization()
+  {
+    var handler = new CountingHttpMessageHandler(request =>
+    {
+      if (request.RequestUri!.AbsolutePath == "/health")
+      {
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+          Content = new StringContent("{\"status\":\"ok\"}", Encoding.UTF8, "application/json")
+        };
+      }
+
+      return new HttpResponseMessage(HttpStatusCode.OK)
+      {
+        Content = new ByteArrayContent(new byte[10 * 1024 * 1024 + 1])
+      };
+    });
+    using var service = new HttpImageSegmentationService(
+        baseUrl: "http://ml-server:9000",
+        maxRetryAttempts: 1,
+        messageHandler: handler);
+    var tmpFile = Path.GetTempFileName() + ".png";
+    await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
+
+    try
+    {
+      await service.Invoking(sut => sut.SegmentAsync(tmpFile))
+          .Should().ThrowAsync<ImageSegmentationServiceException>()
+          .WithMessage("*response exceeds*");
+    }
+    finally
+    {
+      File.Delete(tmpFile);
+    }
+  }
+
   [Fact]
   public async Task SegmentAsync_AfterRepeatedFailures_ShouldOpenCircuit()
   {
