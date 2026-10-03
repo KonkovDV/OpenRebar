@@ -261,6 +261,46 @@ public class CsvScheduleExporterTests
     }
   }
 
+  [Fact]
+  public async Task ExportAsync_SteelTotalUsesExactLength()
+  {
+    const double totalLengthMm = 175108.1402964464;
+    const int count = 27;
+    double lengthMm = totalLengthMm / count;
+    var exporter = new CsvScheduleExporter();
+    var outputPath = Path.Combine(Path.GetTempPath(), $"OpenRebar-schedule-exact-{Guid.NewGuid():N}.csv");
+    IReadOnlyList<ReinforcementZone> zones =
+    [
+        new ReinforcementZone
+        {
+          Id = "Z-001",
+          Boundary = MakeRect(0, 0, 6000, 4000),
+          Spec = new ReinforcementSpec { DiameterMm = 20, SpacingMm = 150, SteelClass = "A500C" },
+          Direction = RebarDirection.X,
+          ZoneType = ZoneType.Simple,
+          Rebars = Enumerable.Range(0, count).Select(index => MakeRebar(20, lengthMm, index * 150.0)).ToList()
+        }
+    ];
+    PositionAssigner.Assign(zones);
+
+    try
+    {
+      await exporter.ExportAsync(zones, outputPath, ScheduleNumberCulture.Invariant);
+      var lines = await File.ReadAllLinesAsync(outputPath, Encoding.UTF8);
+      double linearMass = ReinforcementLimits.GetLinearMass(20);
+      string exact = (linearMass * totalLengthMm / 1000.0).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+      string rounded = (linearMass * 6485 / 1000.0 * count).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+      exact.Should().NotBe(rounded);
+      lines.Should().Contain($"A500C;20;{exact}");
+      lines.Should().Contain(line => line.StartsWith("1;;Ø20 A500C l = 6485;27;", StringComparison.Ordinal));
+    }
+    finally
+    {
+      if (File.Exists(outputPath))
+        File.Delete(outputPath);
+    }
+  }
+
   private static ReinforcementZone Zone(string steelClass, int diameterMm, RebarSegment bar) => new()
   {
     Id = steelClass + diameterMm,

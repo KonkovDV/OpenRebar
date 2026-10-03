@@ -59,7 +59,10 @@ public static class PositionAssigner
         .Select(group =>
         {
           var key = group.Key;
-          double massPerPiece = ReinforcementLimits.GetLinearMass(key.DiameterMm) * (key.RoundedLengthMm / 1000.0);
+          var items = group.ToList();
+          var (massPerPiece, totalMassKg) = Masses(
+              key.DiameterMm,
+              items.Select(item => item.Rebar.TotalLength).ToList());
           string layer = string.Join(
               "+",
               group.Select(item => LayerLabel(item.Zone)).Distinct(StringComparer.Ordinal).OrderBy(label => label, StringComparer.Ordinal));
@@ -70,13 +73,29 @@ public static class PositionAssigner
             SteelClass = key.SteelClass,
             ShapeCode = key.ShapeCode,
             LengthMm = key.RoundedLengthMm,
-            Quantity = group.Count(),
+            Quantity = items.Count,
             MassPerPieceKg = massPerPiece,
-            TotalMassKg = massPerPiece * group.Count(),
+            TotalMassKg = totalMassKg,
             Layer = layer
           };
         })
         .ToList();
+  }
+
+  /// <summary>
+  /// Mass from the exact cut lengths. Callers round only when they print a schedule.
+  /// </summary>
+  public static (double MassPerPieceKg, double TotalMassKg) Masses(
+      int diameterMm,
+      IReadOnlyCollection<double> totalLengthsMm)
+  {
+    double exactTotalLengthMm = 0;
+    foreach (double lengthMm in totalLengthsMm)
+      exactTotalLengthMm += lengthMm;
+
+    double totalMassKg = ReinforcementLimits.GetLinearMass(diameterMm) * exactTotalLengthMm / 1000.0;
+    double massPerPieceKg = totalLengthsMm.Count == 0 ? 0 : totalMassKg / totalLengthsMm.Count;
+    return (massPerPieceKg, totalMassKg);
   }
 
   private static string AllocateBarId(ReinforcementZone zone, RebarSegment rebar, HashSet<string> usedIds)

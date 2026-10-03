@@ -95,7 +95,9 @@ def main() -> int:
             print(f"  mass from exact length {kg:.3f} kg, summary {r['summary']['totalMassKg']:.3f} kg")
         positions = sum(p["totalMassKg"] for p in r["positions"])
         drift = r["summary"]["totalMassKg"] - positions
-        print(f"  positions mass {positions:.3f} kg, drift vs summary {drift:+.3f} kg (rounding policy, see PR-6)")
+        print(f"  positions mass {positions:.6f} kg, drift vs summary {drift:+.6f} kg")
+        if abs(drift) > 1e-6:
+            errors.append(f"{report.name} mass drift {drift:+.6f} kg")
         print(f"  waste {r['summary']['totalWastePercent']:.2f}%, purchased {r['summary']['massPurchasedKg']} kg")
     if errors:
         print("FAILED:", ", ".join(errors))

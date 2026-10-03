@@ -397,8 +397,8 @@
       "shapeCode": "H",
       "lengthMm": 6485,
       "quantity": 27,
-      "massPerPieceKg": 16.017950000000003,
-      "totalMassKg": 432.48465000000004,
+      "massPerPieceKg": 16.019152093786026,
+      "totalMassKg": 432.51710653222267,
       "layer": "BottomX"
     }
   ],
@@ -577,12 +577,12 @@
           "shapeCode": "H",
           "lengthMm": 6485,
           "quantity": 27,
-          "massPerPieceKg": 16.017950000000003,
-          "totalMassKg": 432.48465000000004,
+          "massPerPieceKg": 16.019152093786026,
+          "totalMassKg": 432.51710653222267,
           "layer": "BottomX"
         }
       ],
-      "massKg": 432.48465000000004
+      "massKg": 432.51710653222267
     },
     {
       "layer": "BottomY",
