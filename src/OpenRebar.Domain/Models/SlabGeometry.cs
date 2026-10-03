@@ -53,6 +53,25 @@ public sealed class SlabGeometry
   /// <summary>Sides of the outline. An omitted side is Free.</summary>
   public IReadOnlyList<SlabEdge> Edges { get; init; } = [];
 
-  /// <summary>Effective depth d₀ = h - a (mm).</summary>
+  /// <summary>
+  /// Slab thickness minus cover, mm. A partial report uses this because no bar
+  /// has been placed yet, so d/2 is not subtracted.
+  /// </summary>
   public double EffectiveDepthMm => ThicknessMm - CoverMm;
+
+  /// <summary>
+  /// Distance from the opposite face to the axis of an outer bar, mm.
+  /// The axis sits at cover + d/2 from the near face.
+  /// </summary>
+  public double EffectiveDepthFor(int diameterMm)
+  {
+    if (diameterMm < 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "Diameter cannot be negative.");
+
+    double depth = ThicknessMm - CoverMm - diameterMm / 2.0;
+    if (depth <= 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "The bar does not fit in the slab.");
+
+    return depth;
+  }
 }
