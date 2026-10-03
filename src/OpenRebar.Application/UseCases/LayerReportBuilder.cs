@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using OpenRebar.Domain;
 using OpenRebar.Domain.Models;
-using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Application.UseCases;
 
@@ -70,9 +69,12 @@ public static class LayerReportBuilder
         .GroupBy(item => item.Rebar.Mark ?? "")
         .Select(group =>
         {
-          var first = group.First();
+          var bars = group.ToList();
+          var first = bars[0];
           int length = (int)Math.Round(first.Rebar.TotalLength, MidpointRounding.AwayFromZero);
-          double piece = ReinforcementLimits.GetLinearMass(first.Rebar.DiameterMm) * (length / 1000.0);
+          var (piece, total) = PositionAssigner.Masses(
+              first.Rebar.DiameterMm,
+              bars.Select(item => item.Rebar.TotalLength).ToList());
           return new PositionExecutionReport
           {
             Mark = group.Key,
@@ -80,9 +82,9 @@ public static class LayerReportBuilder
             SteelClass = first.Zone.Spec.SteelClass,
             ShapeCode = string.IsNullOrWhiteSpace(first.Rebar.ShapeCode) ? "00" : first.Rebar.ShapeCode,
             LengthMm = length,
-            Quantity = group.Count(),
+            Quantity = bars.Count,
             MassPerPieceKg = piece,
-            TotalMassKg = piece * group.Count(),
+            TotalMassKg = total,
             Layer = name
           };
         })

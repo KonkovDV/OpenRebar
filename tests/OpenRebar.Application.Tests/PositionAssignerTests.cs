@@ -1,5 +1,6 @@
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using FluentAssertions;
 
 namespace OpenRebar.Application.Tests;
@@ -68,6 +69,37 @@ public class PositionAssignerTests
     positions[2].Layer.Should().Be("TopY");
     positions[2].LengthMm.Should().Be(4000);
     positions[3].LengthMm.Should().Be(2000);
+  }
+
+  [Fact]
+  public void Assign_TotalMassUsesExactLength()
+  {
+    const double totalLengthMm = 175108.1402964464;
+    const int count = 27;
+    double lengthMm = totalLengthMm / count;
+    var zone = new ReinforcementZone
+    {
+      Id = "Z-1",
+      Boundary = MakeRect(0, 0, 6000, 4000),
+      Spec = new ReinforcementSpec { DiameterMm = 20, SpacingMm = 150, SteelClass = "A500C" },
+      Direction = RebarDirection.X,
+      Layer = RebarLayer.Bottom,
+      ZoneType = ZoneType.Simple,
+      Rebars = Enumerable.Range(0, count)
+          .Select(index => MakeRebar(20, lengthMm, index * 150.0))
+          .ToList()
+    };
+
+    var position = PositionAssigner.Assign([zone]).Single();
+    double linearMass = ReinforcementLimits.GetLinearMass(20);
+    double exact = linearMass * totalLengthMm / 1000.0;
+    double rounded = linearMass * position.LengthMm * count / 1000.0;
+
+    position.LengthMm.Should().Be(6485);
+    position.Quantity.Should().Be(count);
+    position.TotalMassKg.Should().BeApproximately(exact, 1e-9);
+    position.MassPerPieceKg.Should().BeApproximately(exact / count, 1e-9);
+    Math.Abs(exact - rounded).Should().BeGreaterThan(1e-4);
   }
 
   private static ReinforcementZone Zone(

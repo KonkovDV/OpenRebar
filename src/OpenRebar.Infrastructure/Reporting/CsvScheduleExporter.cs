@@ -1,14 +1,15 @@
 using System.Globalization;
 using System.Text;
+using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
-using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Infrastructure.Reporting;
 
 /// <summary>
 /// Exports a semicolon-delimited specification and a steel-mass sheet.
-/// A position name is Ø20 A500C l = 6565. The designation column stays empty.
+/// A position name is Ø20 A500C l = 6485. The designation column stays empty.
+/// Piece mass and the steel total use the exact cut length and are rounded only here.
 /// Rows are positions, ordered by the numeric mark.
 /// </summary>
 public sealed class CsvScheduleExporter : IScheduleExporter
@@ -54,14 +55,19 @@ public sealed class CsvScheduleExporter : IScheduleExporter
           .GroupBy(row => row.Rebar.Mark ?? "")
           .Select(group =>
           {
-            var first = group.First();
+            var members = group.ToList();
+            var first = members[0];
+            var (massPerPiece, _) = PositionAssigner.Masses(
+                first.Rebar.DiameterMm,
+                members.Select(row => row.Rebar.TotalLength).ToList());
             return new ScheduleGroup(
                 group.Key,
                 first.Rebar.DiameterMm,
                 (int)Math.Round(first.Rebar.TotalLength, MidpointRounding.AwayFromZero),
                 first.Zone.Spec.SteelClass,
                 string.IsNullOrWhiteSpace(first.Rebar.ShapeCode) ? "00" : first.Rebar.ShapeCode,
-                group.Count());
+                members.Count,
+                massPerPiece);
           })
           .OrderBy(group => int.TryParse(group.Mark, NumberStyles.Integer, CultureInfo.InvariantCulture, out int mark) ? mark : int.MaxValue)
           .ThenBy(group => group.Mark, StringComparer.Ordinal)
@@ -76,7 +82,6 @@ public sealed class CsvScheduleExporter : IScheduleExporter
       builder.AppendLine(header);
       foreach (var group in layerRows)
       {
-        double massPerPiece = ReinforcementLimits.GetLinearMass(group.DiameterMm) * (group.LengthMm / 1000.0);
         builder.AppendLine(string.Join(";",
             new[]
             {
@@ -84,7 +89,7 @@ public sealed class CsvScheduleExporter : IScheduleExporter
               "",
               $"Ø{group.DiameterMm} {group.SteelClass} l = {group.LengthMm}",
               group.Quantity.ToString(CultureInfo.InvariantCulture),
-              massPerPiece.ToString("F2", culture),
+              group.MassPerPieceKg.ToString("F2", culture),
               $"форма {group.ShapeCode}"
             }.Select(CsvCell)));
       }
@@ -94,11 +99,9 @@ public sealed class CsvScheduleExporter : IScheduleExporter
         .GroupBy(row => (Steel: row.Zone.Spec.SteelClass, Diameter: row.Rebar.DiameterMm))
         .Select(group =>
         {
-          double mass = group.Sum(row =>
-          {
-            int length = (int)Math.Round(row.Rebar.TotalLength, MidpointRounding.AwayFromZero);
-            return ReinforcementLimits.GetLinearMass(row.Rebar.DiameterMm) * (length / 1000.0);
-          });
+          var (_, mass) = PositionAssigner.Masses(
+              group.Key.Diameter,
+              group.Select(row => row.Rebar.TotalLength).ToList());
           return (group.Key.Steel, group.Key.Diameter, Mass: mass);
         })
         .OrderBy(item => item.Steel, StringComparer.Ordinal)
@@ -145,5 +148,6 @@ public sealed class CsvScheduleExporter : IScheduleExporter
       int LengthMm,
       string SteelClass,
       string ShapeCode,
-      int Quantity);
+      int Quantity,
+      double MassPerPieceKg);
 }
