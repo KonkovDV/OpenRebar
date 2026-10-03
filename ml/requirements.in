@@ -30,7 +30,7 @@ pydantic>=2.6,<3.0
 python-multipart>=0.0.9,<1.0
 
 # Geometry validation (shared with C# for consistency)
-ezdxf>=1.0,<2.0
+ezdxf>=1.4.4,<2.0
 shapely>=2.0,<3.0
 
 # Development and testing
