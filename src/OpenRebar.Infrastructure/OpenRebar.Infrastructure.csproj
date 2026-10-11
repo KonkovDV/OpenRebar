@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
-    <PackageReference Include="System.Text.Json" Version="10.0.7" />
+    <PackageReference Include="System.Text.Json" Version="10.0.12" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.587" />
   </ItemGroup>
 
