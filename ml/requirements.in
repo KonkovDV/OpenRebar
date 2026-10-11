@@ -31,7 +31,7 @@ python-multipart>=0.0.9,<1.0
 
 # Geometry validation (shared with C# for consistency)
 ezdxf>=1.0,<2.0
-shapely>=2.0,<3.0
+shapely>=2.2.0,<3.0
 
 # Development and testing
 pytest>=8.0,<9.0
