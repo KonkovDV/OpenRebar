@@ -16,7 +16,7 @@ The libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in
 
 ## Status
 
-Counted regression, the five commands under [Build and test](#build-and-test): **453/453 tests passing**.
+Counted regression, the five commands under [Quick start](#quick-start): **453/453 tests passing**.
 
 | Surface | Now |
 |---|---|
@@ -30,11 +30,35 @@ Counted regression, the five commands under [Build and test](#build-and-test): *
 
 The worked example `examples/dxf/simple-slab` exits 2. Edges are free, the required area runs to the edge, and a hook is not credited. That failure is the regression, not a bug in the snapshot.
 
+## Stage
+
+The examples are synthetic fixtures. They exercise the pipeline and the regression. They are not a measured pilot in a design office, and they are not a certificate.
+
+Shown on those fixtures:
+
+- a free-edge slab whose area check fails, and a supported slab whose area check passes
+- a report that rejects unknown fields
+- an IFC file whose bar type, body, and placement the CI check can see
+
+Not shown here:
+
+- a profile signed by an organisation, or a scan of every cited clause
+- a trained PNG segmenter
+- bent bars placed in a live Revit model
+- an IFC file opened again by another program
+- a saving of steel or money
+
+If this page and the tests disagree, the tests win. The rule for publishing a number is [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
+
 ## Where it sits
 
-[AeroBIM](https://github.com/KonkovDV/AeroBIM) checks a documentation pack (model, sheet, schedule, text) and writes the pack flag itself. OpenRebar designs the slab reinforcement and writes the report and the IFC that such a check can read. It does not review the pack.
+| Role | Program | Boundary |
+|---|---|---|
+| Required area | A calculation program writes As,req | OpenRebar does not solve the slab |
+| Layout and area check | **OpenRebar** | Does not accept the documentation pack |
+| Pack check | [AeroBIM](https://github.com/KonkovDV/AeroBIM) | Reads a model, a sheet, a schedule, and text. Sets its own pack flag. Does not design the bars |
 
-Other repositories under the same account (scheduling engines, marketplaces, research notes) are separate products.
+Scheduling engines, marketplaces, and research notes under the same GitHub account are other products.
 
 ## Pipeline
 
@@ -150,6 +174,13 @@ CI installs that lock with hashes on Python 3.11. There is no call to a hosted m
 ## Revit
 
 Copy `addin/RevitNet8` next to the `net8.0-windows` build, or `addin/RevitNet10` next to the `net10.0-windows` build. Bar axes sit at cover + d/2. The inner direction of a face lies on the outer one. Top cover is read from `CLEAR_COVER_TOP`. See [RELEASE_POLICY.md](RELEASE_POLICY.md).
+
+## Supply chain
+
+- NuGet restore is locked.
+- The ML lane installs `ml/requirements.locked.txt` with hashes and does not call a hosted model.
+- Scorecard runs on `main`. A release builds an SBOM and attests the published files.
+- ImageSharp stays on 3.1.12. Version 4 needs a license key. Five advisories on that line are accepted because that line has no patch. Any other high finding still fails the audit.
 
 ## Documents
 

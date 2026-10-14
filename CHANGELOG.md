@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The public README names the stage: synthetic fixtures, not a pilot and not a certificate. It places OpenRebar between the program that writes required area and AeroBIM, which checks the pack. It also records the locked restore, the hashed ML lock, Scorecard, the release SBOM, and the ImageSharp 3.1.12 hold.
 - The public README states the product boundary: deterministic slab reinforcement, no steel-saving claim, no trained segmenter, crack width and deflection left `NotEvaluated`. The current plan link is r10. The IFC section matches the bar type, swept disk, and placement already in the exporter.
 
 ### Added
