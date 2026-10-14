@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore accepts the five ImageSharp 3.1.12 advisories. That line has no patched release, and version 4 needs a license key. Any other high finding still fails the audit.
+- An IFC reinforcing bar keeps the same name and GlobalId on a second export. The name is the bar id. A bar with neither an id nor a mark is named from its zone and index.
 - The slab report records the distance from the opposite face to the axis of the largest placed bar: `h − cover − d/2`. On simple-slab, Ø20, that figure moves from 190 mm to 180 mm. Lengths and masses are unchanged. A report written before any bar exists still records `h − cover`.
 - A hooked bar can be drawn as its straight axis plus the semicircle already counted in the cut length. The straight tail stays 0 until a profile sets `hooks.tailDiameters`. L and U bars are still not drawn. The simple-slab lengths and masses are unchanged.
 - The IFC example check accepts exit 2 and exit 3. Those runs still write an IFC file. Exit 1 still fails the check.

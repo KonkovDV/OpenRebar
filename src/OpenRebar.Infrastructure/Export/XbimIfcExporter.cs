@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using OpenRebar.Domain;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
@@ -13,6 +16,7 @@ using Xbim.Ifc4.PropertyResource;
 using Xbim.Ifc4.QuantityResource;
 using Xbim.Ifc4.SharedBldgElements;
 using Xbim.Ifc4.StructuralElementsDomain;
+using Xbim.Ifc4.UtilityResource;
 
 namespace OpenRebar.Infrastructure.Export;
 
@@ -104,11 +108,13 @@ public sealed class XbimIfcExporter : IIfcExporter
     {
       ct.ThrowIfCancellationRequested();
 
-      foreach (var segment in zone.Rebars)
+      for (int index = 0; index < zone.Rebars.Count; index++)
       {
+        RebarSegment segment = zone.Rebars[index];
         var bar = model.Instances.New<IfcReinforcingBar>(entity =>
         {
-          entity.Name = segment.Mark ?? $"BAR-{Guid.NewGuid():N}";
+          entity.Name = BarName(zone, segment, index);
+          entity.GlobalId = BarGlobalId(zone, segment, index);
           entity.NominalDiameter = segment.DiameterMm * MillimetersToMeters;
           entity.BarLength = segment.TotalLength * MillimetersToMeters;
           entity.SteelGrade = zone.Spec.SteelClass;
@@ -130,6 +136,24 @@ public sealed class XbimIfcExporter : IIfcExporter
     model.SaveAs(outputPath);
 
     return Task.CompletedTask;
+  }
+
+  private static string BarName(ReinforcementZone zone, RebarSegment segment, int index)
+  {
+    if (!string.IsNullOrWhiteSpace(segment.BarId))
+      return segment.BarId;
+    if (!string.IsNullOrWhiteSpace(segment.Mark))
+      return segment.Mark;
+    return $"BAR-{zone.Id}-{index}";
+  }
+
+  private static IfcGloballyUniqueId BarGlobalId(ReinforcementZone zone, RebarSegment segment, int index)
+  {
+    string key = string.Create(
+        CultureInfo.InvariantCulture,
+        $"{segment.BarId}|{zone.Id}|{index}|{zone.Layer}|{zone.Direction}|{segment.DiameterMm}|{segment.Start.X:R}|{segment.Start.Y:R}|{segment.End.X:R}|{segment.End.Y:R}");
+    byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(key));
+    return IfcGloballyUniqueId.ConvertToBase64(new Guid(hash.AsSpan(0, 16)));
   }
 
   private static IfcSlab CreateSlab(IfcStore model, SlabGeometry slab)
