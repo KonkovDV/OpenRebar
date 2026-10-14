@@ -139,18 +139,6 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
       }
     }
 
-    // Spacing limit follows slab thickness. The layer, not the plan axis, chooses the role.
-    double maxSpacing = ReinforcementLimits.MaxSpacing(slab.ThicknessMm, ReinforcementLimits.SlabReinforcementRole.Working);
-    if (spacing > maxSpacing)
-    {
-      _logger.Warn(
-          "Spacing exceeds normative maximum",
-          ("zoneId", zone.Id),
-          ("spacingMm", spacing),
-          ("maxSpacingMm", Math.Round(maxSpacing, 2)),
-          ("slabThicknessMm", slab.ThicknessMm));
-    }
-
     zone.ExtendedBeyondZoneCount = extendedBeyondZone;
     if (extendedBeyondZone > 0)
     {

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The maximum bar spacing is measured on the combined layer. An additional bar between the background mesh is not a spacing error on its own. A wider gap is a hard clash, `layerSpacing`. On simple-slab the 150 mm spacing stays inside the 330 mm limit, so the example figures are unchanged.
 - Restore accepts the five ImageSharp 3.1.12 advisories. That line has no patched release, and version 4 needs a license key. Any other high finding still fails the audit.
 - An IFC reinforcing bar keeps the same name and GlobalId on a second export. The name is the bar id. A bar with neither an id nor a mark is named from its zone and index.
 - The slab report records the distance from the opposite face to the axis of the largest placed bar: `h − cover − d/2`. On simple-slab, Ø20, that figure moves from 190 mm to 180 mm. Lengths and masses are unchanged. A report written before any bar exists still records `h − cover`.
