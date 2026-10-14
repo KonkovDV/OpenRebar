@@ -115,13 +115,18 @@ public sealed class DxfIsolineParser : IIsolineParser
       return;
     }
 
-    var (polygon, color, holes) = ExtractPolygonFromEntity(entity, dxfFile);
+    var (polygon, color, holes, reason) = ExtractPolygonFromEntity(entity, dxfFile);
+    if (reason is not null)
+      session.Add(reason);
     if (polygon is null || color is null)
       return;
 
     var legendEntry = legend.FindClosest(color.Value);
     if (legendEntry is null)
+    {
+      session.Add("colorNotInLegend");
       return;
+    }
 
     if (candidates.Count >= MaxExpandedCandidates)
       throw new InvalidOperationException(
@@ -135,7 +140,7 @@ public sealed class DxfIsolineParser : IIsolineParser
         holes));
   }
 
-  private static (Polygon? Polygon, IsolineColor? Color, IReadOnlyList<Polygon> Holes) ExtractPolygonFromEntity(
+  private static (Polygon? Polygon, IsolineColor? Color, IReadOnlyList<Polygon> Holes, string? Reason) ExtractPolygonFromEntity(
       IxMilia.Dxf.Entities.DxfEntity entity,
       IxMilia.Dxf.DxfFile dxfFile)
   {
@@ -144,39 +149,48 @@ public sealed class DxfIsolineParser : IIsolineParser
       case DxfLwPolyline polyline:
         {
           var polygon = BuildPolygonFromLwPolyline(polyline);
-          if (polygon is null) return (null, null, []);
+          if (polygon is null) return (null, null, [], null);
 
           var color = ResolveEntityColor(polyline, dxfFile);
-          return (polygon, color, []);
+          return color is null
+              ? (null, null, [], "noColor")
+              : (polygon, color, [], null);
         }
 
       case DxfPolyline polyline3d:
         {
           var polygon = BuildPolygonFromPolyline(polyline3d);
-          if (polygon is null) return (null, null, []);
+          if (polygon is null) return (null, null, [], null);
 
           var color = ResolveEntityColor(polyline3d, dxfFile);
-          return (polygon, color, []);
+          return color is null
+              ? (null, null, [], "noColor")
+              : (polygon, color, [], null);
         }
 
       case DxfHatch hatch:
         {
           var shape = BuildHatchShape(hatch);
-          if (shape is null) return (null, null, []);
+          if (shape is null) return (null, null, [], null);
 
           var color = ResolveEntityColor(hatch, dxfFile);
-          return (shape.Value.Outer, color, shape.Value.Holes);
+          return color is null
+              ? (null, null, [], "noColor")
+              : (shape.Value.Outer, color, shape.Value.Holes, null);
         }
 
       default:
-        return (null, null, []);
+        return (null, null, [], "unsupportedEntity:" + entity.GetType().Name);
     }
   }
 
   private static Polygon? BuildPolygonFromLwPolyline(DxfLwPolyline polyline)
   {
     if (polyline.Vertices.Count < 2)
+    {
+      ActiveSession.Value?.Add("degenerateBoundary");
       return null;
+    }
 
     var first = polyline.Vertices[0];
     var last = polyline.Vertices[^1];
@@ -204,7 +218,10 @@ public sealed class DxfIsolineParser : IIsolineParser
   private static Polygon? BuildPolygonFromPolyline(DxfPolyline polyline)
   {
     if (polyline.Vertices.Count < 2)
+    {
+      ActiveSession.Value?.Add("degenerateBoundary");
       return null;
+    }
 
     var first = polyline.Vertices[0].Location;
     var last = polyline.Vertices[^1].Location;
@@ -253,7 +270,11 @@ public sealed class DxfIsolineParser : IIsolineParser
         .ToList();
 
     if (candidates.Count == 0)
+    {
+      if (hatch.BoundaryPaths.Count == 0)
+        ActiveSession.Value?.Add("degenerateBoundary");
       return null;
+    }
 
     var outer = candidates[0];
     var holes = new List<Polygon>();
@@ -282,7 +303,10 @@ public sealed class DxfIsolineParser : IIsolineParser
   private static Polygon? BuildPolygonFromPolylineBoundaryPath(DxfHatch.PolylineBoundaryPath path)
   {
     if (path.Vertices.Count < 2)
+    {
+      ActiveSession.Value?.Add("degenerateBoundary");
       return null;
+    }
 
     var first = path.Vertices[0].Location;
     var last = path.Vertices[^1].Location;

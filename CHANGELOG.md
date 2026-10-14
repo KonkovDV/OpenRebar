@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A DXF entity that is not a zone boundary, has no colour, or uses a colour outside the legend is counted in `ignoredByReason` instead of being dropped. A colour outside the legend is also a warning. simple-slab is one closed polyline in the legend, so its ignored-reason count stays `unitsAssumedMillimetres`.
 - The lap share is counted over every bar of the layer whose axis crosses the 1.3·lap window, including bars with different ends. A splice that uses the up-to-half lap length in a section that is more than half spliced is a hard clash, `lapShareExceeded`. simple-slab has no laps, so its figures are unchanged.
 - A supplier catalogue rejects a bad row instead of skipping it. Lengths and prices are read in the invariant culture, so a comma decimal is not a number. A length must be finite and greater than 0, a price must be empty or at least 0, and a duplicate length fails. The examples do not load a catalogue file, so their figures are unchanged.
 - The maximum bar spacing is measured on the combined layer. An additional bar between the background mesh is not a spacing error on its own. A wider gap is a hard clash, `layerSpacing`. On simple-slab the 150 mm spacing stays inside the 330 mm limit, so the example figures are unchanged.
