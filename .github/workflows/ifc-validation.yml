@@ -9,6 +9,8 @@ on:
       - "src/OpenRebar.Infrastructure/Export/**"
       - "src/OpenRebar.Domain/Ports/IIfcExporter.cs"
       - "tools/ci/validate_ifc_examples.py"
+      - "tools/ci/validate_ifc_ids.py"
+      - "tools/ci/ids/**"
       - "examples/**"
 
 permissions:
@@ -38,6 +40,9 @@ jobs:
 
       - name: Validate IFC examples
         run: python3 tools/ci/validate_ifc_examples.py
+
+      - name: Check IFC examples against the IDS entity list
+        run: python3 tools/ci/validate_ifc_ids.py artifacts/ifc-validation/generated tools/ci/ids/openrebar.ids
 
       - name: Upload IFC validation artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ids xmlns="http://standards.buildingsmart.org/IDS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd">
+  <info>
+    <title>OpenRebar reinforcing bar</title>
+    <description>A bar has a type, a swept disk body, and a placement. Length unit is the metre.</description>
+  </info>
+  <specifications>
+    <specification name="Reinforcing bar" ifcVersion="IFC4">
+      <applicability minOccurs="1">
+        <entity>
+          <name>
+            <simpleValue>IFCREINFORCINGBAR</simpleValue>
+          </name>
+        </entity>
+      </applicability>
+      <requirements>
+        <entity>
+          <name>
+            <simpleValue>IFCREINFORCINGBARTYPE</simpleValue>
+          </name>
+        </entity>
+        <entity>
+          <name>
+            <simpleValue>IFCRELDEFINESBYTYPE</simpleValue>
+          </name>
+        </entity>
+        <entity>
+          <name>
+            <simpleValue>IFCSWEPTDISKSOLID</simpleValue>
+          </name>
+        </entity>
+        <entity>
+          <name>
+            <simpleValue>IFCLOCALPLACEMENT</simpleValue>
+          </name>
+        </entity>
+      </requirements>
+    </specification>
+  </specifications>
+</ids>
