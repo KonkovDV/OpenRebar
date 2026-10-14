@@ -1,4 +1,5 @@
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using OpenRebar.Infrastructure.Export;
 using FluentAssertions;
 using Xbim.Ifc;
@@ -77,6 +78,70 @@ public class XbimIfcExporterTests
       model.Instances.OfType<IIfcReinforcingBar>().Should().HaveCount(2);
       model.Instances.OfType<IIfcMaterial>().Should().ContainSingle(
           "bars that share the same steel class should reuse one IFC material definition instead of duplicating it per bar");
+    }
+    finally
+    {
+      if (File.Exists(path))
+        File.Delete(path);
+    }
+  }
+
+  [Fact]
+  public async Task ExportAsync_GivesEachBarATypeBodyAndPlacement()
+  {
+    var exporter = new XbimIfcExporter();
+    string path = Path.Combine(Path.GetTempPath(), $"OpenRebar-{Guid.NewGuid():N}.ifc");
+    (SlabGeometry slab, IReadOnlyList<ReinforcementZone> zones) = Sample();
+
+    try
+    {
+      await exporter.ExportAsync(zones, slab, path);
+      using var model = IfcStore.Open(path);
+      model.Instances.OfType<IIfcReinforcingBarType>().Should().ContainSingle();
+      var bars = model.Instances.OfType<IIfcReinforcingBar>().ToList();
+      bars.Should().HaveCount(2);
+      foreach (var bar in bars)
+      {
+        bar.ObjectPlacement.Should().BeAssignableTo<IIfcLocalPlacement>();
+        var solid = bar.Representation!.Representations
+            .SelectMany(representation => representation.Items)
+            .OfType<IIfcSweptDiskSolid>()
+            .Single();
+        ((double)solid.Radius).Should().BeApproximately(0.006, 1e-9);
+        solid.InnerRadius.Should().BeNull();
+      }
+    }
+    finally
+    {
+      if (File.Exists(path))
+        File.Delete(path);
+    }
+  }
+
+  [Fact]
+  public async Task ExportAsync_DrawsAHookedBar()
+  {
+    var exporter = new XbimIfcExporter();
+    string path = Path.Combine(Path.GetTempPath(), $"OpenRebar-{Guid.NewGuid():N}.ifc");
+    var shape = BendRules.Describe(12, "A500C", BarEndCondition.NeedsHook, BarEndCondition.NeedsHook);
+    (SlabGeometry slab, IReadOnlyList<ReinforcementZone> zones) = Sample();
+    var zone = zones[0];
+    zone.Rebars = [zone.Rebars[0] with
+    {
+      EndConditionStart = BarEndCondition.NeedsHook,
+      EndConditionEnd = BarEndCondition.NeedsHook,
+      Shape = shape.Shape,
+      ShapeCode = shape.Code,
+      BendRadiusMm = shape.InnerRadiusMm,
+      BendArcMm = shape.ArcMm
+    }];
+
+    try
+    {
+      await exporter.ExportAsync(zones, slab, path);
+      using var model = IfcStore.Open(path);
+      model.Instances.OfType<IIfcCompositeCurve>().Should().ContainSingle();
+      model.Instances.OfType<IIfcSweptDiskSolid>().Should().ContainSingle();
     }
     finally
     {

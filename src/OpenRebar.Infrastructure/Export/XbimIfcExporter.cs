@@ -3,10 +3,14 @@ using System.Security.Cryptography;
 using System.Text;
 using OpenRebar.Domain;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using OpenRebar.Domain.Ports;
 using Xbim.Common;
 using Xbim.Ifc;
 using Xbim.IO;
+using Xbim.Ifc4.GeometricConstraintResource;
+using Xbim.Ifc4.GeometricModelResource;
+using Xbim.Ifc4.GeometryResource;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.Kernel;
 using Xbim.Ifc4.MaterialResource;
@@ -14,6 +18,7 @@ using Xbim.Ifc4.MeasureResource;
 using Xbim.Ifc4.ProductExtension;
 using Xbim.Ifc4.PropertyResource;
 using Xbim.Ifc4.QuantityResource;
+using Xbim.Ifc4.RepresentationResource;
 using Xbim.Ifc4.SharedBldgElements;
 using Xbim.Ifc4.StructuralElementsDomain;
 using Xbim.Ifc4.UtilityResource;
@@ -103,6 +108,9 @@ public sealed class XbimIfcExporter : IIfcExporter
     });
 
     var materialCache = new Dictionary<string, IfcMaterial>(StringComparer.OrdinalIgnoreCase);
+    var typeCache = new Dictionary<string, IfcReinforcingBarType>(StringComparer.Ordinal);
+    var context = model.Instances.OfType<IfcGeometricRepresentationContext>()
+        .First(item => item.CoordinateSpaceDimension == 3);
 
     foreach (var zone in zones)
     {
@@ -129,6 +137,8 @@ public sealed class XbimIfcExporter : IIfcExporter
         AttachBarProperties(model, bar, zone, segment);
         AttachBarQuantities(model, bar, segment);
         AttachBarMaterial(model, bar, zone.Spec.SteelClass, materialCache);
+        AttachBarType(model, bar, zone, segment, typeCache);
+        AttachBarShape(model, bar, zone, segment, slab, context);
       }
     }
 
@@ -295,5 +305,186 @@ public sealed class XbimIfcExporter : IIfcExporter
       rel.RelatingMaterial = material;
       rel.RelatedObjects.Add(bar);
     });
+  }
+
+  private static void AttachBarType(
+      IfcStore model,
+      IfcReinforcingBar bar,
+      ReinforcementZone zone,
+      RebarSegment segment,
+      IDictionary<string, IfcReinforcingBarType> typeCache)
+  {
+    string key = string.Create(CultureInfo.InvariantCulture, $"{segment.DiameterMm}|{zone.Spec.SteelClass}");
+    if (!typeCache.TryGetValue(key, out var barType))
+    {
+      bool periodic = AnchorageRules.IsPeriodicProfile(zone.Spec.SteelClass);
+      barType = model.Instances.New<IfcReinforcingBarType>(entity =>
+      {
+        entity.Name = key;
+        entity.PredefinedType = IfcReinforcingBarTypeEnum.MAIN;
+        entity.NominalDiameter = segment.DiameterMm * MillimetersToMeters;
+        entity.BarSurface = periodic
+            ? IfcReinforcingBarSurfaceEnum.TEXTURED
+            : IfcReinforcingBarSurfaceEnum.PLAIN;
+      });
+      typeCache[key] = barType;
+    }
+
+    model.Instances.New<IfcRelDefinesByType>(rel =>
+    {
+      rel.RelatingType = barType;
+      rel.RelatedObjects.Add(bar);
+    });
+  }
+
+  private static void AttachBarShape(
+      IfcStore model,
+      IfcReinforcingBar bar,
+      ReinforcementZone zone,
+      RebarSegment segment,
+      SlabGeometry slab,
+      IfcGeometricRepresentationContext context)
+  {
+    double elevationMm = LayerElevations.AxisElevationMm(
+        zone.Layer,
+        zone.Direction,
+        slab.ThicknessMm,
+        slab.CoverMm,
+        slab.CoverMm,
+        segment.DiameterMm,
+        segment.DiameterMm);
+    if (!HookCenterline.TryBuild(segment, elevationMm, tailMm: 0, bendUp: zone.Layer != RebarLayer.Bottom, out var spans, out _))
+      return;
+
+    var origin = spans[0].Start;
+    double dx = segment.End.X - segment.Start.X;
+    double dy = segment.End.Y - segment.Start.Y;
+    double length = Math.Sqrt(dx * dx + dy * dy);
+    if (length < 1e-6)
+      return;
+    double ux = dx / length;
+    double uy = dy / length;
+
+    bar.ObjectPlacement = model.Instances.New<IfcLocalPlacement>(placement =>
+    {
+      placement.RelativePlacement = model.Instances.New<IfcAxis2Placement3D>(axis =>
+      {
+        axis.Location = Point(model, origin.X * MillimetersToMeters, origin.Y * MillimetersToMeters, origin.Z * MillimetersToMeters);
+        axis.Axis = Direction(model, 0, 0, 1);
+        axis.RefDirection = Direction(model, ux, uy, 0);
+      });
+    });
+
+    IfcCurve directrix = spans.Any(span => span.Through is not null)
+        ? Composite(model, spans, origin, ux, uy)
+        : Polyline(model, spans.SelectMany(span => new[] { span.Start, span.End }), origin, ux, uy);
+
+    var solid = model.Instances.New<IfcSweptDiskSolid>(entity =>
+    {
+      entity.Directrix = directrix;
+      entity.Radius = segment.DiameterMm * MillimetersToMeters / 2.0;
+    });
+    var shape = model.Instances.New<IfcShapeRepresentation>(representation =>
+    {
+      representation.ContextOfItems = context;
+      representation.RepresentationIdentifier = "Body";
+      representation.RepresentationType = "AdvancedSweptSolid";
+      representation.Items.Add(solid);
+    });
+    bar.Representation = model.Instances.New<IfcProductDefinitionShape>(definition =>
+    {
+      definition.Representations.Add(shape);
+    });
+  }
+
+  private static IfcPolyline Polyline(
+      IfcStore model,
+      IEnumerable<HookCenterline.Point> points,
+      HookCenterline.Point origin,
+      double ux,
+      double uy)
+  {
+    var curve = model.Instances.New<IfcPolyline>();
+    HookCenterline.Point? previous = null;
+    foreach (var point in points)
+    {
+      if (previous is { } prior && Same(prior, point))
+        continue;
+      curve.Points.Add(Point(model, Local(point, origin, ux, uy)));
+      previous = point;
+    }
+
+    return curve;
+  }
+
+  private static IfcCompositeCurve Composite(
+      IfcStore model,
+      IReadOnlyList<HookCenterline.Span> spans,
+      HookCenterline.Point origin,
+      double ux,
+      double uy)
+  {
+    var curve = model.Instances.New<IfcCompositeCurve>();
+    foreach (var span in spans)
+    {
+      var points = span.Through is { } through
+          ? SampleArc(span.Start, through, span.End)
+          : new[] { span.Start, span.End };
+      var parent = Polyline(model, points, origin, ux, uy);
+      curve.Segments.Add(model.Instances.New<IfcCompositeCurveSegment>(segment =>
+      {
+        segment.Transition = IfcTransitionCode.CONTINUOUS;
+        segment.SameSense = true;
+        segment.ParentCurve = parent;
+      }));
+    }
+
+    return curve;
+  }
+
+  private static IReadOnlyList<HookCenterline.Point> SampleArc(
+      HookCenterline.Point start,
+      HookCenterline.Point through,
+      HookCenterline.Point end)
+  {
+    var samples = new List<HookCenterline.Point> { start, through, end };
+    return samples;
+  }
+
+  private static (double X, double Y, double Z) Local(
+      HookCenterline.Point point,
+      HookCenterline.Point origin,
+      double ux,
+      double uy)
+  {
+    double dx = point.X - origin.X;
+    double dy = point.Y - origin.Y;
+    double dz = point.Z - origin.Z;
+    return (
+        (dx * ux + dy * uy) * MillimetersToMeters,
+        (dx * -uy + dy * ux) * MillimetersToMeters,
+        dz * MillimetersToMeters);
+  }
+
+  private static bool Same(HookCenterline.Point left, HookCenterline.Point right) =>
+      Math.Abs(left.X - right.X) < 1e-6
+      && Math.Abs(left.Y - right.Y) < 1e-6
+      && Math.Abs(left.Z - right.Z) < 1e-6;
+
+  private static IfcCartesianPoint Point(IfcStore model, double x, double y, double z)
+  {
+    var point = model.Instances.New<IfcCartesianPoint>();
+    point.SetXYZ(x, y, z);
+    return point;
+  }
+
+  private static IfcCartesianPoint Point(IfcStore model, (double X, double Y, double Z) value) =>
+      Point(model, value.X, value.Y, value.Z);
+
+  private static IfcDirection Direction(IfcStore model, double x, double y, double z)
+  {
+    var direction = model.Instances.New<IfcDirection>();
+    direction.SetXYZ(x, y, z);
+    return direction;
   }
 }
