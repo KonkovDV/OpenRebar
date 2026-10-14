@@ -51,7 +51,7 @@ public static class ClearanceChecker
         AddStackClash(clashes, left, right, slab);
     }
 
-    AddLapClashes(clashes, bars, jointRatioMax);
+    AddLapClashes(clashes, bars, slab, jointRatioMax);
     AddLayerSpacing(clashes, bars, slab);
     return clashes
         .OrderBy(clash => clash.Kind, StringComparer.Ordinal)
@@ -157,47 +157,88 @@ public static class ClearanceChecker
     });
   }
 
-  private static void AddLapClashes(List<ClashReport> clashes, IReadOnlyList<BarRef> bars, double jointRatioMax)
+  private static void AddLapClashes(
+      List<ClashReport> clashes,
+      IReadOnlyList<BarRef> bars,
+      SlabGeometry slab,
+      double jointRatioMax)
   {
     foreach (var layer in bars.GroupBy(bar => LayerKeyOf(bar.Zone)))
     {
       var lines = ClusterLines(layer.ToList());
-      foreach (var run in ClusterRuns(lines))
+      if (lines.Count == 0)
+        continue;
+
+      var origin = lines[0].Bars[0].PhysicalStart;
+      var axis = lines[0].Bars[0].PhysicalEnd - origin;
+      double axisLength = Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y);
+      if (axisLength < 1e-9)
+        continue;
+      var unit = new Point2D(axis.X / axisLength, axis.Y / axisLength);
+      double Project(Point2D point) => (point.X - origin.X) * unit.X + (point.Y - origin.Y) * unit.Y;
+
+      var section = new List<LapSectionShare.Bar>(lines.Count);
+      foreach (var line in lines)
       {
-        var joints = run.SelectMany(line => line.Joints).ToList();
-        if (joints.Count == 0 || run.Count == 0)
-          continue;
+        var points = line.Bars.SelectMany(bar => new[] { bar.PhysicalStart, bar.PhysicalEnd }).Select(Project).ToList();
+        section.Add(new LapSectionShare.Bar(
+            points.Min(),
+            points.Max(),
+            line.Joints.Select(joint => Project(joint.Center)).ToList()));
+      }
 
-        var origin = run[0].Bars[0].PhysicalStart;
-        var axis = run[0].Bars[0].PhysicalEnd - origin;
-        double axisLength = Math.Sqrt(axis.X * axis.X + axis.Y * axis.Y);
-        if (axisLength < 1e-9)
-          continue;
-        var unit = new Point2D(axis.X / axisLength, axis.Y / axisLength);
-        double Project(Point2D point) => (point.X - origin.X) * unit.X + (point.Y - origin.Y) * unit.Y;
-
-        foreach (var joint in joints)
+      var flagged = new HashSet<string>(StringComparer.Ordinal);
+      foreach (var line in lines)
+      {
+        foreach (var joint in line.Joints)
         {
           double at = Project(joint.Center);
-          double window = LapPlanner.SectionLengthFactor * joint.Length;
-          int occupied = run.Count(line => line.Joints.Any(other => Math.Abs(Project(other.Center) - at) <= window + 1e-6));
-          if (occupied / (double)run.Count <= jointRatioMax)
-            continue;
-
-          clashes.Add(new ClashReport
+          double share = LapSectionShare.Ratio(section, at, joint.Length);
+          string ids = string.Join("|", new[] { joint.Left.Id, joint.Right.Id }.OrderBy(id => id, StringComparer.Ordinal));
+          if (share > jointRatioMax + 1e-9 && flagged.Add("overload:" + ids))
           {
-            Type = "soft",
-            Kind = "lapOverload",
-            X = joint.Center.X,
-            Y = joint.Center.Y,
-            BarIds = [joint.Left.Id, joint.Right.Id]
-          });
-          break;
-        }
+            clashes.Add(new ClashReport
+            {
+              Type = "soft",
+              Kind = "lapOverload",
+              X = joint.Center.X,
+              Y = joint.Center.Y,
+              BarIds = [joint.Left.Id, joint.Right.Id]
+            });
+          }
 
-        AddLapClearanceClashes(clashes, run, Project);
+          if (share > 0.5 + 1e-9 && IsUpToHalfLap(joint, slab) && flagged.Add("share:" + ids))
+          {
+            clashes.Add(new ClashReport
+            {
+              Type = "hard",
+              Kind = "lapShareExceeded",
+              X = joint.Center.X,
+              Y = joint.Center.Y,
+              BarIds = [joint.Left.Id, joint.Right.Id]
+            });
+          }
+        }
       }
+
+      foreach (var run in ClusterRuns(lines))
+        AddLapClearanceClashes(clashes, run, Project);
     }
+  }
+
+  private static bool IsUpToHalfLap(LapSample joint, SlabGeometry slab)
+  {
+    int diameter = Math.Max(joint.Left.Segment.DiameterMm, joint.Right.Segment.DiameterMm);
+    bool top = joint.Left.Zone.Layer == RebarLayer.Top
+        || joint.Left.Zone.DesignLayer is LayerKey.TopX or LayerKey.TopY;
+    double factor = top ? NormativeProfiles.Sp63_2018.TopBarAnchorageFactor : 1.0;
+    double halfLap = AnchorageRules.CalculateLapLength(
+        diameter,
+        joint.Left.Zone.Spec.SteelClass,
+        slab.ConcreteClass,
+        AnchorageRules.LapSpliceShare.UpTo50,
+        topBarAnchorageFactor: factor);
+    return Math.Abs(joint.Length - halfLap) <= 1.0;
   }
 
   /// <summary>

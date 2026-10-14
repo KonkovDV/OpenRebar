@@ -1,6 +1,7 @@
 using FluentAssertions;
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using OpenRebar.Infrastructure.Geometry;
 
 namespace OpenRebar.Application.Tests;
@@ -155,6 +156,39 @@ public class ClearanceCheckerTests
   }
 
   [Fact]
+  public void CombinedSection_FlagsLapsThatExceedTheHalfShare()
+  {
+    double lap = AnchorageRules.CalculateLapLength(12, "A500C", "B25", AnchorageRules.LapSpliceShare.UpTo50);
+    var clashes = Check(
+        Piece("a1", 0, 0, 5000 + lap / 2),
+        Piece("a2", 5000 - lap / 2, 0, 10000),
+        Piece("plain", 0, 200, 10000),
+        Piece("b1", 0, 400, 5000 + lap / 2),
+        Piece("b2", 5000 - lap / 2, 400, 9000),
+        Piece("c1", 0, 600, 5000 + lap / 2),
+        Piece("c2", 5000 - lap / 2, 600, 9000));
+
+    clashes.Should().Contain(clash => clash.Kind == "lapShareExceeded" && clash.Type == "hard");
+  }
+
+  [Fact]
+  public void CombinedSection_AcceptsLapsOutsideTheWindow()
+  {
+    double lap = AnchorageRules.CalculateLapLength(12, "A500C", "B25", AnchorageRules.LapSpliceShare.UpTo50);
+    double far = 5000 + LapPlanner.SectionLengthFactor * lap + 10;
+    var clashes = Check(
+        Piece("a1", 0, 0, 5000 + lap / 2),
+        Piece("a2", 5000 - lap / 2, 0, 10000),
+        Piece("plain", 0, 200, 10000),
+        Piece("b1", 0, 400, far + lap / 2),
+        Piece("b2", far - lap / 2, 400, 9000),
+        Piece("c1", 0, 600, far + lap / 2),
+        Piece("c2", far - lap / 2, 600, 9000));
+
+    clashes.Should().NotContain(clash => clash.Kind == "lapShareExceeded");
+  }
+
+  [Fact]
   public void CombinedLayer_FlagsAGapWiderThanTheLimit()
   {
     var clashes = ClearanceChecker.Check(
@@ -196,6 +230,9 @@ public class ClearanceCheckerTests
       Rebars = bars
     };
   }
+
+  private static RebarSegment Piece(string id, double x0, double y, double x1) =>
+      Bar(id, x0, y, x1, y);
 
   private static RebarSegment Bar(
       string id,
