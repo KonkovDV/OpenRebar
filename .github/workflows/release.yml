@@ -127,7 +127,7 @@ jobs:
         run: sha256sum --check SHA256SUMS
 
       - name: Attest final release artifacts
-        uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
         with:
           subject-path: |
             ./publish/OpenRebar-cli-${{ github.ref_name }}.zip
