@@ -83,7 +83,7 @@ The repository treats the machine-readable outputs as first-class artifacts.
 | `*.schedule.csv` | CLI exporter | Rebar schedule export for downstream spreadsheets/ERP |
 | `*.reinforcement.ifc` | CLI exporter | IFC export surface (IFC4 via xBIM) |
 
-**Canonical schema:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `2.0.0`)
+**Canonical schema:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `2.1.0`)
 
 The canonical report explicitly persists:
 
@@ -168,7 +168,7 @@ dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj
 dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Current regression status (those five commands): **447/447 tests passing**.
+Current regression status (those five commands): **453/453 tests passing**.
 
 ## CI Quality Gates
 
@@ -205,6 +205,7 @@ Still open relative to [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_
 - Column generation packs a single stock length. A dual bound is published only when `boundStatus` is `Proven`.
 - The schedule is a CSV specification and a steel-mass sheet. XLSX is not written. IFC export has no `IfcReinforcingBarType` and no bar geometry.
 - Raster input requires calibration. The optional ML service ships with an empty model manifest.
+- Crack width and deflection are not calculated from a required-area input. The report lists them as `NotEvaluated`.
 - A 50 mm grid rejects a layout when any cell is short of the specified area (`Passed` only at zero deficit). Development is measured from the placed end, so an edge without room for anchorage fails the check. Holes are still part of the checked area. `examples/dxf/simple-slab` stays failed because its edges are Free, the required area runs to the edge, and a hook is not credited. A free edge also insets the axis by cover + d/2 (40 mm for Ø20 and 30 mm cover): `edgeDevelopmentAreaM2` is 6.12, `realDeficitAreaM2` is 0.99, and `underReinforcedAreaM2` is 7.11.
 
 ## CLI Quickstart

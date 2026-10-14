@@ -126,6 +126,10 @@
     "laps": {
       "type": "array",
       "items": { "$ref": "#/$defs/lapJointReport" }
+    },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/normativeCheck" }
     }
   },
   "$defs": {
@@ -139,6 +143,17 @@
         "positionMm": { "type": "number" },
         "lengthMm": { "type": "number", "minimum": 0 },
         "alpha": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "normativeCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["Passed", "Failed", "NotEvaluated"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "clause": { "type": "string", "minLength": 1 }
       }
     },
     "clashReport": {

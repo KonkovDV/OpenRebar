@@ -42,7 +42,8 @@ public class ReportSchemaComplianceTests
         "layers",
         "parameterSources",
         "clashes",
-        "laps"
+        "laps",
+        "checks"
   ];
 
   [Fact]

@@ -83,7 +83,7 @@ OpenRebar реализует воспроизводимый конвейер:
 | `*.schedule.csv` | CLI exporter | Выгрузка ведомости арматуры (CSV) |
 | `*.reinforcement.ifc` | CLI exporter | IFC-экспорт (IFC4 через xBIM) |
 
-**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `2.0.0`)
+**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `2.1.0`)
 
 Канонический отчёт явно хранит:
 
@@ -168,7 +168,7 @@ dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj
 dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Текущий регрессионный статус (эти пять команд): **447/447 тестов проходят**.
+Текущий регрессионный статус (эти пять команд): **453/453 тестов проходят**.
 
 ## Контрольные проверки CI
 
@@ -205,6 +205,7 @@ dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --co
 - Генерация столбцов пакует одну складскую длину. Двойственная граница публикуется только при `boundStatus` = `Proven`.
 - Ведомость — это CSV-спецификация и лист расхода стали. XLSX не пишется. В IFC нет `IfcReinforcingBarType` и нет геометрии стержня.
 - Растр требует калибровки. Опциональный ML-сервис поставляется с пустым манифестом модели.
+- Ширина трещин и прогиб по одному полю требуемой площади не считаются. Отчёт помечает их как `NotEvaluated`.
 - Сетка 50 мм отклоняет раскладку, если хотя бы одна ячейка недобирает заданную площадь (`Passed` только при нулевом дефиците). Развитие считается от уложенного торца, поэтому край без места под анкеровку не проходит проверку. Отверстия остаются внутри проверяемой площади. `examples/dxf/simple-slab` остаётся красным: края Free, требуемая площадь доходит до края, крюк не засчитывается. Свободный край ещё отступает ось на cover + d/2 (для Ø20 и защитного слоя 30 мм это 40 мм): `edgeDevelopmentAreaM2` равен 6,12, `realDeficitAreaM2` равен 0,99, `underReinforcedAreaM2` равен 7,11.
 
 ## Быстрый старт CLI

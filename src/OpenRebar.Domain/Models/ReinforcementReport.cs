@@ -25,7 +25,7 @@ public sealed record PipelineExecutionMetadata
 public sealed record ReinforcementExecutionReport
 {
   public string ContractId { get; init; } = "OpenRebar.reinforcement.report.v2";
-  public string SchemaVersion { get; init; } = "2.0.0";
+  public string SchemaVersion { get; init; } = "2.1.0";
   public required DateTimeOffset GeneratedAtUtc { get; init; }
   public required PipelineExecutionMetadata Metadata { get; init; }
   public required NormativeProfileExecutionReport NormativeProfile { get; init; }
@@ -50,6 +50,7 @@ public sealed record ReinforcementExecutionReport
   public IReadOnlyList<ParameterSourceReport> ParameterSources { get; init; } = [];
   public IReadOnlyList<ClashReport> Clashes { get; init; } = [];
   public IReadOnlyList<LapJointReport> Laps { get; init; } = [];
+  public IReadOnlyList<NormativeCheck> Checks { get; init; } = [];
   public bool PartialResult { get; init; }  // true if pipeline aborted early due to critical error
 }
 
