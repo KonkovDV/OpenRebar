@@ -303,6 +303,77 @@ public class PngIsolineParserTests
     }
   }
 
+  [Fact]
+  public async Task ParseAsync_DeclaredSizeAboveTheBudget_DoesNotDecode()
+  {
+    var parser = Calibrated();
+    var tempFile = Path.Combine(Path.GetTempPath(), $"OpenRebar-huge-{Guid.NewGuid():N}.png");
+    await File.WriteAllBytesAsync(tempFile, PngWithDeclaredSize(100_000, 100_000));
+
+    try
+    {
+      var act = async () => await parser.ParseAsync(tempFile, RedLegend());
+      await act.Should().ThrowAsync<InvalidIsolineFileException>()
+          .WithMessage("*100000x100000*");
+    }
+    finally
+    {
+      if (File.Exists(tempFile))
+        File.Delete(tempFile);
+    }
+  }
+
+  private static byte[] PngWithDeclaredSize(uint width, uint height)
+  {
+    var data = new byte[13];
+    WriteBigEndian(data, 0, width);
+    WriteBigEndian(data, 4, height);
+    data[8] = 8;
+    data[9] = 2;
+    var typeAndData = new byte[17];
+    typeAndData[0] = (byte)'I';
+    typeAndData[1] = (byte)'H';
+    typeAndData[2] = (byte)'D';
+    typeAndData[3] = (byte)'R';
+    data.CopyTo(typeAndData, 4);
+    uint crc = Crc32(typeAndData);
+
+    var file = new byte[8 + 12 + 13];
+    file[0] = 137;
+    file[1] = 80;
+    file[2] = 78;
+    file[3] = 71;
+    file[4] = 13;
+    file[5] = 10;
+    file[6] = 26;
+    file[7] = 10;
+    WriteBigEndian(file, 8, 13);
+    typeAndData.CopyTo(file, 12);
+    WriteBigEndian(file, 29, crc);
+    return file;
+  }
+
+  private static void WriteBigEndian(byte[] buffer, int offset, uint value)
+  {
+    buffer[offset] = (byte)(value >> 24);
+    buffer[offset + 1] = (byte)(value >> 16);
+    buffer[offset + 2] = (byte)(value >> 8);
+    buffer[offset + 3] = (byte)value;
+  }
+
+  private static uint Crc32(byte[] data)
+  {
+    uint crc = 0xFFFFFFFF;
+    foreach (byte value in data)
+    {
+      crc ^= value;
+      for (int bit = 0; bit < 8; bit++)
+        crc = (crc & 1) == 1 ? (crc >> 1) ^ 0xEDB88320 : crc >> 1;
+    }
+
+    return ~crc;
+  }
+
   private static PngIsolineParser Calibrated() => new()
   {
     Calibration = new RasterCalibration(1, 0, 0),

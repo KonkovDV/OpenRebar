@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A PNG is measured from its header before it is decoded. A frame above 25 million pixels is rejected with the same size error as before, and only the first frame is decoded. The examples are unchanged.
 - An IFC reinforcing bar has a type for its diameter and steel class, a swept-disk body of radius d/2, and a placement on the bar axis. A hook is a composite curve. The bar name and GlobalId are unchanged. simple-slab lengths and masses are unchanged. The IFC bytes change because those entities are new.
 - A DXF entity that is not a zone boundary, has no colour, or uses a colour outside the legend is counted in `ignoredByReason` instead of being dropped. A colour outside the legend is also a warning. simple-slab is one closed polyline in the legend, so its ignored-reason count stays `unitsAssumedMillimetres`.
 - The lap share is counted over every bar of the layer whose axis crosses the 1.3·lap window, including bars with different ends. A splice that uses the up-to-half lap length in a section that is more than half spliced is a hard clash, `lapShareExceeded`. simple-slab has no laps, so its figures are unchanged.

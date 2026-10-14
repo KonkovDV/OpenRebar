@@ -168,7 +168,7 @@ dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj
 dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
 ```
 
-Current regression status (those five commands): **446/446 tests passing**.
+Current regression status (those five commands): **447/447 tests passing**.
 
 ## CI Quality Gates
 

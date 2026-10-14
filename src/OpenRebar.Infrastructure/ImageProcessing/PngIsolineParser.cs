@@ -3,6 +3,7 @@ using OpenRebar.Domain.Ports;
 using OpenRebar.Domain.Exceptions;
 using OpenRebar.Domain.Rules;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace OpenRebar.Infrastructure.ImageProcessing;
@@ -97,21 +98,33 @@ public sealed class PngIsolineParser : IIsolineParser
     return zones;
   }
 
+  private static void RejectOversized(string filePath, int width, int height)
+  {
+    if ((long)width * height <= MaxImagePixels)
+      return;
+
+    throw new InvalidIsolineFileException(
+        filePath,
+        $"Image is too large for in-process parsing: {width}x{height} pixels. " +
+        $"Limit: {MaxImagePixels} pixels.");
+  }
+
   private async Task<IReadOnlyList<ReinforcementZone>> ParseWithColorQuantizationAsync(
       string filePath,
       ColorLegend legend,
       CancellationToken cancellationToken)
   {
     var calibration = Calibration ?? throw new RasterNotCalibratedException(filePath);
-    using var image = await Image.LoadAsync<Rgba32>(filePath, cancellationToken);
+    var info = await Image.IdentifyAsync(filePath, cancellationToken);
+    if (info is null)
+      throw new InvalidIsolineFileException(filePath, "Image header could not be read.");
+    RejectOversized(filePath, info.Width, info.Height);
+
+    var decoderOptions = new DecoderOptions { MaxFrames = 1 };
+    using var image = await Image.LoadAsync<Rgba32>(decoderOptions, filePath, cancellationToken);
     int width = image.Width;
     int height = image.Height;
-
-    if ((long)width * height > MaxImagePixels)
-      throw new InvalidIsolineFileException(
-          filePath,
-          $"Image is too large for in-process parsing: {width}x{height} pixels. " +
-          $"Limit: {MaxImagePixels} pixels.");
+    RejectOversized(filePath, width, height);
 
     var entries = legend.Entries.ToList();
     var lut = BuildColorLut(entries);
