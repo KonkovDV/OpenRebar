@@ -1,97 +1,36 @@
 version: 2
 updates:
+  # One entry so one package bump opens one pull request, not one per project.
   - package-ecosystem: "nuget"
-    directory: "/src/OpenRebar.Application"
+    directories:
+      - "/src/OpenRebar.Application"
+      - "/src/OpenRebar.Domain"
+      - "/src/OpenRebar.Infrastructure"
+      - "/src/OpenRebar.RevitPlugin"
+      - "/src/OpenRebar.Cli"
+      - "/tests/OpenRebar.Application.Tests"
+      - "/tests/OpenRebar.Domain.Tests"
+      - "/tests/OpenRebar.Infrastructure.Tests"
+      - "/tests/OpenRebar.Cli.Tests"
+      - "/tests/OpenRebar.TestCorpus"
     schedule:
       interval: "weekly"
-    groups:
-      microsoft-extensions:
-        patterns:
-          - "Microsoft.Extensions.*"
-
-  - package-ecosystem: "nuget"
-    directory: "/src/OpenRebar.Domain"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "nuget"
-    directory: "/src/OpenRebar.Infrastructure"
-    schedule:
-      interval: "weekly"
-    # Q-5 is still open (r6 §7). Until the distribution model is chosen, stay on
-    # ImageSharp 3.1.x (MIT). ImageSharp 4 requires a license key at build, and
-    # the Split License is paid for commercial use above $1M revenue:
-    # https://docs.sixlabors.com/articles/imagesharp/
+    # Q-5 is still open. ImageSharp stays on 3.1.12 (MIT). Version 4 requires a
+    # license key at build, and the Split License is paid for commercial use
+    # above $1M revenue: https://docs.sixlabors.com/articles/imagesharp/
+    # Version 3.2.0 does not patch the five accepted advisories. They are fixed
+    # only in 4.1.2, and the audit exception is pinned to 3.1.12.
+    # FluentAssertions 8+ is commercial. v7 stays open source:
+    # https://www.fluentassertions.com/releases/
     ignore:
       - dependency-name: "SixLabors.ImageSharp"
-        versions: [">=4.0.0"]
+        versions: [">=3.2.0"]
+      - dependency-name: "FluentAssertions"
+        versions: [">=8.0.0"]
     groups:
       microsoft-extensions:
         patterns:
           - "Microsoft.Extensions.*"
-
-  - package-ecosystem: "nuget"
-    directory: "/src/OpenRebar.RevitPlugin"
-    schedule:
-      interval: "weekly"
-    groups:
-      microsoft-extensions:
-        patterns:
-          - "Microsoft.Extensions.*"
-
-  - package-ecosystem: "nuget"
-    directory: "/src/OpenRebar.Cli"
-    schedule:
-      interval: "weekly"
-    groups:
-      microsoft-extensions:
-        patterns:
-          - "Microsoft.Extensions.*"
-
-  # FluentAssertions 8+ is commercial. v7 stays open source:
-  # https://www.fluentassertions.com/releases/
-  - package-ecosystem: "nuget"
-    directory: "/tests/OpenRebar.Application.Tests"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "FluentAssertions"
-        versions: [">=8.0.0"]
-
-  - package-ecosystem: "nuget"
-    directory: "/tests/OpenRebar.Domain.Tests"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "FluentAssertions"
-        versions: [">=8.0.0"]
-
-  - package-ecosystem: "nuget"
-    directory: "/tests/OpenRebar.Infrastructure.Tests"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "FluentAssertions"
-        versions: [">=8.0.0"]
-
-  - package-ecosystem: "nuget"
-    directory: "/tests/OpenRebar.Cli.Tests"
-    schedule:
-      interval: "weekly"
-    ignore:
-      - dependency-name: "FluentAssertions"
-        versions: [">=8.0.0"]
-
-  - package-ecosystem: "nuget"
-    directory: "/tests/OpenRebar.TestCorpus"
-    schedule:
-      interval: "weekly"
-    # Same ImageSharp hold as Infrastructure: TestCorpus references 3.1.12 directly.
-    ignore:
-      - dependency-name: "FluentAssertions"
-        versions: [">=8.0.0"]
-      - dependency-name: "SixLabors.ImageSharp"
-        versions: [">=4.0.0"]
 
   - package-ecosystem: "pip"
     directory: "/ml"
