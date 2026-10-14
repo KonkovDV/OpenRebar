@@ -21,7 +21,7 @@ torch==2.11.0+cpu
 torchvision==0.26.0+cpu
 onnx>=1.16,<2.0
 onnxscript>=0.1,<1.0
-onnxruntime>=1.17,<2.0
+onnxruntime>=1.31.0,<2.0
 
 # REST API framework
 fastapi>=0.110,<1.0
