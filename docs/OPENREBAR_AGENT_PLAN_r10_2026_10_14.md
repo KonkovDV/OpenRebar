@@ -83,7 +83,7 @@
 | 10 | PR-10a | IFC v2: тип, тело, размещение — сделано | SDK | IFC | нет |
 | 11 | PR-10b | IDS в CI — сделано | MCP | нет | нет |
 | 12 | PR-17 | Раскрой: имя алгоритма, `MinScrapLengthMm`, хэш стека | SDK | да | 2.1.0 |
-| 13 | RT-4 | Два KPI: отходы % и стоимость закупки | SDK | да | 2.1.0 |
+| 13 | RT-4 | Два KPI раскроя — уже есть: `wastePercent` и `estimatedCost` | SDK | нет | нет |
 | 14 | RT-6 | `laps.representation` | SDK | нет | профиль |
 | 15 | S-1 | Supply chain: OSV, SBOM, ML endpoint | MCP | нет | нет |
 | 16 | P3 | Аудитор КЖ, ЛИРА, сравнение раскладок | владелец | — | — |
@@ -202,11 +202,9 @@
 2. `MinScrapLengthMm`: удалить из порта (нигде не используется). Вводить порог полезного остатка только по решению владельца.
 3. `StackTrace` в отчёте → `stackTraceSha256` (SHA-256 строки стека); полный стек только в лог. Схема 2.1.0, эталон: поле `stackTrace: null` → `stackTraceSha256: null`.
 
-### 4.13 RT-4. Два KPI раскроя (SDK)
+### 4.13 RT-4. Два KPI раскроя — уже в отчёте
 
-1. В итоге раскроя: `wastePercent` (есть) и `purchaseCost` = Σ(масса закупленных хлыстов × `PricePerTon` / 1000). Без цены в каталоге — `purchaseCost: null` и `NotEvaluated` в `checks` не нужен (это KPI, не проверка).
-2. Без утверждений об экономии: отчёт показывает два числа, решение принимает инженер.
-3. Эталон: каталог по умолчанию без цен → `purchaseCost: null`.
+`wastePercent` и `estimatedCost`. Стоимость считается в `EstimatePurchasedStockCost`: масса закупленного хлыста в тоннах умножается на `PricePerTon`. Если у длины нет цены, поле `null`. В эталоне `simple-slab` оба уровня (`optimizationByDiameter` и `summary`) уже `estimatedCost: null`. Второе поле `purchaseCost` не добавлять.
 
 ### 4.14 RT-6. Представление нахлёста (SDK)
 
