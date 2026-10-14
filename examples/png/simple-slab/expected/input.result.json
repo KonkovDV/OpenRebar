@@ -1,6 +1,6 @@
 {
   "contractId": "OpenRebar.reinforcement.report.v2",
-  "schemaVersion": "2.0.0",
+  "schemaVersion": "2.1.0",
   "generatedAtUtc": "2026-10-02T16:05:24.3057064+00:00",
   "metadata": {
     "projectCode": "OpenRebar-CLI",
@@ -704,5 +704,21 @@
     }
   ],
   "laps": [],
+  "checks": [
+    {
+      "id": "providedArea",
+      "status": "Failed"
+    },
+    {
+      "id": "crackWidth",
+      "status": "NotEvaluated",
+      "reason": "inputIsRequiredAreaOnly"
+    },
+    {
+      "id": "deflection",
+      "status": "NotEvaluated",
+      "reason": "inputIsRequiredAreaOnly"
+    }
+  ],
   "partialResult": true
 }

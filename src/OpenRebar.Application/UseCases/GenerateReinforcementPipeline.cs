@@ -929,6 +929,7 @@ public sealed class GenerateReinforcementPipeline
       ParameterSources = input.ParameterSources,
       Clashes = result.Clashes,
       Laps = result.Laps,
+      Checks = NormativeCheck.Build(result.Verification, result.Laps.Count > 0),
       Warnings = MergeWarnings(placement?.Warnings, result.ParseStats)
           .Concat(result.FieldWarnings)
           .Concat(result.OverlayWarnings)
@@ -1028,6 +1029,7 @@ public sealed class GenerateReinforcementPipeline
       ParameterSources = input.ParameterSources,
       Clashes = result.Clashes,
       Laps = result.Laps,
+      Checks = NormativeCheck.Build(result.Verification, result.Laps.Count > 0),
       Warnings = result.OverlayWarnings.Concat(result.LayoutWarnings).Concat(result.DetailingWarnings).ToList(),
       Errors = failures,
       PartialResult = true

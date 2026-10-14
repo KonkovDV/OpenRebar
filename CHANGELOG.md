@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The report lists `checks`. Crack width and deflection stay `NotEvaluated` when the input is only required area. `providedArea` follows the area-check status. `transverseInLap` is listed only when a lap exists, and stays `NotEvaluated`. On simple-slab the area check is `Failed` and there is no lap, so the list is those three entries. `schemaVersion` is 2.1.0. Lengths and masses are unchanged.
+
 ### Fixed
 
 - A PNG is measured from its header before it is decoded. A frame above 25 million pixels is rejected with the same size error as before, and only the first frame is decoded. The examples are unchanged.
