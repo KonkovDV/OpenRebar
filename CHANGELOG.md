@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A supplier catalogue rejects a bad row instead of skipping it. Lengths and prices are read in the invariant culture, so a comma decimal is not a number. A length must be finite and greater than 0, a price must be empty or at least 0, and a duplicate length fails. The examples do not load a catalogue file, so their figures are unchanged.
 - The maximum bar spacing is measured on the combined layer. An additional bar between the background mesh is not a spacing error on its own. A wider gap is a hard clash, `layerSpacing`. On simple-slab the 150 mm spacing stays inside the 330 mm limit, so the example figures are unchanged.
 - Restore accepts the five ImageSharp 3.1.12 advisories. That line has no patched release, and version 4 needs a license key. Any other high finding still fails the audit.
 - An IFC reinforcing bar keeps the same name and GlobalId on a second export. The name is the bar id. A bar with neither an id nor a mark is named from its zone and index.
