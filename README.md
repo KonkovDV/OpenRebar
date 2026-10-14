@@ -294,7 +294,7 @@ The repository includes:
 - Documentation router: [docs/README.md](docs/README.md)
 - **Normative Traceability**: [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — mapping of SP 63 clauses to code and tests
 - Architecture notes: [docs/architecture.md](docs/architecture.md)
-- Current plan: [docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md) (on top of r8 and r7)
+- Current plan: [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) (on top of r9, r8 and r7)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)

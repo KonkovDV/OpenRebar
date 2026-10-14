@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Source of truth: the code and tests on `main`, then [r9](docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md), then [r8](docs/OPENREBAR_AGENT_PLAN_r8_2026_10_02.md), then [r7](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md), then [r6](docs/OPENREBAR_AGENT_PLAN_r6_2026_10_01.md), then [r5](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md). Other files under `docs/` are history. A human answer recorded in [docs/agent/decisions/DECISIONS.md](docs/agent/decisions/DECISIONS.md) overrides the plan.
+Source of truth: the code and tests on `main`, then [r10](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md), then [r9](docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md), then [r8](docs/OPENREBAR_AGENT_PLAN_r8_2026_10_02.md), then [r7](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md), then [r6](docs/OPENREBAR_AGENT_PLAN_r6_2026_10_01.md), then [r5](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md). Other files under `docs/` are history. A human answer recorded in [docs/agent/decisions/DECISIONS.md](docs/agent/decisions/DECISIONS.md) overrides the plan.
 
 Do not commit or push unless asked. Do not force-push.
 
@@ -55,6 +55,6 @@ From r5 §5.1–5.4:
 
 ## Stop
 
-Open questions are r7 §7. Where r6 still says otherwise, r7 wins: hook credit stays 0, Rs is the table already in the repo, and Revit builds are `RevitNet8` / `RevitNet10` by runtime. Do not invent a norm, a lap-force rule, or a U-bar leg. The official Amendment 1 order text and the primary text of clauses 10.3.25 and 10.4.9 were not opened. Safe defaults until a person answers: `NotEvaluated: transverseInLap`, no generated U-bars, first pilot is an auditor (Q-12).
+Open questions are r10 §6 (it carries r7 §7 forward). Where r6 still says otherwise, r7 wins: hook credit stays 0, Rs is the table already in the repo, and Revit builds are `RevitNet8` / `RevitNet10` by runtime. Do not invent a norm, a lap-force rule, or a U-bar leg. The official Amendment 1 order text and the primary text of clauses 10.3.25 and 10.4.9 were not opened. Safe defaults until a person answers: `NotEvaluated: transverseInLap`, no generated U-bars, first pilot is an auditor (Q-12).
 
 Before code, write `docs/agent/plans/YYYY-MM-DD-<task>.md`.

@@ -16,7 +16,7 @@ OpenRebar distinguishes between three documentation classes:
 | Class | Purpose | Files |
 |---|---|---|
 | Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md`, `VALIDATION_BASELINE.md` |
-| Current plan | The work queue. One file. | `OPENREBAR_AGENT_PLAN_r9_2026_10_02.md` |
+| Current plan | The work queue. One file. | `OPENREBAR_AGENT_PLAN_r10_2026_10_14.md` |
 | Archive | April 2026 audits and plans. Not the source of truth. | `archive/` |
 
 ## Read By Goal
@@ -35,7 +35,8 @@ OpenRebar distinguishes between three documentation classes:
 
 ### Understand the work queue
 
-- [OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](OPENREBAR_AGENT_PLAN_r9_2026_10_02.md): the current plan
+- [OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](OPENREBAR_AGENT_PLAN_r10_2026_10_14.md): the current plan
+- [OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](OPENREBAR_AGENT_PLAN_r9_2026_10_02.md): the previous plan, open items carried into r10
 - [archive/](archive/): April 2026 audits and execution plans. Historical, not the source of truth.
 
 ## Scope Rules

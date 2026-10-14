@@ -287,7 +287,7 @@ Revit-хост компилируется под `#if REVIT_SDK` и требуе
 
 - Роутер документации: [docs/README.md](docs/README.md)
 - Архитектурные заметки: [docs/architecture.md](docs/architecture.md)
-- Текущий план: [docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r9_2026_10_02.md) (надстройка над r8 и r7)
+- Текущий план: [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) (надстройка над r9, r8 и r7)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Security policy: [SECURITY.md](SECURITY.md)
