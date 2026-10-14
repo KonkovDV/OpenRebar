@@ -259,7 +259,7 @@ public class StandardReinforcementCalculatorTests
   }
 
   [Fact]
-  public void CalculateRebars_SpacingViolation_ShouldLogWarning()
+  public void CalculateRebars_WideZoneSpacing_DoesNotWarn()
   {
     var zone = new ReinforcementZone
     {
@@ -275,9 +275,10 @@ public class StandardReinforcementCalculatorTests
     };
 
     var calculator = CreateCalculator();
-    calculator.CalculateRebars([zone], TestSlab);
+    calculator.CalculateRebars([zone], TestSlab).Should().ContainSingle();
+    zone.Rebars.Should().NotBeEmpty();
 
-    _logger.Received().Warn("Spacing exceeds normative maximum", Arg.Any<(string Key, object? Value)[]>());
+    _logger.DidNotReceive().Warn("Spacing exceeds normative maximum", Arg.Any<(string Key, object? Value)[]>());
   }
 
   [Fact]

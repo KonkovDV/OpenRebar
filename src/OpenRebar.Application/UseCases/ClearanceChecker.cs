@@ -52,6 +52,7 @@ public static class ClearanceChecker
     }
 
     AddLapClashes(clashes, bars, jointRatioMax);
+    AddLayerSpacing(clashes, bars, slab);
     return clashes
         .OrderBy(clash => clash.Kind, StringComparer.Ordinal)
         .ThenBy(clash => clash.BarIds[0], StringComparer.Ordinal)
@@ -669,6 +670,114 @@ public static class ClearanceChecker
     var aSpan = Span(left);
     var bSpan = Span(right);
     return Math.Min(aSpan.End, bSpan.End) - Math.Max(aSpan.Start, bSpan.Start) > SameLineMm;
+  }
+
+  private static void AddLayerSpacing(List<ClashReport> clashes, IReadOnlyList<BarRef> bars, SlabGeometry slab)
+  {
+    double limit = ReinforcementLimits.MaxSpacing(slab.ThicknessMm);
+    foreach (var group in bars.GroupBy(bar => (bar.Zone.Layer, bar.Zone.Direction)))
+    {
+      bool alongX = group.Key.Direction == RebarDirection.X;
+      var ordered = group
+          .OrderBy(bar => Station(bar, alongX))
+          .ThenBy(bar => bar.Id, StringComparer.Ordinal)
+          .ToList();
+      var clusters = new List<List<BarRef>>();
+      foreach (var bar in ordered)
+      {
+        if (clusters.Count == 0 || Station(bar, alongX) - Station(clusters[^1][0], alongX) > SameLineMm)
+          clusters.Add([]);
+        clusters[^1].Add(bar);
+      }
+
+      for (int i = 0; i < clusters.Count - 1; i++)
+      {
+        for (int j = i + 1; j < clusters.Count; j++)
+        {
+          if (!LineSpansOverlap(clusters[i], clusters[j], alongX))
+            continue;
+
+          double gap = Station(clusters[j][0], alongX) - Station(clusters[i][0], alongX);
+          if (gap > limit + 1e-6 && TryOverlapCenter(clusters[i], clusters[j], alongX, out Point2D at, out string leftId, out string rightId))
+          {
+            clashes.Add(new ClashReport
+            {
+              Type = "hard",
+              Kind = "layerSpacing",
+              X = at.X,
+              Y = at.Y,
+              BarIds = string.Compare(leftId, rightId, StringComparison.Ordinal) <= 0
+                  ? [leftId, rightId]
+                  : [rightId, leftId]
+            });
+          }
+
+          break;
+        }
+      }
+    }
+  }
+
+  private static double Station(BarRef bar, bool alongX) =>
+      alongX
+          ? (bar.PhysicalStart.Y + bar.PhysicalEnd.Y) / 2.0
+          : (bar.PhysicalStart.X + bar.PhysicalEnd.X) / 2.0;
+
+  private static bool LineSpansOverlap(List<BarRef> left, List<BarRef> right, bool alongX)
+  {
+    (double Start, double End) Span(List<BarRef> cluster)
+    {
+      double min = double.PositiveInfinity;
+      double max = double.NegativeInfinity;
+      foreach (var bar in cluster)
+      {
+        double start = alongX ? bar.PhysicalStart.X : bar.PhysicalStart.Y;
+        double end = alongX ? bar.PhysicalEnd.X : bar.PhysicalEnd.Y;
+        min = Math.Min(min, Math.Min(start, end));
+        max = Math.Max(max, Math.Max(start, end));
+      }
+
+      return (min, max);
+    }
+
+    var a = Span(left);
+    var b = Span(right);
+    return Math.Min(a.End, b.End) - Math.Max(a.Start, b.Start) > SameLineMm;
+  }
+
+  private static bool TryOverlapCenter(
+      List<BarRef> left,
+      List<BarRef> right,
+      bool alongX,
+      out Point2D center,
+      out string leftId,
+      out string rightId)
+  {
+    center = default;
+    leftId = "";
+    rightId = "";
+    foreach (var a in left)
+    {
+      double a0 = alongX ? Math.Min(a.PhysicalStart.X, a.PhysicalEnd.X) : Math.Min(a.PhysicalStart.Y, a.PhysicalEnd.Y);
+      double a1 = alongX ? Math.Max(a.PhysicalStart.X, a.PhysicalEnd.X) : Math.Max(a.PhysicalStart.Y, a.PhysicalEnd.Y);
+      foreach (var b in right)
+      {
+        double b0 = alongX ? Math.Min(b.PhysicalStart.X, b.PhysicalEnd.X) : Math.Min(b.PhysicalStart.Y, b.PhysicalEnd.Y);
+        double b1 = alongX ? Math.Max(b.PhysicalStart.X, b.PhysicalEnd.X) : Math.Max(b.PhysicalStart.Y, b.PhysicalEnd.Y);
+        double overlap = Math.Min(a1, b1) - Math.Max(a0, b0);
+        if (overlap <= SameLineMm)
+          continue;
+
+        double along = (Math.Max(a0, b0) + Math.Min(a1, b1)) / 2.0;
+        double across = (Station(a, alongX) + Station(b, alongX)) / 2.0;
+        center = alongX ? new Point2D(along, across) : new Point2D(across, along);
+        leftId = a.Id;
+        rightId = b.Id;
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private static string IdOf(RebarSegment bar) =>

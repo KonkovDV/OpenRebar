@@ -154,6 +154,29 @@ public class ClearanceCheckerTests
     shifted.Select(clash => clash.Kind).Should().Equal(local.Select(clash => clash.Kind));
   }
 
+  [Fact]
+  public void CombinedLayer_FlagsAGapWiderThanTheLimit()
+  {
+    var clashes = ClearanceChecker.Check(
+        [Zone([Bar("a", 0, 0, 200, 0), Bar("b", 0, 400, 200, 400)])],
+        Slab(),
+        new NtsPlanarGeometry());
+
+    clashes.Should().ContainSingle(clash =>
+        clash.Kind == "layerSpacing" && clash.Type == "hard"
+        && clash.BarIds.Count == 2 && clash.BarIds[0] == "a" && clash.BarIds[1] == "b");
+  }
+
+  [Fact]
+  public void CombinedLayer_AcceptsAnAdditionalBarBetweenTheMesh()
+  {
+    var background = Zone([Bar("a", 0, 0, 200, 0), Bar("b", 0, 400, 200, 400)]);
+    var additional = Zone([Bar("c", 0, 200, 200, 200)]);
+    var clashes = ClearanceChecker.Check([background, additional], Slab(), new NtsPlanarGeometry());
+
+    clashes.Should().NotContain(clash => clash.Kind == "layerSpacing");
+  }
+
   private static IReadOnlyList<ClashReport> Check(params RebarSegment[] bars) =>
       ClearanceChecker.Check([Zone(bars)], Slab());
 
