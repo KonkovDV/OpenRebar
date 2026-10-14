@@ -1,4 +1,4 @@
-# OpenRebar — автоматизация армирования ЖБ плит по изолиниям
+# OpenRebar
 
 [![CI](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg)](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge)](https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar)
@@ -8,40 +8,60 @@
 
 Русский | [English](README.md)
 
-OpenRebar генерирует раскладку арматуры в плоских железобетонных плитах по изолиниям (DXF или PNG). Ядро собирается под .NET 8 и .NET 10, CLI поставляется на .NET 10. Инженерная логика тестируется вне Revit. Надстройка Revit — две сборки по рантайму процесса: `RevitNet8`, пока Revit на .NET 8, и `RevitNet10` для .NET 10.
+OpenRebar превращает карту требуемой площади арматуры плоской железобетонной плиты в стержни, анкеровку, нахлёсты, ведомость, раскрой и файл IFC. Карта приходит как изолинии DXF, калиброванный PNG или числовое поле. Ядро детерминированное. Языковая модель не раскладывает стержни и не ставит отметку «принято».
 
-В репозитории поддерживаются три поверхности исполнения:
+Библиотеки собираются под .NET 8 и .NET 10. CLI — на .NET 10. Надстройка Revit — две сборки по рантайму процесса: `RevitNet8`, пока Revit на .NET 8, и `RevitNet10` на .NET 10. Правила проверяются без Revit.
 
-- **CLI-хост** (`src/OpenRebar.Cli`) — пакетные прогоны, CI, отладка, генерация интеграционных артефактов
-- **Revit-хост** (`src/OpenRebar.RevitPlugin`) — ExternalCommand + UI (компилируется только при наличии ссылок на Revit SDK)
-- **Опциональный ML-модуль** (`ml/`) — сегментация PNG-изолиний U-Net через HTTP (FastAPI)
+**Чего здесь нет.** Это не конечно-элементный решатель, не обученный сегментатор и не расчёт ширины трещин или прогиба. Гнутые стержни в Revit не ставятся. Экономия стали не заявляется. Каталог `ml/` поставляется с пустым манифестом модели и остаётся офлайн.
 
-## Содержание
+## Состояние
 
-- [Постановка задачи](#постановка-задачи)
-- [Быстрый старт (паритет с CI)](#быстрый-старт-паритет-с-ci)
-- [Выходные артефакты и контракт интеграции](#выходные-артефакты-и-контракт-интеграции)
-- [Архитектура](#архитектура)
-- [Доменные порты](#доменные-порты)
-- [Сборка и тесты](#сборка-и-тесты)
-- [Контрольные проверки CI](#контрольные-проверки-ci)
-- [История](#история)
-- [Известные ограничения](#известные-ограничения)
-- [Канонические примеры и снапшоты](#канонические-примеры-и-снапшоты)
-- [Python ML модуль (опционально)](#python-ml-модуль-опционально)
-- [Граница Revit-хоста](#граница-revit-хоста)
-- [Документация](#документация)
-- [Академический Стандарт Отчётности](#академический-стандарт-отчётности)
+Регрессия по пяти командам из раздела [Сборка и тесты](#сборка-и-тесты): **453/453 тестов проходят**.
 
-## Быстрый старт (паритет с CI)
+| Поверхность | Сейчас |
+|---|---|
+| Отчёт | `schemaVersion` 2.1.0, контракт `OpenRebar.reinforcement.report.v2` |
+| Нормы | СП 63.13330.2018, профиль `ru.sp63.2018`, таблицы `ru.sp63.2018.tables.v3` |
+| Проверка площади | Сетка ячеек. `Passed` только при нулевом дефиците. Жёсткая коллизия эту проверку не заменяет |
+| `checks` | `providedArea` повторяет проверку площади. Трещины и прогиб остаются `NotEvaluated` |
+| Раскрой | Генерация столбцов (HiGHS) с записанным provenance. Процент отходов и `estimatedCost` (null, если в каталоге нет цены) |
+| IFC | IFC4. Один тип на диаметр и класс стали, диск радиуса d/2, размещение на оси. CI проверяет эти имена сущностей |
+| Revit | Только прямые стержни. Крюк, Г или П — ошибка, не прямая линия |
 
-Предварительные требования:
+Пример `examples/dxf/simple-slab` завершается с кодом 2. Края свободные, требуемая площадь доходит до края, крюк не засчитывается. Это регрессия, а не ошибка эталона.
 
-- .NET SDK 8.x и .NET SDK 10.x (CLI и библиотеки `net10.0` требуют SDK 10; сборка Revit под .NET 8 требует SDK 8)
-- Python 3.11+ (для `tools/ci/*.py` и опционального модуля `ml/`)
-- Git с корректной обработкой LF
+## Место среди соседних репозиториев
 
-Запускать из корня репозитория:
+[AeroBIM](https://github.com/KonkovDV/AeroBIM) сверяет комплект документации (модель, лист, ведомость, текст) и сам выставляет флаг комплекта. OpenRebar проектирует армирование плиты и пишет отчёт и IFC, которые такая сверка может прочитать. Комплект он не проверяет.
+
+Остальные репозитории того же автора (движки расписаний, маркетплейсы, исследовательские заметки) — отдельные продукты.
+
+## Конвейер
+
+1. Читается файл изолиний. Сущность DXF, которая не стала зоной, учитывается, а не пропадает. PNG измеряется по заголовку до декодирования.
+2. Зоны классифицируются, покрытие разбиения записывается.
+3. Ставятся стержни. Шаг на грани меряется по суммарному слою. Длины анкеровки и нахлёста берутся из версионированных таблиц. Зачёт крюка равен 0. Хвост крюка по умолчанию равен 0.
+4. Режется склад. Стержень, который нельзя купить или состыковать, — критическая ошибка.
+5. Уложенная площадь сверяется с требуемой, пишется `checks`.
+6. Пишутся `*.result.json`, `*.schedule.csv`, `*.aerobim.json` и `*.reinforcement.ifc`.
+
+## SOTA 2026 как разрыв, не как обещание
+
+Сравнение — в [docs/SOTA_2026.md](docs/SOTA_2026.md). Коротко:
+
+| Тема | Есть в репозитории | Нет в репозитории |
+|---|---|---|
+| Сертификат площади | Запас по ячейке и полигон дефицита | Утверждение, что раскладка оптимальна |
+| Провенанс | Идентификатор профиля, версия таблиц, идентификатор оптимизатора, источник параметра | Норма, набранная по памяти |
+| Раскрой | Генерация столбцов, записанные отходы и стоимость закупки | Измеренная экономия в процентах или деньгах |
+| IFC | IFC4: тип стержня, тело-диск, размещение, имена сущностей IDS в CI | Кодирование нахлёста IFC 4.3, круговой обмен с просмотрщиком |
+| Сегментация | Точное совпадение RGB. У пути U-Net нет контрольной точки | SAM2, DINOv2, опубликованный mIoU |
+| Поиск раскладки | Правила зон и проверка шага | GNN, обучение с подкреплением, физически-информируемая сеть |
+| Вторая группа предельных состояний | `NotEvaluated` для трещин и прогиба | PINN или нормативная проверка этих величин |
+
+## Быстрый старт
+
+Нужны SDK .NET 8 и 10 и Python 3.11 для скриптов CI и необязательной ML-ветки.
 
 ```bash
 dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
@@ -55,309 +75,94 @@ dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --co
 python tools/ci/verify_readme_regression_claim.py
 ```
 
-Эта последовательность соответствует базовому .NET-контуру в CI и рекомендуется как минимальный набор проверок перед PR для изменений кода и документации.
+Одна плита:
 
-## Постановка задачи
-
-Мотивирующий сценарий: инженер по ЖБ размещает арматуру в Revit на основании карт изолиний, экспортируемых из расчётных/постпроцессорных инструментов (например, LIRA-SAPR / Stark-ES). Ручная постановка занимает существенное время и даёт вариативность результатов (между этажами, зонами и исполнителями).
-
-OpenRebar реализует воспроизводимый конвейер:
-
-1. Парсинг файла изолиний (**DXF** или **PNG**) в набор цвето-кодированных зон армирования
-2. Классификация зон и декомпозиция сложных многоугольников в прямоугольники (с сохранением метрик покрытия/перепокрытия)
-3. Расчёт раскладки арматуры по зонам (шаг, диаметры, анкеровка)
-4. Оптимизация раскроя (1D CSP) для снижения отходов (точный путь для малых экземпляров + column generation для более крупных)
-5. Сохранение проверяемых машинно-читаемых артефактов для внешних BIM-систем
-6. (При включении) размещение арматуры в Revit и генерация тегов / трекинг форм гибов
-
-Цель — сократить рутинную постановку армирования плиты с инженер-недель до инженер-часов **при корректной валидации предпосылок** и наличии стабильного контракта выходных данных.
-
-## Выходные артефакты и контракт интеграции
-
-Репозиторий рассматривает машинно-читаемые выходы как первоклассные артефакты.
-
-| Артефакт | Кто формирует | Назначение |
-|---|---|---|
-| `*.result.json` | Pipeline / CLI | Канонический отчёт исполнения (под schema) |
-| `*.aerobim.json` | CLI exporter | Экспорт в формат, удобный для AeroBIM |
-| `*.schedule.csv` | CLI exporter | Выгрузка ведомости арматуры (CSV) |
-| `*.reinforcement.ifc` | CLI exporter | IFC-экспорт (IFC4 через xBIM) |
-
-**Каноническая схема:** `contracts/aerobim-reinforcement-report.schema.json` (`schemaVersion` `2.1.0`)
-
-Канонический отчёт явно хранит:
-
-- `normativeProfile` (например, `ru.sp63.2018`) и идентификатор набора таблиц с версией (например, `ru.sp63.2018.tables.v3`)
-- `analysisProvenance` по декомпозиции геометрии и оптимизации раскроя (идентификаторы алгоритмов, пороги, резервные ветви)
-- `sawCutWidthMm` для каждого cutting plan, чтобы downstream-потребители могли независимо пересчитывать kerf-aware `wasteMm` / `wastePercent`
-- `dualBound` / `gap` по каждому диаметру (если доступны у оптимизатора); в эвристическом резервном режиме эти поля намеренно `null`, так как LP-гарантии нижней границы там не действуют
-
-## Архитектура
-
-Clean Architecture со строгой инверсией зависимостей:
-
-```
-Domain (pure) ← Application (use cases) ← Infrastructure (adapters) ← Hosts (CLI, RevitPlugin)
+```bash
+dotnet run --project src/OpenRebar.Cli --configuration Release -- examples/dxf/simple-slab/input.dxf --thickness 220 --cover 30 --slab-width 6000 --slab-height 4000 --layer BottomX
 ```
 
-- **Domain** (`src/OpenRebar.Domain`): модели, порты (интерфейсы), правила; без внешних зависимостей
-- **Application** (`src/OpenRebar.Application`): оркестрация и use cases; зависит только от Domain
-- **Infrastructure** (`src/OpenRebar.Infrastructure`): DXF/PNG парсинг, оптимизация, экспорты, report store, логирование; зависит от Domain + Application
-- **Hosts**:
-  - CLI (`src/OpenRebar.Cli`)
-  - Revit-плагин (`src/OpenRebar.RevitPlugin`, `#if REVIT_SDK`)
+Код 2 значит, что проверка площади не прошла, а файлы всё равно записаны. Код 1 — ошибка входа или ввода-вывода. Код 3 — критическая ошибка детализации.
 
-## Доменные порты
+Полезные флаги: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--thickness`, `--cover`.
 
-Порты определены в `src/OpenRebar.Domain/Ports/`.
+## Выходы
 
-| Порт | Ответственность |
+| Файл | Роль |
 |---|---|
-| `IIsolineParser` | Парсинг DXF/PNG изолиний в зоны |
-| `ILegendLoader` | Загрузка/выдача конфигурации легенды |
-| `IZoneDetector` | Классификация зон и декомпозиция многоугольников |
-| `IReinforcementCalculator` | Генерация стержней/сегментов по зонам |
-| `IRebarOptimizer` | Оптимизация раскроя арматуры (1D CSP) |
-| `ISupplierCatalogLoader` | Загрузка доступных длин/цен по поставщикам |
-| `IReportStore` | Сохранение канонических `*.result.json` отчётов |
-| `IReportExporter` | Экспорт отчётов для внешних систем (например, AeroBIM) |
-| `IScheduleExporter` | Экспорт ведомости арматуры (CSV) |
-| `IIfcExporter` | IFC-экспорт |
-| `IRevitPlacer` | Размещение арматуры в активном документе Revit |
-| `IImageSegmentationService` | ML-мост для сегментации PNG (HTTP) |
-| `IStructuredLogger` | Минимальная абстракция структурного логирования |
+| `*.result.json` | Канонический отчёт. Неизвестные свойства отвергаются |
+| `*.schedule.csv` | Позиции и масса. Кавычки безопасны для таблиц |
+| `*.aerobim.json` | Короткая сводка для внешней проверки |
+| `*.reinforcement.ifc` | Стержни IFC4 |
 
-## Ключевые реализованные поверхности
+Отчёт хранит нормативный профиль, версию таблиц, provenance оптимизатора, `wastePercent` с учётом пропила и `estimatedCost`. Новое поле верхнего уровня требует подъёма схемы. `checks[].status` — это `Passed`, `Failed` или `NotEvaluated`.
 
-### Нормативный движок (СП 63.13330.2018)
+## Слои
 
-Текущая нормативная база упакована как версионированный встроенный ресурс, с эталонными тестами для:
+```
+Domain ← Application ← Infrastructure ← CLI и плагин Revit
+```
 
-- lookup bond stress / design strength
-- классификации периодического профиля
-- таблиц линейной массы
+В Domain нет пакетов NuGet. NetTopologySuite, HiGHS, xBIM и ImageSharp остаются в Infrastructure за портами `src/OpenRebar.Domain/Ports/`. Revit API подключается только в `src/OpenRebar.RevitPlugin/` под `#if REVIT_SDK`.
 
-### Оптимизация раскроя
-
-Две реализации оптимизатора за портом `IRebarOptimizer`:
-
-| Алгоритм | Роль |
+| Порт | Роль |
 |---|---|
-| `ColumnGenerationOptimizer` | Инженерный рабочий базовый алгоритм с сохранением provenance и точным fast-path для малых экземпляров |
-| `FirstFitDecreasingOptimizer` | Эвристический базовый алгоритм и резервный маршрут |
+| `IIsolineParser` | Зоны из DXF и PNG |
+| `IReinforcementCalculator` | Стержни зоны |
+| `IRebarOptimizer` | Одномерный раскрой |
+| `IIfcExporter` | IFC4 |
+| `IRevitPlacer` | Прямые стержни в открытом документе |
+| `IImageSegmentationService` | Необязательный HTTP-мост. Офлайн. Без внешней модели |
 
-Текущую реализацию column generation следует трактовать как сильный инженерный базовый алгоритм (LP/pricing/repair), но не как математически полный branch-and-price. Это различие явно фиксируется в provenance канонического отчёта.
-Показатели `WasteMm` / `WastePercent` kerf-aware: они измеряют остаток стержня после вычитания как установленной длины арматуры, так и потерь материала на saw cut.
+Генерация столбцов — основной раскрой. Она записывает, когда двойственная граница имеет статус `Proven`. Запасной класс — `FirstFitDecreasingOptimizer`; его цикл оставляет хлыст с наименьшим остатком. Ни то ни другое не является заявлением о минимуме отходов на реальном объекте.
 
-### Распознавание цветов (DXF/PNG)
+## Известные пределы
 
-- **DXF:** палитра AutoCAD ACI (256 цветов) + ByLayer
-- **PNG:** в детерминированном пути точное совпадение RGB с легендой; пиксели антиалиасинга на границах остаются без класса. ΔE*76 в CIE L*a*b* используется для проверки различимости цветов легенды и для сопоставления зон из ML-сегментации (ISO/CIE 11664-4)
-- Опционально: ML-сегментация PNG через FastAPI (ml/)
+- Один чертёж — один слой. Файл проекта может назвать до четырёх чертежей.
+- Анкеровка останавливается на границе рабочей области. Крюк — дуга по оси, без прямого хвоста, пока профиль не задаст `hooks.tailDiameters`. Муфты не моделируются. Отверстия учитываются и остаются внутри проверяемой площади.
+- Генерация столбцов пакует одну складскую длину за раз.
+- Ведомость — CSV. XLSX не пишется.
+- IFC — это IFC4. Это не модель нахлёста IFC 4.3, и круговой обмен с импортом Revit в этом репозитории не прогонялся.
+- Постановка в Revit крюка, Г или П отклоняется. Записью остаются ведомость и IFC.
+- PNG требует калибровки (`--px-per-mm` и начало координат). Кадр больше 25 миллионов пикселей отвергается до декодирования.
+- `examples/dxf/simple-slab` при Ø20 и защитном слое 30 мм: `edgeDevelopmentAreaM2` 6,12, `realDeficitAreaM2` 0,99, `underReinforcedAreaM2` 7,11.
 
-## Сборка и тесты
+## Примеры
 
-```bash
-dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
-dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true -p:Platform=x64
-dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --no-build --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --no-build --configuration Release -f net8.0
-dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --no-build --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --no-build --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --no-build --configuration Release -f net10.0
-```
+- `examples/dxf/simple-slab/` — свободные края, проверка площади не проходит, код 2
+- `examples/png/simple-slab/` — та же плита из калиброванного PNG
+- `examples/fe-field/supported-slab.csv` и `supported-slab.project.json` — плита на стенах, проверка площади проходит
 
-Текущий регрессионный статус (эти пять команд): **453/453 тестов проходят**.
+Эталоны пересобираются скриптами `tools/examples/generate_expected_outputs.ps1` и `.sh`. Каждая изменённая цифра объясняется в запросе на слияние.
 
-## Контрольные проверки CI
+Корпус пакетов не входит в прогон push. Без `OPENREBAR_BATCH_CORPUS_ROOT` корпус пишет `corpus: NotEvaluated`.
 
-Конвейер `build-and-test` проверяет не только компиляцию, но и согласованность заявлений:
-
-| Проверка | Назначение | Эффект при падении |
-|---|---|---|
-| `dotnet restore --locked-mode` | целостность файла блокировки зависимостей и детерминированный граф зависимостей | блокирует конвейер |
-| `dotnet build` | целостность компиляции | блокирует конвейер |
-| `dotnet format --verify-no-changes --no-restore` | защита от дрейфа форматирования | блокирует конвейер |
-| `dotnet test` + TRX | исполнимый регрессионный базовый уровень | блокирует конвейер |
-| `verify_readme_regression_claim.py` | паритет числа тестов в README EN/RU с TRX | блокирует конвейер |
-| отчёты по состоянию зависимостей | видимость состояния зависимостей (`--vulnerable`, `--outdated`) | публикация артефактов |
-| пороговая проверка benchmark summary | контроль допустимого диапазона качества | блокирует benchmark-конвейер |
-
-Для аудит-уровня используйте [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
-
-## История
-
-Аудиты и планы апреля 2026 года исторические и не являются источником истины. Они лежат в [docs/archive/](docs/archive/). Текущий план — [docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md](docs/OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
-
-## Опциональный контур корпусных данных
-
-Обычный тест-лейн пропускает `BatchReinforcementCorpusFixtureTests`, если манифеста нет. На push и pull request линия корпуса пишет `corpus: NotEvaluated`. По расписанию и при ручном запуске задача `benchmark-corpus` ставит `OPENREBAR_REQUIRE_BATCH_CORPUS=1` только если задан `OPENREBAR_BATCH_CORPUS_ROOT`, и тогда падает без манифеста. Чтобы прогнать конверт локально, добавьте:
-
-- `tests/OpenRebar.Application.Tests/Fixtures/BatchBenchmarkCorpus/manifest.json`, или
-- установите `OPENREBAR_BATCH_CORPUS_ROOT` на директорию, содержащую manifest и фикстуры.
-
-## Известные ограничения
-
-Ещё открыто относительно [docs/OPENREBAR_AGENT_PLAN_2026_10_01.md](docs/OPENREBAR_AGENT_PLAN_2026_10_01.md):
-
-- Один чертёж по-прежнему один слой. Файл проекта может назвать до четырёх чертежей. Анкеровка рисуется только в пределах рабочей области. Крюк — это дуга по оси стержня, без прямого хвоста за загибом. Стержень длиннее складского прутка стыкуется нахлёстом. Муфты не моделируются. Отверстия учитываются, но не вычитаются из зоны.
-- Генерация столбцов пакует одну складскую длину. Двойственная граница публикуется только при `boundStatus` = `Proven`.
-- Ведомость — это CSV-спецификация и лист расхода стали. XLSX не пишется. В IFC нет `IfcReinforcingBarType` и нет геометрии стержня.
-- Растр требует калибровки. Опциональный ML-сервис поставляется с пустым манифестом модели.
-- Ширина трещин и прогиб по одному полю требуемой площади не считаются. Отчёт помечает их как `NotEvaluated`.
-- Сетка 50 мм отклоняет раскладку, если хотя бы одна ячейка недобирает заданную площадь (`Passed` только при нулевом дефиците). Развитие считается от уложенного торца, поэтому край без места под анкеровку не проходит проверку. Отверстия остаются внутри проверяемой площади. `examples/dxf/simple-slab` остаётся красным: края Free, требуемая площадь доходит до края, крюк не засчитывается. Свободный край ещё отступает ось на cover + d/2 (для Ø20 и защитного слоя 30 мм это 40 мм): `edgeDevelopmentAreaM2` равен 6,12, `realDeficitAreaM2` равен 0,99, `underReinforcedAreaM2` равен 7,11.
-
-## Быстрый старт CLI
+## Необязательная ветка ML
 
 ```bash
-dotnet run --project src/OpenRebar.Cli -- <isoline-file> [options]
-```
-
-Часто используемые опции:
-
-- --legend <path>: легенда (JSON)
-- --catalog <path>: каталог поставщика (JSON/CSV)
-- --ml-url <url>: сервис сегментации PNG (например, http://localhost:8101)
-- --slab-width <mm> / --slab-height <mm> / --thickness <mm> / --cover <mm>
-
-CLI пишет канонический отчёт рядом со входным файлом (`.result.json`), а также формирует `.schedule.csv`, `.aerobim.json` и `.reinforcement.ifc`.
-
-## Канонические примеры и снапшоты
-
-В репозитории добавлены воспроизводимые примеры в `examples/`:
-
-- `examples/dxf/simple-slab/input.dxf`
-- `examples/png/simple-slab/input.png`
-- `examples/fe-field/supported-slab.csv` вместе с `supported-slab.project.json` (плита на стенах, проверка проходит)
-
-Для каждого примера зафиксированы эталонные снапшоты:
-
-- `expected/input.result.json`
-- `expected/input.schedule.csv`
-
-Скрипты пересборки эталонов:
-
-```bash
-# Linux/macOS
-bash tools/examples/generate_expected_outputs.sh
-
-# Windows PowerShell
-powershell -ExecutionPolicy Bypass -File tools/examples/generate_expected_outputs.ps1
-```
-
-Проверка снапшотов выполняется тестами `ExamplesSnapshotTests` (`tests/OpenRebar.Cli.Tests`).
-
-## Python ML модуль (опционально)
-
-```bash
-cd ml
-
-# Установка с проверкой хэшей (рекомендуется для production)
-pip install --require-hashes -r requirements.locked.txt
-
-# Альтернатива для локальной разработки
-pip install -r requirements.txt
-
-pytest tests -q
-uvicorn src.api.server:app --port 8101
-```
-
-В CI python-smoke тесты запускаются с явным PYTHONPATH, указывающим на ml/, а зависимости устанавливаются из `ml/requirements.locked.txt` с `--require-hashes`.
-
-**Безопасность**: см. [ml/SUPPLY_CHAIN_SECURITY.md](ml/SUPPLY_CHAIN_SECURITY.md)
-
-- lock-файл зависимостей с SHA256 хэшами
-- манифест чекпоинтов `ml/models/MANIFEST.json` для проверки целостности
-- процедуры CI/CD-валидации
-- шаблон регулярного re-pin зависимостей
-
-## Граница Revit-хоста
-
-Revit-хост компилируется под `#if REVIT_SDK` и требует локальных ссылок Autodesk Revit. Папку `addin/RevitNet8` кладут рядом со сборкой `net8.0-windows`, пока процесс Revit на .NET 8; `addin/RevitNet10` — рядом со сборкой `net10.0-windows`, когда рантайм уже .NET 10. См. [RELEASE_POLICY.md](RELEASE_POLICY.md).
-В репозитории присутствуют:
-
-- DI composition root (`src/OpenRebar.RevitPlugin/Bootstrap.cs`)
-- реализация размещения через `Rebar.CreateFromCurves`
-- проход создания тегов (`IndependentTag.Create`)
-- отслеживание форм гибов (создание bending detail-элементов оставлено как явная TODO-граница)
-- ось стержня ставится на cover + d/2, внутреннее направление грани лежит на внешнем; верхний защитный слой берётся из `CLEAR_COVER_TOP`
-- безопасный режим: стержень с крюком, Г- или П-концом не кладётся прямой линией, а выдаётся ошибкой; источник истины — ведомость и IFC
-
-## Документация
-
-- Роутер документации: [docs/README.md](docs/README.md)
-- Архитектурные заметки: [docs/architecture.md](docs/architecture.md)
-- Текущий план: [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) (надстройка над r9, r8 и r7)
-- Changelog: [CHANGELOG.md](CHANGELOG.md)
-- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Security policy: [SECURITY.md](SECURITY.md)
-- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-- Citation metadata: [CITATION.cff](CITATION.cff)
-- Funding metadata: [.github/FUNDING.yml](.github/FUNDING.yml)
-
-## Академический Стандарт Отчётности
-
-### Граница Утверждений
-
-Этот README разделяет реализованное и проверенное поведение от плановых намерений.
-
-- Подтверждённые утверждения опираются на исполнимые пути кода, контракты, тесты и сохранённые отчёты.
-- Плановые элементы остаются явно помеченными как будущая работа.
-- Метрики производительности и качества привязаны к конкретным артефактам и контурам валидации, а не к универсальным гарантиям.
-
-### Базовый Протокол Воспроизводимости
-
-Используйте [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md) как канонический базовый протокол валидации перед публикацией инженерных или бенчмарк-утверждений.
-
-Минимальный репозиторный набор проверок:
-
-```bash
-dotnet build OpenRebar.sln --configuration Release -p:EnableWindowsTargeting=true
-dotnet test tests/OpenRebar.Domain.Tests/OpenRebar.Domain.Tests.csproj --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --configuration Release -f net8.0
-dotnet test tests/OpenRebar.TestCorpus/OpenRebar.TestCorpus.csproj --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Application.Tests/OpenRebar.Application.Tests.csproj --configuration Release -f net8.0
-dotnet test tests/OpenRebar.Cli.Tests/OpenRebar.Cli.Tests.csproj --configuration Release -f net10.0
 cd ml
 python -m pip install --require-hashes -r requirements.locked.txt
 python -m pytest tests -q
+python scripts/validate_model_manifest.py models/MANIFEST.json
 ```
 
-Если менялись ML-зависимости или логика конвейера, дополнительно проверьте закреплённый путь обновления lock-файла, описанный в [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md):
+CI ставит этот lock с хэшами на Python 3.11. Вызова внешней модели нет. Пустой манифест значит, что у сервиса нет контрольной точки.
 
-```bash
-cd ml
-python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
-python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in
-```
+## Revit
 
-Для утверждений на основе отчётов указывайте путь к report-файлу, версию schema-контракта и commit SHA.
+Скопируйте `addin/RevitNet8` рядом со сборкой `net8.0-windows` или `addin/RevitNet10` рядом со сборкой `net10.0-windows`. Ось стержня сидит на cover + d/2. Внутреннее направление грани лежит на внешнем. Верхний защитный слой читается из `CLEAR_COVER_TOP`. См. [RELEASE_POLICY.md](RELEASE_POLICY.md).
 
-### Цитирование И Научное Переиспользование
+## Документы
 
-- Используйте метаданные цитирования из `CITATION.cff`.
-- Для сравнительных исследований фиксируйте и достигнутые показатели качества, и оставшиеся граничные условия.
-- При внешних публикациях сохраняйте явную связку с `normativeProfile` и версией таблиц.
+- [docs/README.md](docs/README.md) — карта
+- [docs/architecture.md](docs/architecture.md)
+- [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — пункт, код, тест
+- [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md) — как публичная цифра получает право на существование
+- [docs/SOTA_2026.md](docs/SOTA_2026.md) — список разрывов
+- [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) — текущая очередь
+- [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
 
-## Управление проектом
-
-- [Support](SUPPORT.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security Policy](SECURITY.md)
-- [Maintainers](MAINTAINERS.md)
-- [Release Policy](RELEASE_POLICY.md)
-- [Citation Metadata](CITATION.cff)
-
-## Правила ведения документации
-
-Чтобы не допускать расхождения между публичными утверждениями и проверяемыми фактами:
-
-1. Сначала обновляйте канонические поверхности (`README.md`, `README.ru.md`, [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), [docs/README.md](docs/README.md)).
-2. Исторические цифры оставляйте только с датой в документах дорожной карты и аудитов; актуальные значения держите в текущих публичных описаниях.
-3. Если изменилось поведение, в том же изменении обновляйте командные примеры и рекомендации по паритету с CI.
-4. Снимки отчётов трактуйте как датированные подтверждения, а не как вечную истину.
+Аудиты апреля 2026 в `docs/archive/` — история.
 
 ## Лицензия
 
-MIT — см. LICENSE.
+MIT. См. [LICENSE](LICENSE).
