@@ -34,9 +34,21 @@ public static class LapPlanner
           ? NormativeProfiles.Sp63_2018.TopBarAnchorageFactor
           : 1.0;
       var planned = new Dictionary<int, LinePlan>();
+      var committed = new Dictionary<int, List<double>>();
+      var layerBars = LayerBars(zone);
       foreach (var group in Groups(zone))
       {
-        var plan = Plan(zone, group, concreteClass, factor, maxPiece, stockLengthsMm, kerfMm, jointRatioMax);
+        var plan = Plan(
+            zone,
+            group,
+            layerBars,
+            committed,
+            concreteClass,
+            factor,
+            maxPiece,
+            stockLengthsMm,
+            kerfMm,
+            jointRatioMax);
         if (plan is null)
         {
           if (!reportedUnsplit)
@@ -55,7 +67,10 @@ public static class LapPlanner
         }
 
         for (int i = 0; i < group.Count; i++)
+        {
           planned[group[i].Index] = plan.Lines[i];
+          committed[group[i].Index] = plan.Lines[i].Joints.Select(local => Absolute(group[i], local)).ToList();
+        }
       }
 
       var rebuilt = new List<RebarSegment>(zone.Rebars.Count);
@@ -139,6 +154,8 @@ public static class LapPlanner
   private static GroupPlan? Plan(
       ReinforcementZone zone,
       List<BarRef> group,
+      IReadOnlyList<BarRef> layerBars,
+      Dictionary<int, List<double>> committed,
       string concreteClass,
       double topFactor,
       double maxPiece,
@@ -156,6 +173,8 @@ public static class LapPlanner
     var staggered = Place(
         zone,
         group,
+        layerBars,
+        committed,
         concreteClass,
         topFactor,
         AnchorageRules.LapSpliceShare.UpTo50,
@@ -171,6 +190,8 @@ public static class LapPlanner
     var full = Place(
         zone,
         group,
+        layerBars,
+        committed,
         concreteClass,
         topFactor,
         AnchorageRules.LapSpliceShare.Full100,
@@ -186,6 +207,8 @@ public static class LapPlanner
   private static List<LinePlan>? Place(
       ReinforcementZone zone,
       List<BarRef> group,
+      IReadOnlyList<BarRef> layerBars,
+      Dictionary<int, List<double>> committed,
       string concreteClass,
       double topFactor,
       AnchorageRules.LapSpliceShare share,
@@ -206,7 +229,6 @@ public static class LapPlanner
     if (lap > maxPiece + 1e-6)
       return null;
 
-    double window = SectionLengthFactor * lap;
     double limit = Math.Min(0.5, jointRatioMax);
     var placed = new List<LinePlan>(group.Count);
     var centers = new List<List<double>>(group.Count);
@@ -223,7 +245,7 @@ public static class LapPlanner
       }
 
       var joints = Shortest(length, lap, maxPiece, startArc, endArc, stock, kerf, center =>
-          !stagger || Allowed(center, centers, group.Count, window, limit));
+          !stagger || Allowed(bar, center, group, centers, layerBars, committed, lap, limit));
       if (joints is null)
         return null;
       placed.Add(new LinePlan(joints, lap, alpha));
@@ -234,20 +256,75 @@ public static class LapPlanner
   }
 
   private static bool Allowed(
+      BarRef current,
       double center,
+      List<BarRef> group,
       List<List<double>> placed,
-      int lineCount,
-      double window,
+      IReadOnlyList<BarRef> layerBars,
+      Dictionary<int, List<double>> committed,
+      double lap,
       double limit)
   {
-    int occupied = 1;
-    foreach (var line in placed)
+    bool alongX = AlongX(current.Segment);
+    double at = Absolute(current, center);
+    var bars = new List<LapSectionShare.Bar>();
+    foreach (var member in layerBars)
     {
-      if (line.Any(joint => Math.Abs(joint - center) <= window + 1e-6))
-        occupied++;
+      if (AlongX(member.Segment) != alongX)
+        continue;
+
+      var joints = new List<double>();
+      if (committed.TryGetValue(member.Index, out var done))
+        joints.AddRange(done);
+
+      int placedIndex = group.FindIndex(bar => bar.Index == member.Index);
+      if (placedIndex >= 0 && placedIndex < placed.Count)
+        joints.AddRange(placed[placedIndex].Select(local => Absolute(group[placedIndex], local)));
+
+      if (member.Index == current.Index)
+        joints.Add(at);
+
+      (double start, double end) = AxisSpan(member.Segment);
+      bars.Add(new LapSectionShare.Bar(start, end, joints));
     }
 
-    return occupied / (double)lineCount <= limit + 1e-9;
+    return LapSectionShare.Ratio(bars, at, lap) <= limit + 1e-9;
+  }
+
+  private static List<BarRef> LayerBars(ReinforcementZone zone)
+  {
+    var bars = new List<BarRef>();
+    for (int index = 0; index < zone.Rebars.Count; index++)
+    {
+      var bar = zone.Rebars[index];
+      if (bar.Status == BarInstanceStatus.Discarded)
+        continue;
+      bars.Add(new BarRef(index, 0, bar));
+    }
+
+    return bars;
+  }
+
+  private static bool AlongX(RebarSegment bar) =>
+      Math.Abs(bar.End.X - bar.Start.X) >= Math.Abs(bar.End.Y - bar.Start.Y);
+
+  private static double Absolute(BarRef bar, double local)
+  {
+    var segment = bar.Segment;
+    double length = segment.Start.DistanceTo(segment.End);
+    if (length < 1e-9)
+      return AlongX(segment) ? segment.Start.X : segment.Start.Y;
+
+    double ux = (segment.End.X - segment.Start.X) / length;
+    double uy = (segment.End.Y - segment.Start.Y) / length;
+    return AlongX(segment) ? segment.Start.X + ux * local : segment.Start.Y + uy * local;
+  }
+
+  private static (double Start, double End) AxisSpan(RebarSegment bar)
+  {
+    double start = AlongX(bar) ? bar.Start.X : bar.Start.Y;
+    double end = AlongX(bar) ? bar.End.X : bar.End.Y;
+    return (Math.Min(start, end), Math.Max(start, end));
   }
 
   private static List<double>? Shortest(
