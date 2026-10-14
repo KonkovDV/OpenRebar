@@ -10,6 +10,16 @@ from typing import Any
 
 SEVERITY = {"low": 1, "moderate": 2, "high": 3, "critical": 4}
 
+# ImageSharp 3.1.12 has no patched release. Version 4 needs a license key, so these
+# advisories stay listed and do not fail the high gate. Any other high finding still fails.
+ACCEPTED_ADVISORIES = {
+    "https://github.com/advisories/GHSA-gwg2-r3hj-4w44",
+    "https://github.com/advisories/GHSA-j3p4-wp97-rph4",
+    "https://github.com/advisories/GHSA-j9gm-c75j-xc9q",
+    "https://github.com/advisories/GHSA-jjfr-hcj7-qf5w",
+    "https://github.com/advisories/GHSA-wmxv-xphr-5c9g",
+}
+
 
 def findings(payload: dict[str, Any], threshold: str) -> list[tuple[str, str, str, str, str]]:
     minimum = SEVERITY[threshold]
@@ -30,6 +40,8 @@ def findings(payload: dict[str, Any], threshold: str) -> list[tuple[str, str, st
                     if SEVERITY.get(severity, 0) < minimum:
                         continue
                     advisory = str(vulnerability.get("advisoryurl", "unknown-advisory"))
+                    if advisory in ACCEPTED_ADVISORIES and package_id == "SixLabors.ImageSharp" and resolved == "3.1.12":
+                        continue
                     result.append((severity, package_id, resolved, advisory, f"{project_path} ({framework_name})"))
     return sorted(result, key=lambda item: (-SEVERITY[item[0]], item[1], item[2], item[4]))
 
