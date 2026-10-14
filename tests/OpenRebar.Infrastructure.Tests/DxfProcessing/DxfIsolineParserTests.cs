@@ -308,6 +308,47 @@ public class DxfIsolineParserTests
     parser.Stats.ParsedEntityCount.Should().Be(1);
   }
 
+  [Fact]
+  public async Task ParseAsync_Line_IsNamedAsAnUnsupportedEntity()
+  {
+    var parser = new DxfIsolineParser();
+    var line = new DxfLine(new DxfPoint(0, 0, 0), new DxfPoint(10, 0, 0))
+    {
+      Color = DxfColor.FromIndex(1)
+    };
+
+    var zones = await ParseEntityAsync(line, parser, CreateLegend(new IsolineColor(255, 0, 0)));
+
+    zones.Should().BeEmpty();
+    parser.Stats.IgnoredByReason.Should().ContainKey("unsupportedEntity:DxfLine");
+  }
+
+  [Fact]
+  public async Task ParseAsync_ColorOutsideTheLegend_IsCounted()
+  {
+    var parser = new DxfIsolineParser();
+    var zones = await ParseEntityAsync(
+        ClosedRectangle(0, 0, 100, 50),
+        parser,
+        CreateLegend(new IsolineColor(0, 0, 255)));
+
+    zones.Should().BeEmpty();
+    parser.Stats.IgnoredByReason.Should().ContainKey("colorNotInLegend");
+  }
+
+  [Fact]
+  public async Task ParseAsync_ByBlockColor_IsNoColor()
+  {
+    var parser = new DxfIsolineParser();
+    var polyline = ClosedRectangle(0, 0, 100, 50);
+    polyline.Color = DxfColor.ByBlock;
+
+    var zones = await ParseEntityAsync(polyline, parser, CreateLegend(new IsolineColor(255, 0, 0)));
+
+    zones.Should().BeEmpty();
+    parser.Stats.IgnoredByReason.Should().ContainKey("noColor");
+  }
+
   private static ColorLegend CreateLegend(IsolineColor color)
   {
     return new ColorLegend([

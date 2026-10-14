@@ -1113,6 +1113,10 @@ public sealed class GenerateReinforcementPipeline
     if (openPolylines > 0)
       warnings.Add($"{openPolylines} open polylines were ignored.");
 
+    int missingLegend = Count(stats, "colorNotInLegend");
+    if (missingLegend > 0)
+      warnings.Add($"{missingLegend} DXF entities used a color that is not in the legend.");
+
     if (stats.RoiAssumedFullImage)
       warnings.Add("PNG region of interest was not set; the full image was used.");
 
