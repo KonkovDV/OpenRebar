@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Dependabot checks every NuGet project in one update, so one package bump is one pull request. ImageSharp stays below 3.2 and FluentAssertions stays below 8.
 - Microsoft.Extensions packages are 10.0.12. ImageSharp stays 3.1.x and FluentAssertions stays 7.x.
 - SP 63 table 6.14 from Amendment 1: Rs is A400 340 MPa and B500 415 MPa. A500 stays 435 MPa, so the A500C examples keep the same bar lengths and masses. Rsc is stored from the TECHNO NICOL copy (A400 350 MPa). A second public transcription prints A400 Rsc as 340, and the official order text was not opened. Anchorage still uses Rs.
 
