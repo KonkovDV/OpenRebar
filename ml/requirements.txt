@@ -1,16 +1,19 @@
 # OpenRebar Reinforcement — Python ML Module
 # Isoline image segmentation service for PNG processing.
+# CPU wheels: https://download.pytorch.org/whl/cpu
+# The hashed lock is requirements.locked.txt. Install that file in CI.
 
 # Core
 numpy>=1.26,<2.0
 opencv-python-headless>=4.9,<5.0
-Pillow>=10.2,<11.0
+Pillow>=12.3,<13
 scikit-image>=0.22,<1.0
 
-# ML (U-Net segmentation)
-torch>=2.2,<3.0
-torchvision>=0.17,<1.0
-onnx>=1.16,<2.0
+# ML (U-Net segmentation). CPU wheels only.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.13.0+cpu
+torchvision==0.28.0+cpu
+onnx>=1.22,<2.0
 onnxscript>=0.1,<1.0
 onnxruntime>=1.17,<2.0
 
@@ -18,7 +21,7 @@ onnxruntime>=1.17,<2.0
 fastapi>=0.110,<1.0
 uvicorn>=0.27,<1.0
 pydantic>=2.6,<3.0
-python-multipart>=0.0.9,<1.0
+python-multipart>=0.0.31,<1.0
 
 # DXF geometry (shared with C# for validation)
 # ezdxf jumped from 0.18.x to 1.x, so 0.19-0.99 does not exist on PyPI.
@@ -26,6 +29,13 @@ ezdxf>=1.0,<2.0
 shapely>=2.0,<3.0
 
 # Dev / test
-pytest>=8.0,<9.0
-pytest-asyncio>=0.23,<1.0
+pytest>=9.0.3,<10
+pytest-asyncio>=1.2,<2
 httpx>=0.27,<0.28
+
+# Transitive advisory floors
+anyio>=4.14.2
+starlette>=1.3.1
+idna>=3.15
+fsspec>=2026.6.0
+setuptools>=83
