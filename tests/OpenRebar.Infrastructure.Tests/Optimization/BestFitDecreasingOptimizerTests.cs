@@ -6,9 +6,9 @@ using FluentAssertions;
 
 namespace OpenRebar.Infrastructure.Tests.Optimization;
 
-public class FirstFitDecreasingOptimizerTests
+public class BestFitDecreasingOptimizerTests
 {
-  private readonly IRebarOptimizer _optimizer = new FirstFitDecreasingOptimizer();
+  private readonly IRebarOptimizer _optimizer = new BestFitDecreasingOptimizer();
 
   private static readonly IReadOnlyList<StockLength> DefaultStock =
   [
@@ -17,8 +17,7 @@ public class FirstFitDecreasingOptimizerTests
 
   private static readonly OptimizationSettings DefaultSettings = new()
   {
-    SawCutWidthMm = 3,
-    MinScrapLengthMm = 300
+    SawCutWidthMm = 3
   };
 
   [Fact]
@@ -29,6 +28,8 @@ public class FirstFitDecreasingOptimizerTests
     result.TotalStockBarsNeeded.Should().Be(0);
     result.TotalWasteMm.Should().Be(0);
     result.CuttingPlans.Should().BeEmpty();
+    result.Provenance!.OptimizerId.Should().Be("best-fit-decreasing-v1");
+    result.Provenance.IntegerizationStrategy.Should().Be("best-fit-decreasing");
   }
 
   [Fact]

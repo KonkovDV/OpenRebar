@@ -86,7 +86,7 @@ public class FullPipelineIntegrationTests
       result.Report.AnalysisProvenance.Optimization.OptimizerId.Should().BeOneOf(
           "column-generation-relaxation-v2",
           "exact-small-instance-search-v1",
-          "first-fit-decreasing-v1");
+          "best-fit-decreasing-v1");
       result.Report.Verification.Should().NotBeNull();
       result.Report.Verification!.Status.Should().Be(VerificationStatuses.Failed);
       result.Report.Summary.TotalRebarSegments.Should().Be(result.TotalRebarSegments);

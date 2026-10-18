@@ -10,7 +10,7 @@ namespace OpenRebar.Infrastructure.Optimization;
 /// <summary>
 /// Production-oriented column-generation-style optimizer for the 1D cutting stock problem.
 /// Uses restricted-master LP, bounded-knapsack pricing, heuristic integerization,
-/// and an FFD non-regression floor instead of claiming exact branch-and-price optimality.
+/// and a best-fit non-regression floor instead of claiming exact branch-and-price optimality.
 ///
 /// Algorithm:
 ///   1. Build initial patterns via FFD (one pattern per distinct length)
@@ -85,13 +85,13 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
     int[] itemDemand = demand.Select(d => d.Count).ToArray();
 
     // Column generation is still one stock length per plan. A length that cannot
-    // hold every cut is skipped; mixed-length packing stays on the FFD floor.
+    // hold every cut is skipped; mixed-length packing stays on the best-fit floor.
     var singleStockCandidates = availableStock
         .Where(stock => requiredLengths.All(length => length + settings.SawCutWidthMm <= stock.LengthMm + 1e-6))
         .ToList();
 
     if (singleStockCandidates.Count == 0)
-      return new FirstFitDecreasingOptimizer().Optimize(requiredLengths, availableStock, settings);
+      return new BestFitDecreasingOptimizer().Optimize(requiredLengths, availableStock, settings);
 
     var candidates = singleStockCandidates
         .Select(stock =>
@@ -110,7 +110,7 @@ public sealed class ColumnGenerationOptimizer : IRebarOptimizer
 
     // Guard against pathological CG rounding/pricing behavior by keeping the simpler
     // best-fit-decreasing baseline as a floor for solution quality.
-    var baseline = new FirstFitDecreasingOptimizer().Optimize(requiredLengths, availableStock, settings);
+    var baseline = new BestFitDecreasingOptimizer().Optimize(requiredLengths, availableStock, settings);
     double? baselineCostProxy = EstimateCostProxy(baseline, availableStock);
     if (IsBaselineBetter(
         baseline,

@@ -77,7 +77,7 @@ public class ExamplesSnapshotTests
           continue;
         }
 
-        if (property.Key.Equals("stackTrace", StringComparison.OrdinalIgnoreCase))
+        if (property.Key.Equals("stackTraceSha256", StringComparison.OrdinalIgnoreCase))
         {
           jsonObject[property.Key] = "__STACKTRACE_DYNAMIC__";
           continue;

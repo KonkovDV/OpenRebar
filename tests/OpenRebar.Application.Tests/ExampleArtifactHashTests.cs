@@ -206,7 +206,7 @@ public class ExampleArtifactHashTests
       foreach (var property in obj.ToList())
       {
         if (property.Key.EndsWith("Utc", StringComparison.OrdinalIgnoreCase)
-            || property.Key.Equals("stackTrace", StringComparison.OrdinalIgnoreCase))
+            || property.Key.Equals("stackTraceSha256", StringComparison.OrdinalIgnoreCase))
         {
           obj[property.Key] = "__DYNAMIC__";
           continue;

@@ -37,4 +37,4 @@ Each case defines enough boundary data to run the end-to-end application pipelin
 - optional `legendEntries` — color-to-spec mapping for the DXF entities
 - optional `maxBarRegression`, `maxWasteRegressionPercent`, `maxAbsoluteWastePercent`
 
-The benchmark compares each case against the shipped `FirstFitDecreasingOptimizer` baseline and also verifies that canonical `*.result.json` reports are persisted successfully.
+The benchmark compares each case against the shipped `BestFitDecreasingOptimizer` baseline and also verifies that canonical `*.result.json` reports are persisted successfully.

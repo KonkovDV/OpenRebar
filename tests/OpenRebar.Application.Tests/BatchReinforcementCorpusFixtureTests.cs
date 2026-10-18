@@ -23,7 +23,6 @@ public class BatchReinforcementCorpusFixtureTests
   private static readonly OptimizationSettings DefaultOptimizationSettings = new()
   {
     SawCutWidthMm = 3,
-    MinScrapLengthMm = 300
   };
 
   [Fact]
@@ -71,7 +70,7 @@ public class BatchReinforcementCorpusFixtureTests
 
       var result = await batchPipeline.ExecuteAsync(inputs);
       var defaultCatalog = catalogLoader.GetDefaultCatalog();
-      var ffdOptimizer = new FirstFitDecreasingOptimizer();
+      var ffdOptimizer = new BestFitDecreasingOptimizer();
 
       result.Failures.Should().BeEmpty();
       result.SlabResults.Should().HaveCount(manifest.Cases.Count);
@@ -90,7 +89,7 @@ public class BatchReinforcementCorpusFixtureTests
             .ToList();
         optimizerIds.Should().OnlyContain(id =>
             id == "column-generation-relaxation-v2" ||
-            id == "first-fit-decreasing-v1" ||
+            id == "best-fit-decreasing-v1" ||
             id == "exact-small-instance-search-v1");
 
         var requiredLengths = slabResult.Result.ClassifiedZones
@@ -200,12 +199,10 @@ public class BatchReinforcementCorpusFixtureTests
   private sealed class BatchCorpusOptimizationSettings
   {
     public double? SawCutWidthMm { get; init; }
-    public double? MinScrapLengthMm { get; init; }
 
     public OptimizationSettings ToDomainSettings() => new()
     {
-      SawCutWidthMm = SawCutWidthMm ?? DefaultOptimizationSettings.SawCutWidthMm,
-      MinScrapLengthMm = MinScrapLengthMm ?? DefaultOptimizationSettings.MinScrapLengthMm
+      SawCutWidthMm = SawCutWidthMm ?? DefaultOptimizationSettings.SawCutWidthMm
     };
   }
 

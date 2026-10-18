@@ -18,7 +18,6 @@ public class ColumnGenerationOptimizerTests
   private static readonly OptimizationSettings DefaultSettings = new()
   {
     SawCutWidthMm = 3,
-    MinScrapLengthMm = 300
   };
 
   [Fact]
@@ -59,7 +58,7 @@ public class ColumnGenerationOptimizerTests
     // 10 pieces of 3000mm each. 11700/(3000+3) ≈ 3.89 → 3 per bar
     // 10/3 = ceil(3.33) = 4 bars
     var lengths = Enumerable.Repeat(3000.0, 10).ToList();
-    var baseline = new FirstFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
+    var baseline = new BestFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
 
     var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
     var allCuts = result.CuttingPlans.SelectMany(plan => plan.Cuts).ToList();
@@ -124,7 +123,7 @@ public class ColumnGenerationOptimizerTests
     var lengths = Enumerable.Range(0, 50)
         .Select(_ => 1500.0 + rng.NextDouble() * 8000) // 1500–9500mm
         .ToList();
-    var baseline = new FirstFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
+    var baseline = new BestFitDecreasingOptimizer().Optimize(lengths, DefaultStock, DefaultSettings);
 
     var result = _optimizer.Optimize(lengths, DefaultStock, DefaultSettings);
 
@@ -189,7 +188,6 @@ public class ColumnGenerationOptimizerTests
     var settings = new OptimizationSettings
     {
       SawCutWidthMm = 3,
-      MinScrapLengthMm = 300,
       WasteWeight = 0,
       InstallationWeight = 0,
       CostWeight = 1,

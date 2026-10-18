@@ -384,7 +384,7 @@
       "errorMessage": "Under-reinforced region in PNG-0001 at (0, 0)-(6000, 4000) mm.",
       "exceptionType": "VerificationFailed",
       "occurredAtUtc": "2026-10-02T16:05:24.2500818+00:00",
-      "stackTrace": null,
+      "stackTraceSha256": null,
       "isCritical": true
     }
   ],

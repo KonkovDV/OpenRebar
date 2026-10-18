@@ -350,7 +350,7 @@
         "errorMessage": { "type": "string", "minLength": 1 },
         "exceptionType": { "type": "string", "minLength": 1 },
         "occurredAtUtc": { "type": "string", "format": "date-time" },
-        "stackTrace": { "type": ["string", "null"] },
+        "stackTraceSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
         "isCritical": { "type": "boolean" }
       },
       "additionalProperties": false

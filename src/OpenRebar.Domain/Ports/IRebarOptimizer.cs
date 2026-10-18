@@ -26,19 +26,6 @@ public interface IRebarOptimizer
 /// </summary>
 public sealed record OptimizationSettings
 {
-  /// <summary>Minimum usable scrap length in mm (shorter pieces are waste).</summary>
-  public double MinScrapLengthMm
-  {
-    get => _minScrapLengthMm;
-    init
-    {
-      if (value < 0)
-        throw new ArgumentOutOfRangeException(nameof(MinScrapLengthMm), value, "Minimum scrap length cannot be negative.");
-      _minScrapLengthMm = value;
-    }
-  }
-  private readonly double _minScrapLengthMm = 300;
-
   /// <summary>Saw cut width in mm.</summary>
   public double SawCutWidthMm
   {
