@@ -852,6 +852,7 @@ public sealed class GenerateReinforcementPipeline
         .Select(r => r.DiameterMm)
         .DefaultIfEmpty(0)
         .Max();
+    var depthByLayer = EffectiveDepths.ByLayer(input.Slab, zonesWithRebars);
 
     return new ReinforcementExecutionReport
     {
@@ -874,6 +875,7 @@ public sealed class GenerateReinforcementPipeline
         ThicknessMm = input.Slab.ThicknessMm,
         CoverMm = input.Slab.CoverMm,
         EffectiveDepthMm = input.Slab.EffectiveDepthFor(maxDiameterMm),
+        EffectiveDepthByLayer = depthByLayer.Count == 0 ? null : depthByLayer,
         AreaMm2 = input.Slab.OuterBoundary.CalculateArea(),
         OpeningCount = input.Slab.Openings.Count,
         BoundingBox = ToBoundingBoxReport(slabBox)

@@ -508,6 +508,7 @@ public class ReportSchemaComplianceTests
       ThicknessMm = 200,
       CoverMm = 25,
       EffectiveDepthMm = 175,
+      EffectiveDepthByLayer = new Dictionary<string, double> { ["BottomX"] = 167 },
       AreaMm2 = 600_000_000,
       OpeningCount = 0,
       BoundingBox = new BoundingBoxExecutionReport

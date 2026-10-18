@@ -433,6 +433,12 @@
         "thicknessMm": { "type": "number", "exclusiveMinimum": 0 },
         "coverMm": { "type": "number", "minimum": 0 },
         "effectiveDepthMm": { "type": "number", "exclusiveMinimum": 0 },
+        "effectiveDepthByLayer": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "enum": ["BottomX", "BottomY", "TopX", "TopY"] },
+          "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
+        },
         "areaMm2": { "type": "number", "minimum": 0 },
         "openingCount": { "type": "integer", "minimum": 0 },
         "boundingBox": { "$ref": "#/$defs/boundingBoxExecutionReport" }
