@@ -256,6 +256,7 @@ public class CliProgramIntegrationTests
   [InlineData("InvalidIsolineFileException", 1)]
   [InlineData("VerificationFailed", 2)]
   [InlineData("DecompositionQualityViolation", 3)]
+  [InlineData("edgesRequireRectangularSlab", 3)]
   public void ResolveExitCode_MapsCriticalFailures(string exceptionType, int expected)
   {
     var report = new ReinforcementExecutionReport

@@ -43,6 +43,11 @@ public static class SlabEdges
 
   public const string RealDeficit = "RealDeficit";
 
+  public const string EdgesRequireRectangularSlab = "edgesRequireRectangularSlab";
+
+  public const string EdgesRequireRectangularSlabMessage =
+      "edgesRequireRectangularSlab: Supported and Continuous edges are named on the bounding box. This outline is not an axis-aligned rectangle, so it is not replaced by that box.";
+
   public static readonly string[] Remedy =
   [
       "anchorIntoSupport",
@@ -109,11 +114,51 @@ public static class SlabEdges
   }
 
   /// <summary>
+  /// True when every edge is horizontal or vertical and the polygon fills its bounding box.
+  /// An L-shape and a slanted edge are not rectangles.
+  /// </summary>
+  public static bool IsAxisAlignedRectangle(Polygon polygon)
+  {
+    const double axisToleranceMm = 1e-6;
+    var box = polygon.GetBoundingBox();
+    double width = box.Max.X - box.Min.X;
+    double height = box.Max.Y - box.Min.Y;
+    if (width <= axisToleranceMm || height <= axisToleranceMm)
+      return false;
+
+    var vertices = polygon.Vertices;
+    for (int i = 0; i < vertices.Count; i++)
+    {
+      var start = vertices[i];
+      var end = vertices[(i + 1) % vertices.Count];
+      double dx = Math.Abs(start.X - end.X);
+      double dy = Math.Abs(start.Y - end.Y);
+      if (dx <= axisToleranceMm && dy <= axisToleranceMm)
+        continue;
+      if (dx > axisToleranceMm && dy > axisToleranceMm)
+        return false;
+    }
+
+    double boxArea = width * height;
+    return Math.Abs(polygon.CalculateArea() - boxArea) <= Math.Max(1e-4, boxArea * 1e-12);
+  }
+
+  /// <summary>
+  /// Support edges are named on the bounding box. They are not defined on any other outline.
+  /// </summary>
+  public static bool SupportEdgesNeedARectangle(SlabGeometry slab) =>
+      HasDeclaredSupport(slab) && !IsAxisAlignedRectangle(slab.OuterBoundary);
+
+  /// <summary>
   /// Axis-aligned working outline. Free sides are inset by <see cref="FreeInsetMm"/>.
   /// Supported and Continuous sides grow outward by the usable support depth.
+  /// A non-rectangular outline with those edges throws instead of returning the box.
   /// </summary>
   public static Polygon WorkingRectangle(SlabGeometry slab, double diameterMm)
   {
+    if (SupportEdgesNeedARectangle(slab))
+      throw new InvalidDataException(EdgesRequireRectangularSlabMessage);
+
     var box = slab.OuterBoundary.GetBoundingBox();
     double minX = Bound(box.Min.X, slab, "minX", outwardIsNegative: true, diameterMm);
     double maxX = Bound(box.Max.X, slab, "maxX", outwardIsNegative: false, diameterMm);

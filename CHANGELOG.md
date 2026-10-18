@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A Supported or Continuous edge on a non-rectangular outline no longer replaces that outline with its bounding box. The run stops with `edgesRequireRectangularSlab` (exit 3) before any bar is placed. Free edges of an oblique slab stay on the outline. An oblique row is still stepped outward by 10 mm, then clipped so the bar end stays inside the contour. Rectangular examples are unchanged.
 - A PNG is measured from its header before it is decoded. A frame above 25 million pixels is rejected with the same size error as before, and only the first frame is decoded. The examples are unchanged.
 - An IFC reinforcing bar has a type for its diameter and steel class, a swept-disk body of radius d/2, and a placement on the bar axis. A hook is a composite curve. The bar name and GlobalId are unchanged. simple-slab lengths and masses are unchanged. The IFC bytes change because those entities are new.
 - A DXF entity that is not a zone boundary, has no colour, or uses a colour outside the legend is counted in `ignoredByReason` instead of being dropped. A colour outside the legend is also a warning. simple-slab is one closed polyline in the legend, so its ignored-reason count stays `unitsAssumedMillimetres`.

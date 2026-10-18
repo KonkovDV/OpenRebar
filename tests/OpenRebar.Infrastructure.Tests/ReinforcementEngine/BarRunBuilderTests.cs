@@ -1,5 +1,6 @@
 using FluentAssertions;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.ReinforcementEngine;
@@ -63,11 +64,57 @@ public class BarRunBuilderTests
     foreach (var run in runs)
     {
       run.Lines.Should().NotBeEmpty();
-      double length = run.EndCoord - run.StartCoord;
-      length.Should().BeApproximately(Math.Round(length / BarRunBuilder.LengthStepMm) * BarRunBuilder.LengthStepMm, 0.1);
+      foreach (double line in run.Lines)
+      {
+        Inside(zone.Boundary, run.StartCoord, line).Should().BeTrue();
+        Inside(zone.Boundary, run.EndCoord, line).Should().BeTrue();
+      }
     }
 
     bars.Should().OnlyContain(bar => bar.Start.X >= -0.1 && bar.End.X <= 80.1);
+  }
+
+  [Fact]
+  public void ObliqueConcreteEdge_KeepsTheBarEndInsideTheOutline()
+  {
+    var outline = new Polygon(
+    [
+        new Point2D(0, 0),
+        new Point2D(8000, 0),
+        new Point2D(8000, 6000),
+        new Point2D(2000, 6000)
+    ]);
+    var zone = Zone(outline);
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = outline,
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+
+    var runs = BarRunBuilder.Build(zone, slab);
+    var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
+        .CalculateRebars([zone], slab)[0].Rebars;
+
+    runs.Should().NotBeEmpty();
+    bars.Should().NotBeEmpty();
+    runs.Should().Contain(run => Math.Abs(run.StartCoord % BarRunBuilder.LengthStepMm) > 0.1
+        || Math.Abs(run.EndCoord % BarRunBuilder.LengthStepMm) > 0.1);
+    foreach (var run in runs)
+    {
+      foreach (double line in run.Lines)
+      {
+        Inside(outline, run.StartCoord, line).Should().BeTrue();
+        Inside(outline, run.EndCoord, line).Should().BeTrue();
+      }
+    }
+
+    foreach (var bar in bars)
+    {
+      Inside(outline, bar.Start.X, bar.Start.Y).Should().BeTrue();
+      Inside(outline, bar.End.X, bar.End.Y).Should().BeTrue();
+    }
   }
 
   [Fact]
@@ -105,6 +152,9 @@ public class BarRunBuilderTests
     CoverMm = 30,
     ConcreteClass = "B25"
   };
+
+  private static bool Inside(Polygon outline, double x, double y) =>
+      PolygonDecomposition.IsPointInPolygon(new Point2D(x, y), outline, GeometryTolerance.Relaxed);
 
   private static Polygon Rectangle(double minX, double minY, double maxX, double maxY) => new(
   [
