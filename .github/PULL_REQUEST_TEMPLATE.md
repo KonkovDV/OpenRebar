@@ -6,8 +6,7 @@
 
 ## Validation
 
-- [ ] `dotnet build OpenRebar.sln`
-- [ ] `dotnet test OpenRebar.sln`
+- [ ] The restore, build, format, and five test commands in the README quick start
 - [ ] `pytest tests -q` (if `ml/` changed)
 - [ ] docs updated when public behavior, contracts, or governance changed
 

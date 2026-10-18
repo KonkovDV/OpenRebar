@@ -1,87 +1,29 @@
-# OpenRebar Documentation Map
+# Documents
 
-This directory is the canonical documentation entrypoint for repository-internal technical documents.
+The product page is [README.md](../README.md) ([Russian](../README.ru.md)). This folder is the rest of the writing.
 
-## Documentation Quality Principles
+## Where to look
 
-- Keep one canonical source per invariant and avoid content forks.
-- Separate current-state claims from historical evidence snapshots.
-- Tie normative or quality claims to executable checks.
-- Keep EN/RU public claim surfaces synchronized when test status or workflow guidance changes.
+| Question | File |
+|---|---|
+| How the program is split | [architecture.md](architecture.md) |
+| Which clause is which method | [NORMATIVE_TRACEABILITY.md](NORMATIVE_TRACEABILITY.md) |
+| Which command backs a public number | [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md) |
+| What is still to do | [OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) |
+| What the 2026 papers do that this repository does not | [SOTA_2026.md](SOTA_2026.md) |
+| What changed | [CHANGELOG.md](../CHANGELOG.md) |
 
-## Document Classes
+`archive/` and the older plan files are history. The code on `main` wins if a page and the tests disagree.
 
-OpenRebar distinguishes between three documentation classes:
+## How to check a claim
 
-| Class | Purpose | Files |
-|---|---|---|
-| Canonical reference | Stable technical understanding of the system as it exists now | `architecture.md`, `NORMATIVE_TRACEABILITY.md`, `VALIDATION_BASELINE.md` |
-| Current plan | The work queue. One file. | `OPENREBAR_AGENT_PLAN_r10_2026_10_14.md` |
-| Archive | April 2026 audits and plans. Not the source of truth. | `archive/` |
+The counted suite is the five `dotnet test` commands in the README quick start. `dotnet test OpenRebar.sln` is not that suite: the CLI project is .NET 10 only, and a solution-wide run does not write the `test-results.trx` files the count script sums.
 
-## Read By Goal
-
-### Understand the current system
-
-- [architecture.md](architecture.md): layer boundaries, data flow, domain ports, optimization architecture, and ML boundary
-- [NORMATIVE_TRACEABILITY.md](NORMATIVE_TRACEABILITY.md): clause-to-code and clause-to-test traceability for the normative core
-- [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): canonical executable validation baseline for repository, ML, and CI lock-refresh claims
-
-### Review repository quality and evidence
-
-- [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md): canonical executable validation baseline
-- [TRIAGE_REPORT_2026-10-02.md](TRIAGE_REPORT_2026-10-02.md): triage of 2026-10-02. The code on `main` wins if they disagree
-- [.github/workflows/release.yml](../.github/workflows/release.yml) and [.github/dependabot.yml](../.github/dependabot.yml): CI token scope and dependency-update coverage
-
-### Understand the work queue
-
-- [OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](OPENREBAR_AGENT_PLAN_r10_2026_10_14.md): the current plan
-- [OPENREBAR_AGENT_PLAN_r9_2026_10_02.md](OPENREBAR_AGENT_PLAN_r9_2026_10_02.md): the previous plan, open items carried into r10
-- [archive/](archive/): April 2026 audits and execution plans. Historical, not the source of truth.
-
-## Scope Rules
-
-- Root-level markdown is reserved for repository-facing governance and community-health surfaces such as `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `CHANGELOG.md`.
-- Technical audits, execution plans, and roadmap-heavy materials belong under `docs/`.
-- Evidence documents are snapshots, not living source-of-truth contracts unless explicitly stated.
-- When behavior changes, update the smallest canonical surface first, then align supporting evidence or roadmap docs only if they encode the same invariant.
-
-## Claim Surface Hierarchy
-
-Use this order when updating or validating documentation claims:
-
-1. `README.md` + `README.ru.md` (public current-state claim surface)
-2. `docs/VALIDATION_BASELINE.md` (canonical executable evidence baseline)
-3. `docs/architecture.md` and `docs/NORMATIVE_TRACEABILITY.md` (stable technical reference)
-4. [archive/](archive/) (historical evidence; not the source of truth)
-
-If a statement conflicts across levels, update the lower-priority document to match the higher-priority canonical source.
-
-## Verification Baseline
-
-Use this baseline before strengthening claims in docs, audits, or release notes:
-
-```bash
-dotnet build OpenRebar.sln --configuration Release
-dotnet test OpenRebar.sln --configuration Release
-cd ml
-python -m pip install --require-hashes -r requirements.locked.txt
-python -m pytest tests -q
-```
-
-If the change touches ML dependency governance or workflow behavior, also verify the pinned lock-refresh path used in CI:
+A lock refresh, from `ml/`, uses the same platforms as the header of `requirements.locked.txt`:
 
 ```bash
 python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
-python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
+python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
 ```
 
-## Documentation PR Checklist
-
-Before merging docs changes:
-
-1. Verify that all current-state numbers in `README.md` and `README.ru.md` match executable evidence.
-2. Ensure every new command snippet is runnable as written (paths, flags, OS notes).
-3. Mark historical values with explicit date context.
-4. Avoid duplicating long protocol text across multiple files; link to the canonical file.
-5. For CI-related claims, confirm corresponding workflow paths in `.github/workflows/`.
+The lock is CPU torch `2.13.0+cpu`. numpy stays on 1.26, whose wheels are tagged `manylinux_2_17`, so the refresh names that platform as well as `manylinux_2_28`. CI installs the committed lock. It does not rewrite it.
