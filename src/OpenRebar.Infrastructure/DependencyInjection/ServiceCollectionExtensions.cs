@@ -41,8 +41,11 @@ public static class ServiceCollectionExtensions
 
     if (!string.IsNullOrWhiteSpace(mlServiceUrl))
     {
-      services.AddSingleton<IImageSegmentationService>(
-          _ => new HttpImageSegmentationService(mlServiceUrl));
+      services.AddSingleton<IImageSegmentationService>(_ =>
+      {
+        string[] hosts = Uri.TryCreate(mlServiceUrl, UriKind.Absolute, out var mlUri) ? [mlUri.Host] : [];
+        return new HttpImageSegmentationService(mlServiceUrl, allowedHosts: hosts);
+      });
     }
 
     services.AddSingleton<PngIsolineParser>(sp =>
