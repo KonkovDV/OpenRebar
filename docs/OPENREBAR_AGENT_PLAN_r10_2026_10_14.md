@@ -28,10 +28,10 @@
 - Revit API только в `src/OpenRebar.RevitPlugin/` под `#if REVIT_SDK`. Две сборки: `RevitNet8`, `RevitNet10` по версии рантайма.
 - DI собирается в `ServiceCollectionExtensions` и `Bootstrap.cs`.
 - Новое поле в `*.result.json` → новое свойство в `contracts/aerobim-reinforcement-report.schema.json` (там `additionalProperties: false`), новый верхний ключ ещё и в `ExpectedTopLevelProperties` (`ReportSchemaComplianceTests`), и `SchemaVersion` в `ReinforcementReport.cs`: `2.0.0` → `2.1.0` для добавления поля, `3.0.0` для удаления или переименования.
-- Статус проверки: `Passed`, `Failed`, `NotEvaluated`. Трещины и прогиб — `NotEvaluated`, пока вход только Aₛ,req.
+- Статус проверки: `Passed`, `Failed`, `NotEvaluated`. Трещины и прогиб — `NotEvaluated`, пока вход только As,req.
 - Жёсткая коллизия сама по себе не валит верификацию; ворота — проверка площади.
 - Зачёт крюка 0. Хвост крюка по умолчанию 0 (`hooks.tailDiameters`, `source: default`). П-образные скобы не генерировать.
-- Rs: A400 340, B500 415, A500 435. Rsc A400 340 + `NotVerified` (Q-15). R_bt B55/B60 не трогать (RT-3).
+- Rs: A400 340, B500 415, A500 435. Rsc A400 340 + `NotVerified` (Q-15). Rbt B55/B60 не трогать (RT-3).
 - ImageSharp остаётся на 3.x, FluentAssertions на 7.x.
 - `ml/` офлайн: никаких вызовов внешних моделей. Lock ставится с `--require-hashes`.
 - Стиль C#: 2 пробела, file-scoped namespace, `TreatWarningsAsErrors`. Гейт `dotnet format --verify-no-changes`.
@@ -58,7 +58,7 @@
 - **Каталог CSV** (`FileSupplierCatalogLoader.LoadCsvAsync`): `double.TryParse` без `CultureInfo.InvariantCulture`, плохие строки пропускаются молча, нет проверок `> 0`, NaN/∞ и дублей. JSON-ветка тоже не проверяет значения.
 - **PNG** (`PngIsolineParser.ParseWithColorQuantizationAsync`): лимит `MaxImagePixels` проверяется после `Image.LoadAsync`, то есть после полного декодирования.
 - **DXF** (`DxfIsolineParser.CollectEntity`): эллипс и сплайн считаются в `unsupportedCurve`, открытые полилинии — в `ignoredOpenPolylines`. Молча теряются: сущность без цвета, цвет вне легенды, прочие типы сущностей (ветка `default` в `ExtractPolygonFromEntity`).
-- **Доля стыков** (`LapPlanner.Plan`): окно 1,3·lₗ и лимит `min(0.5, jointRatioMax)` считаются по группе стержней с одинаковыми концами. `ClearanceChecker.AddLapClashes` (`lapOverload`) считает по линиям прогона, но α в `LapPlanner` от этого не зависит.
+- **Доля стыков** (`LapPlanner.Plan`): окно 1,3·l_l и лимит `min(0.5, jointRatioMax)` считаются по группе стержней с одинаковыми концами. `ClearanceChecker.AddLapClashes` (`lapOverload`) считает по линиям прогона, но α в `LapPlanner` от этого не зависит.
 - **Края плиты:** `SlabEdge.WorkingRectangle` строит рабочую область по bounding box плиты. Для косой плиты с объявленными опорами контур подменяется прямоугольником.
 - **Эффективная высота:** `effectiveDepthMm` остаётся цифрой наибольшего поставленного стержня. `effectiveDepthByLayer` пишет `h − z` для нижнего слоя и `z` для верхнего, только для слоёв со стержнями. На simple-slab это `BottomX: 180`.
 - **Оптимизатор:** класс `BestFitDecreasingOptimizer`, id `best-fit-decreasing-v1`. Аварийный упаковщик конвейера по-прежнему берёт первый подходящий хлыст (`first-fit-decreasing`). `MinScrapLengthMm` удалён. В отчёте `stackTraceSha256`, текст стека только в журнале.
@@ -162,10 +162,10 @@
 
 ### 4.7 RT-5. Доля стыков по сечению (SDK)
 
-1. Вынести расчёт доли в одну функцию (Application): для слоя и направления — все стержни слоя, окно 1,3·lₗ вокруг центра стыка, знаменатель — все стержни, пересекающие окно, а не только группа с теми же концами.
+1. Вынести расчёт доли в одну функцию (Application): для слоя и направления — все стержни слоя, окно 1,3·l_l вокруг центра стыка, знаменатель — все стержни, пересекающие окно, а не только группа с теми же концами.
 2. `ClearanceChecker` (`lapOverload`) и `LapPlanner.Allowed` используют её.
 3. Если фактическая доля больше той, что взята для α в `AnchorageRules.LapSpliceShare`, — критическая диагностика `lapShareExceeded` с `BarId`. Новый коэффициент α не вводить: значения только из `tables.v3.json`.
-4. Тесты в `ClearanceCheckerTests`: две группы с разными концами, стыки в одном окне, сумма > 50 % → `lapShareExceeded`; разнесённые на > 1,3·lₗ → нет.
+4. Тесты в `ClearanceCheckerTests`: две группы с разными концами, стыки в одном окне, сумма > 50 % → `lapShareExceeded`; разнесённые на > 1,3·l_l → нет.
 
 ### 4.8 G-1. Косая плита (SDK) — сделано
 
@@ -248,7 +248,7 @@ gh api -X PUT repos/KonkovDV/OpenRebar/environments/release --input release-env.
 | Q-11 | Первичный текст п. 10.4.9 и 10.3.25 (скобы у свободного края) | скобы не генерировать, `remedy: uBarAtFreeEdge` |
 | Q-12 | Первый пилот | аудитор КЖ |
 | Q-15 | Rsc A400: 350 или 340 | 340 + `NotVerified` |
-| RT-3 | R_bt B55/B60 (скан табл. 6.8) | не менять |
+| RT-3 | Rbt B55/B60 (скан табл. 6.8) | не менять |
 | — | Длины хвостов крюков | `tailDiameters: 0`, `source: default` |
 | — | Порядок слоёв X/Y по высоте | X снаружи (умолчание `LayerElevations`) |
 | — | Торцевой защитный слой по умолчанию | `max(coverEdgeMm, cover + d/2)` |
