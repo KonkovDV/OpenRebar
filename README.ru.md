@@ -152,6 +152,7 @@ CI ставит этот lock с хэшами на Python 3.11. Манифест
 - [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — пункт, код, тест
 - [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
 - [docs/SOTA_2026.md](docs/SOTA_2026.md)
+- [docs/AUDIT_2026-10-18.md](docs/AUDIT_2026-10-18.md) — какие находки от 3 октября уже закрыты
 - [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) — очередь работ
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
 

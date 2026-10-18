@@ -152,6 +152,7 @@ NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with 
 - [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — clause, code, test
 - [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
 - [docs/SOTA_2026.md](docs/SOTA_2026.md)
+- [docs/AUDIT_2026-10-18.md](docs/AUDIT_2026-10-18.md) — which 3 October findings are closed
 - [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) — work queue
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
 

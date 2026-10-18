@@ -12,6 +12,7 @@ The product page is [README.md](../README.md) ([Russian](../README.ru.md)). This
 | What is still to do | [OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) |
 | What the 2026 papers do that this repository does not | [SOTA_2026.md](SOTA_2026.md) |
 | What changed | [CHANGELOG.md](../CHANGELOG.md) |
+| What the 3 October findings look like now | [AUDIT_2026-10-18.md](AUDIT_2026-10-18.md) |
 
 `archive/` and the older plan files are history. The code on `main` wins if a page and the tests disagree.
 

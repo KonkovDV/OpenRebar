@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- A status note, `docs/AUDIT_2026-10-18.md`, records which 3 October findings the code has since closed. Dependabot on that date had 10 open alerts, all ImageSharp 3.1.12.
 - Normative formulas in the traceability table use HTML subscripts, so the indices render in the browser. Historical plans keep the symbol names as they were written.
 - The April audit note is restored from a double-encoded copy, so its displayed formulas read again. CIE Lab and delta-E stars are escaped so Markdown does not turn them into italics.
 - The public README and the docs map are rewritten in plain language around the program as it stands: the area check, the layer depths, the lap drawing, the oblique-edge stop, the best-fit floor, the ML allowlist, the SBOM attestation, and the refreshed lock. The counted phrase stays **467/467**.
