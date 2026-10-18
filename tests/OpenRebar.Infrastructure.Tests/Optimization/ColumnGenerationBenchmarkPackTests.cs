@@ -20,7 +20,6 @@ public class ColumnGenerationBenchmarkPackTests
   private static readonly OptimizationSettings DefaultSettings = new()
   {
     SawCutWidthMm = 3,
-    MinScrapLengthMm = 300
   };
 
   [Fact]

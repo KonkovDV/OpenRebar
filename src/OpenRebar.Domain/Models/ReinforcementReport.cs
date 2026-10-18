@@ -351,6 +351,7 @@ public sealed record PipelineFailureDiagnostic
   public required string ErrorMessage { get; init; }
   public required string ExceptionType { get; init; }
   public required DateTimeOffset OccurredAtUtc { get; init; }
-  public string? StackTrace { get; init; }
+  /// <summary>SHA-256 of the diagnostic stack, lowercase hex. The text stays in the log.</summary>
+  public string? StackTraceSha256 { get; init; }
   public bool IsCritical { get; init; }  // true = pipeline aborted, false = skipped stage
 }

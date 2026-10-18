@@ -166,7 +166,7 @@ public sealed class GenerateReinforcementPipeline
         ErrorMessage = ex.Message,
         ExceptionType = ex.GetType().Name,
         OccurredAtUtc = DateTimeOffset.UtcNow,
-        StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+        StackTraceSha256 = StackHash(ex, input.IncludeDiagnostics),
         IsCritical = true
       };
       failures.Add(diagnostic);
@@ -247,7 +247,7 @@ public sealed class GenerateReinforcementPipeline
         ErrorMessage = ex.Message,
         ExceptionType = ex.GetType().Name,
         OccurredAtUtc = DateTimeOffset.UtcNow,
-        StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+        StackTraceSha256 = StackHash(ex, input.IncludeDiagnostics),
         IsCritical = true
       };
       failures.Add(diagnostic);
@@ -331,7 +331,7 @@ public sealed class GenerateReinforcementPipeline
         ErrorMessage = ex.Message,
         ExceptionType = ex.GetType().Name,
         OccurredAtUtc = DateTimeOffset.UtcNow,
-        StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+        StackTraceSha256 = StackHash(ex, input.IncludeDiagnostics),
         IsCritical = false
       });
       _logger.Warn("Failed to load supplier catalog; using default", ("catalogPath", input.SupplierCatalogPath));
@@ -430,7 +430,7 @@ public sealed class GenerateReinforcementPipeline
         ErrorMessage = ex.Message,
         ExceptionType = ex.GetType().Name,
         OccurredAtUtc = DateTimeOffset.UtcNow,
-        StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+        StackTraceSha256 = StackHash(ex, input.IncludeDiagnostics),
         IsCritical = true
       };
       failures.Add(diagnostic);
@@ -548,7 +548,7 @@ public sealed class GenerateReinforcementPipeline
           ErrorMessage = ex.Message,
           ExceptionType = ex.GetType().Name,
           OccurredAtUtc = DateTimeOffset.UtcNow,
-          StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+          StackTraceSha256 = StackHash(ex, input.IncludeDiagnostics),
           IsCritical = false
         };
         failures.Add(diagnostic);
@@ -656,7 +656,7 @@ public sealed class GenerateReinforcementPipeline
           ErrorMessage = ex.Message,
           ExceptionType = ex.GetType().Name,
           OccurredAtUtc = DateTimeOffset.UtcNow,
-          StackTrace = input.IncludeDiagnostics ? ex.StackTrace : null,
+          StackTraceSha256 = StackHash(ex, input.IncludeDiagnostics),
           IsCritical = false
         };
         failures.Add(diagnostic);
@@ -1270,6 +1270,15 @@ public sealed class GenerateReinforcementPipeline
         bar.LengthMm / 1000.0 * ReinforcementLimits.GetLinearMass(bar.DiameterMm));
     double purchased = result.OptimizationResults.Values.Sum(item => item.MassPurchasedKg ?? 0);
     return (installed, purchased);
+  }
+
+  private string? StackHash(Exception ex, bool includeDiagnostics)
+  {
+    if (!includeDiagnostics || string.IsNullOrEmpty(ex.StackTrace))
+      return null;
+
+    _logger.Warn("Diagnostic stack", ("stackTrace", ex.StackTrace));
+    return DiagnosticStack.Sha256(ex.StackTrace);
   }
 
   private static OptimizationProvenance BuildPipelineFallbackProvenance()

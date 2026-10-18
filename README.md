@@ -16,7 +16,7 @@ The libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in
 
 ## Status
 
-Counted regression, the five commands under [Quick start](#quick-start): **460/460 tests passing**.
+Counted regression, the five commands under [Quick start](#quick-start): **461/461 tests passing**.
 
 | Surface | Now |
 |---|---|
@@ -137,7 +137,7 @@ Domain has no NuGet packages. NetTopologySuite, HiGHS, xBIM, and ImageSharp stay
 | `IRevitPlacer` | Straight bars in a live document |
 | `IImageSegmentationService` | Optional HTTP bridge. Offline. No hosted model |
 
-Column generation is the production cutter. It records when the dual bound is `Proven`. The fallback class is `FirstFitDecreasingOptimizer`; its loop keeps the open bar with the smallest remainder. Neither one is a claim of minimum waste on a real project.
+Column generation is the production cutter. It records when the dual bound is `Proven`. The floor is `BestFitDecreasingOptimizer`: each bar goes into the open stock piece with the smallest remainder. Neither one is a claim of minimum waste on a real project. A diagnostic stack is stored as `stackTraceSha256`. The text stays in the log.
 
 ## Known limits
 

@@ -70,7 +70,7 @@ Image segmentation uses PyTorch U-Net which is impractical to host in .NET. The 
 Rebar cutting is a **1D Cutting Stock Problem** (CSP). The repository now contains two optimizers behind `IRebarOptimizer`:
 
 1. **ColumnGenerationOptimizer** as the default implementation for production-oriented runs
-2. **FirstFitDecreasingOptimizer** as a simple heuristic fallback and baseline
+2. **BestFitDecreasingOptimizer** as a simple heuristic fallback and baseline
 
 This keeps the domain independent from any specific OR solver while allowing the standalone project to evolve toward exact or branch-and-price implementations later.
 

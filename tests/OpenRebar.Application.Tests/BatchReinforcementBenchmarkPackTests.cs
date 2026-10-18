@@ -22,7 +22,6 @@ public class BatchReinforcementBenchmarkPackTests
   private static readonly OptimizationSettings BenchmarkOptimizationSettings = new()
   {
     SawCutWidthMm = 3,
-    MinScrapLengthMm = 300
   };
 
   [Fact]
@@ -49,7 +48,7 @@ public class BatchReinforcementBenchmarkPackTests
       var batchPipeline = new BatchReinforcementPipeline(pipeline);
       var inputs = CreateBenchmarkInputs(tempDirectory);
       var defaultCatalog = catalogLoader.GetDefaultCatalog();
-      var ffdOptimizer = new FirstFitDecreasingOptimizer();
+      var ffdOptimizer = new BestFitDecreasingOptimizer();
 
       var result = await batchPipeline.ExecuteAsync(inputs);
 
@@ -73,7 +72,7 @@ public class BatchReinforcementBenchmarkPackTests
         slabResult.Result.Report!.AnalysisProvenance.Optimization.OptimizerId
             .Should().BeOneOf(
                 "column-generation-relaxation-v2",
-                "first-fit-decreasing-v1",
+                "best-fit-decreasing-v1",
                 "exact-small-instance-search-v1");
 
         var requiredLengths = slabResult.Result.ClassifiedZones

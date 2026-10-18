@@ -6,10 +6,10 @@ using OpenRebar.Domain.Rules;
 namespace OpenRebar.Infrastructure.Optimization;
 
 /// <summary>
-/// First Fit Decreasing bin-packing optimizer for rebar cutting.
-/// Sorts required lengths descending, then packs them with a single-stock or mixed-stock constructive heuristic.
+/// Best-fit decreasing cutter. Lengths are sorted descending. Each length goes into the
+/// open bar that leaves the smallest remainder. A new bar is opened only when none fits.
 /// </summary>
-public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
+public sealed class BestFitDecreasingOptimizer : IRebarOptimizer
 {
   public OptimizationResult Optimize(
       IReadOnlyList<double> requiredLengths,
@@ -25,7 +25,7 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
         TotalWasteMm = 0,
         TotalWastePercent = 0,
         TotalRebarLengthMm = 0,
-        Provenance = BuildFfdProvenance()
+        Provenance = BuildProvenance()
       };
     }
 
@@ -60,7 +60,7 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
       TotalWasteMm = totalWaste,
       TotalWastePercent = totalStock > 0 ? totalWaste / totalStock * 100 : 0,
       TotalRebarLengthMm = totalRequired,
-      Provenance = BuildFfdProvenance()
+      Provenance = BuildProvenance()
     };
   }
 
@@ -245,14 +245,14 @@ public sealed class FirstFitDecreasingOptimizer : IRebarOptimizer
     }
   }
 
-  private static OptimizationProvenance BuildFfdProvenance()
+  private static OptimizationProvenance BuildProvenance()
   {
     return new OptimizationProvenance
     {
-      OptimizerId = "first-fit-decreasing-v1",
+      OptimizerId = "best-fit-decreasing-v1",
       MasterProblemStrategy = "heuristic-bin-packing",
       PricingStrategy = "not-applicable",
-      IntegerizationStrategy = "direct-constructive-heuristic",
+      IntegerizationStrategy = "best-fit-decreasing",
       DemandAggregationPrecisionMm = 0,
       QualityFloor = "none",
       UsedFallbackMasterSolver = false

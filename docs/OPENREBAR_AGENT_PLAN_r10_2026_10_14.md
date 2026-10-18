@@ -1,7 +1,7 @@
 # OpenRebar: план r10 для ИИ-агента (`main` @ `6e9bea0`, 14.10.2026)
 
 > **Кому:** ИИ-агенту, который работает с `KonkovDV/OpenRebar` через GitHub (MCP или `gh`), в том числе без локального .NET SDK.
-> **Срез `main`:** `6e9bea0` (merge PR #186). CI на `main` зелёный. Регрессия **460/460**: Domain 156, Infrastructure 173, TestCorpus 7, Application 98 (net8.0), Cli 26 (net10.0).
+> **Срез `main`:** `6e9bea0` (merge PR #186). CI на `main` зелёный. Регрессия **461/461**: Domain 157, Infrastructure 173, TestCorpus 7, Application 98 (net8.0), Cli 26 (net10.0).
 > **Приоритет источников:** код и тесты `main` → r10 → r9 → r8 → r7 → r6 → r5. Ответ владельца в `docs/agent/decisions/DECISIONS.md` сильнее любого плана (сейчас там нет ни одной строки).
 > **Что это:** сводная очередь. r9 §3 закрыт частично; всё открытое из r9, Red Team 2026-10-03 и r7 §7 перенесено сюда с проверенным статусом.
 
@@ -61,7 +61,7 @@
 - **Доля стыков** (`LapPlanner.Plan`): окно 1,3·l_l и лимит `min(0.5, jointRatioMax)` считаются по группе стержней с одинаковыми концами. `ClearanceChecker.AddLapClashes` (`lapOverload`) считает по линиям прогона, но α в `LapPlanner` от этого не зависит.
 - **Края плиты:** `SlabEdge.WorkingRectangle` строит рабочую область по bounding box плиты. Для косой плиты с объявленными опорами контур подменяется прямоугольником.
 - **Эффективная высота:** `effectiveDepthMm` остаётся цифрой наибольшего поставленного стержня. `effectiveDepthByLayer` пишет `h − z` для нижнего слоя и `z` для верхнего, только для слоёв со стержнями. На simple-slab это `BottomX: 180`.
-- **Оптимизатор:** класс `FirstFitDecreasingOptimizer` и `OptimizerId = "first-fit-decreasing-v1"`, но цикл размещения (строки 77–97) выбирает хлыст с наименьшим остатком, то есть best fit. `MinScrapLengthMm` объявлен в `IRebarOptimizer.cs`, но нигде не применяется. `StackTrace` пишется в отчёт целиком при `IncludeDiagnostics`.
+- **Оптимизатор:** класс `BestFitDecreasingOptimizer`, id `best-fit-decreasing-v1`. Аварийный упаковщик конвейера по-прежнему берёт первый подходящий хлыст (`first-fit-decreasing`). `MinScrapLengthMm` удалён. В отчёте `stackTraceSha256`, текст стека только в журнале.
 - **IFC:** `IfcReinforcingBar` без `IfcReinforcingBarType`, без `IfcSweptDiskSolid`, без явного `ObjectPlacement`. IDS-проверки в CI нет.
 - **Merge-коммиты #185 и #186** имеют коммитера `GitHub <noreply@github.com>` (так работает кнопка merge). Автор — Konkov Dmitrij. Менять уже влитые коммиты нельзя (правило 8).
 
@@ -82,7 +82,7 @@
 | 9 | G-2 | Эффективная высота по слоям — сделано | SDK | да | 2.1.0 |
 | 10 | PR-10a | IFC v2: тип, тело, размещение — сделано | SDK | IFC | нет |
 | 11 | PR-10b | IDS в CI — сделано | MCP | нет | нет |
-| 12 | PR-17 | Раскрой: имя алгоритма, `MinScrapLengthMm`, хэш стека | SDK | да | 2.1.0 |
+| 12 | PR-17 | Раскрой: имя алгоритма, `MinScrapLengthMm`, хэш стека — сделано | SDK | да | 2.1.0 |
 | 13 | RT-4 | Два KPI раскроя — уже есть: `wastePercent` и `estimatedCost` | SDK | нет | нет |
 | 14 | RT-6 | `laps.representation` | SDK | нет | профиль |
 | 15 | S-1 | Supply chain: OSV, SBOM, ML endpoint | MCP | нет | нет |
@@ -196,9 +196,9 @@
 2. В `.github/workflows/ifc-validation.yml` шаг проверки примеров по IDS. Инструмент ставить из lock с хэшами; лицензию проверить до добавления (Dependency Review запрещает AGPL и SSPL). Пин action — полный SHA.
 3. Сначала PR-10a, потом PR-10b: правила IDS должны проходить на новом IFC.
 
-### 4.12 PR-17. Раскрой (SDK)
+### 4.12 PR-17. Раскрой (SDK) — сделано
 
-1. Алгоритм — best fit (§3). Переименовать класс в `BestFitDecreasingOptimizer` (и регистрацию в DI), `OptimizerId` в `best-fit-decreasing-v1`, `IntegerizationStrategy` в `GenerateReinforcementPipeline` (строка 1245) в `best-fit-decreasing`. Результат раскроя не меняется; меняются только строки provenance. В эталонах `simple-slab` основной оптимизатор `column-generation-relaxation-v2` — проверить, где имя FFD попадает в `result.json`, и объяснить каждую строку.
+1. Алгоритм — best fit (§3). Переименовать класс в `BestFitDecreasingOptimizer` (и регистрацию в DI), `OptimizerId` в `best-fit-decreasing-v1`, `IntegerizationStrategy` в `GenerateReinforcementPipeline` (строка 1245) в `best-fit-decreasing`. Результат раскроя не меняется; меняются только строки provenance. В эталонах `simple-slab` основной оптимизатор `column-generation-relaxation-v2` — проверить, где имя FFD попадает в `result.json`, и объяснить каждую строку. Сделано: в DI класс не регистрировался, его создаёт column generation. В `result.json` simple-slab имени FFD нет. Строка 1245 — это аварийный упаковщик, он берёт первый подходящий хлыст, поэтому его метка остаётся `first-fit-decreasing`. У класса best-fit метка `best-fit-decreasing`.
 2. `MinScrapLengthMm`: удалить из порта (нигде не используется). Вводить порог полезного остатка только по решению владельца.
 3. `StackTrace` в отчёте → `stackTraceSha256` (SHA-256 строки стека); полный стек только в лог. Схема 2.1.0, эталон: поле `stackTrace: null` → `stackTraceSha256: null`.
 
