@@ -22,13 +22,13 @@
     "coldDeformedPeriodic": 2.0,
     "smooth": 1.5,
     "clauseId": "SP63.13330.2018:10.3.24",
-    "sourceQuote": "η1 is 2.5 for hot-rolled periodic bars, 2.0 for cold-deformed periodic bars, and 1.5 for smooth bars."
+    "sourceQuote": "η₁ is 2.5 for hot-rolled periodic bars, 2.0 for cold-deformed periodic bars, and 1.5 for smooth bars."
   },
   "eta2": {
     "upTo32Mm": 1.0,
     "from36Mm": 0.9,
     "clauseId": "SP63.13330.2018:10.3.24",
-    "sourceQuote": "η2 is 1.0 for d ≤ 32 mm and 0.9 for d = 36 mm and 40 mm."
+    "sourceQuote": "η₂ is 1.0 for d ≤ 32 mm and 0.9 for d = 36 mm and 40 mm."
   },
   "anchorage": {
     "tensionAlpha": 1.0,
@@ -39,7 +39,7 @@
     "minimumMm": 200,
     "roundUpMm": 10,
     "clauseId": "SP63.13330.2018:10.3.24",
-    "sourceQuote": "l_an = α·l0,an·As,cal/As,ef with α = 1.0 in tension and 0.75 in compression, not less than max(0.3·l0,an, 15d, 200 mm), rounded up to 10 mm. As,cal/As,ef is 1 until a calculated area is supplied."
+    "sourceQuote": "lₐₙ = α·l₀,an·Aₛ,cal/Aₛ,ef with α = 1.0 in tension and 0.75 in compression, not less than max(0.3·l₀,an, 15d, 200 mm), rounded up to 10 mm. Aₛ,cal/Aₛ,ef is 1 until a calculated area is supplied."
   },
   "lap": {
     "upTo50Alpha": 1.2,
@@ -49,7 +49,7 @@
     "minimumDiameters": 20,
     "minimumMm": 250,
     "clauseId": "SP63.13330.2018:10.3.30",
-    "sourceQuote": "Lap length uses unrounded l0,an. α is 1.2 when at most half the bars are lapped, 2.0 when every bar is lapped in one section, and 0.9 in compression. Not less than max(0.4·α·l0,an, 20d, 250 mm)."
+    "sourceQuote": "Lap length uses unrounded l₀,an. α is 1.2 when at most half the bars are lapped, 2.0 when every bar is lapped in one section, and 0.9 in compression. Not less than max(0.4·α·l₀,an, 20d, 250 mm)."
   },
   "topBarAnchorageFactor": {
     "value": 1.0,
@@ -62,7 +62,7 @@
     "thickSlabFactorOfThickness": 1.5,
     "thickSlabCapMm": 400,
     "clauseId": "SP63.13330.2018:10.3.8",
-    "sourceQuote": "For a slab not thicker than 150 mm the bar spacing does not exceed 200 mm. Above that thickness it does not exceed the lesser of 1.5h and 400 mm."
+    "sourceQuote": "For a slab not thicker than 150 mm the bar spacing does not exceed 200 mm. Above that thickness it does not exceed the lesser of 1.5·h and 400 mm."
   },
   "minReinforcementRatio": {
     "ratio": 0.001,
@@ -177,31 +177,31 @@
       "clauseId": "SP63.13330.2018:10.3.24",
       "method": "AnchorageRules.CalculateBasicAnchorageLength",
       "test": "AnchorageRulesTests.BasicAnchorage_MatchesIndependentFormula",
-      "sourceQuote": "l0,an = Rs·d / (4·η1·η2·Rbt)."
+      "sourceQuote": "l₀,an = Rₛ·d / (4·η₁·η₂·Rbt)."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.24",
       "method": "AnchorageRules.CalculateAnchorageLength",
       "test": "AnchorageRulesTests.AnchorageLength_MatchesIndependentRounding",
-      "sourceQuote": "l_an = α·l0,an·As,cal/As,ef, not less than max(0.3·l0,an, 15d, 200 mm), rounded up to 10 mm."
+      "sourceQuote": "lₐₙ = α·l₀,an·Aₛ,cal/Aₛ,ef, not less than max(0.3·l₀,an, 15d, 200 mm), rounded up to 10 mm."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.30",
       "method": "AnchorageRules.CalculateLapLength",
       "test": "AnchorageRulesTests.LapLength_MatchesIndependentFormula",
-      "sourceQuote": "Lap length uses unrounded l0,an and α of 1.2, 2.0, or 0.9, not less than max(0.4·α·l0,an, 20d, 250 mm)."
+      "sourceQuote": "Lap length uses unrounded l₀,an and α of 1.2, 2.0, or 0.9, not less than max(0.4·α·l₀,an, 20d, 250 mm)."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.8",
       "method": "ReinforcementLimits.MaxSpacing",
       "test": "ReinforcementLimitsTests.MaxSpacing_FollowsThicknessBands",
-      "sourceQuote": "Spacing limit is 200 mm when h ≤ 150 mm, otherwise the lesser of 1.5h and 400 mm."
+      "sourceQuote": "Spacing limit is 200 mm when h ≤ 150 mm, otherwise the lesser of 1.5·h and 400 mm."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.6",
       "method": "ReinforcementLimits.MinReinforcementArea",
       "test": "ReinforcementLimitsTests.MinReinforcementArea_UsesEffectiveDepth",
-      "sourceQuote": "Minimum steel area is 0.1% of b·h0."
+      "sourceQuote": "Minimum steel area is 0.1% of b·h₀."
     },
     {
       "clauseId": "SP63.13330.2018+A1:table6.14",
