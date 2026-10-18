@@ -4,7 +4,7 @@ Generated from `ru.sp63.2018.tables.v3.json`. Edit the table file, then regenera
 
 | Clause | Method | Test | Quote |
 | --- | --- | --- | --- |
-| SP63.13330.2018:10.3.24 | AnchorageRules.CalculateBasicAnchorageLength | AnchorageRulesTests.BasicAnchorage_MatchesIndependentFormula | l₀,an = Rₛ·d / (4·η₁·η₂·Rbt). |
+| SP63.13330.2018:10.3.24 | AnchorageRules.CalculateBasicAnchorageLength | AnchorageRulesTests.BasicAnchorage_MatchesIndependentFormula | l₀,an = Rₛ·d / (4·η₁·η₂·R_bt). |
 | SP63.13330.2018:10.3.24 | AnchorageRules.CalculateAnchorageLength | AnchorageRulesTests.AnchorageLength_MatchesIndependentRounding | lₐₙ = α·l₀,an·Aₛ,cal/Aₛ,ef, not less than max(0.3·l₀,an, 15d, 200 mm), rounded up to 10 mm. |
 | SP63.13330.2018:10.3.30 | AnchorageRules.CalculateLapLength | AnchorageRulesTests.LapLength_MatchesIndependentFormula | Lap length uses unrounded l₀,an and α of 1.2, 2.0, or 0.9, not less than max(0.4·α·l₀,an, 20d, 250 mm). |
 | SP63.13330.2018:10.3.8 | ReinforcementLimits.MaxSpacing | ReinforcementLimitsTests.MaxSpacing_FollowsThicknessBands | Spacing limit is 200 mm when h ≤ 150 mm, otherwise the lesser of 1.5·h and 400 mm. |

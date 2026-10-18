@@ -79,7 +79,7 @@ dotnet run --project src/OpenRebar.Cli --configuration Release -- examples/dxf/s
 | `*.aerobim.json` | Короткая сводка для внешней проверки |
 | `*.reinforcement.ifc` | Стержни IFC4 |
 
-На simple-slab, Ø20 и защитный слой 30 мм, `effectiveDepthMm` и `effectiveDepthByLayer.BottomX` оба равны 180. Это `220 − 30 − 20/2`: толщина, минус защитный слой, минус половина диаметра. Слой без стержней в карту не попадает. `estimatedCost` равен null, потому что в каталоге примера нет цены.
+На simple-slab, Ø20 и защитный слой 30 мм, `effectiveDepthMm` и `effectiveDepthByLayer.BottomX` оба равны 180. Это `220 − 30 − 20 / 2`: толщина, минус защитный слой, минус половина диаметра. Слой без стержней в карту не попадает. `estimatedCost` равен null, потому что в каталоге примера нет цены.
 
 Отчёт хранит профиль, версию таблиц и оптимизатор. `checks[].status` — это `Passed`, `Failed` или `NotEvaluated`.
 
