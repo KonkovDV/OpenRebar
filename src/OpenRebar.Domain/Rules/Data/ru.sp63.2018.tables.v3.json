@@ -39,7 +39,7 @@
     "minimumMm": 200,
     "roundUpMm": 10,
     "clauseId": "SP63.13330.2018:10.3.24",
-    "sourceQuote": "lₐₙ = α·l₀,an·Aₛ,cal/Aₛ,ef with α = 1.0 in tension and 0.75 in compression, not less than max(0.3·l₀,an, 15d, 200 mm), rounded up to 10 mm. Aₛ,cal/Aₛ,ef is 1 until a calculated area is supplied."
+    "sourceQuote": "l<sub>an</sub> = α·l<sub>0,an</sub>·A<sub>s,cal</sub>/A<sub>s,ef</sub> with α = 1.0 in tension and 0.75 in compression, not less than max(0.3·l<sub>0,an</sub>, 15d, 200 mm), rounded up to 10 mm. A<sub>s,cal</sub>/A<sub>s,ef</sub> is 1 until a calculated area is supplied."
   },
   "lap": {
     "upTo50Alpha": 1.2,
@@ -49,7 +49,7 @@
     "minimumDiameters": 20,
     "minimumMm": 250,
     "clauseId": "SP63.13330.2018:10.3.30",
-    "sourceQuote": "Lap length uses unrounded l₀,an. α is 1.2 when at most half the bars are lapped, 2.0 when every bar is lapped in one section, and 0.9 in compression. Not less than max(0.4·α·l₀,an, 20d, 250 mm)."
+    "sourceQuote": "Lap length uses unrounded l<sub>0,an</sub>. α is 1.2 when at most half the bars are lapped, 2.0 when every bar is lapped in one section, and 0.9 in compression. Not less than max(0.4·α·l<sub>0,an</sub>, 20d, 250 mm)."
   },
   "topBarAnchorageFactor": {
     "value": 1.0,
@@ -68,7 +68,7 @@
     "ratio": 0.001,
     "sectionHeight": "effectiveDepth",
     "clauseId": "SP63.13330.2018:10.3.6",
-    "sourceQuote": "The minimum reinforcement ratio 0.1% is applied to the effective depth h0."
+    "sourceQuote": "The minimum reinforcement ratio 0.1% is applied to the effective depth h<sub>0</sub>."
   },
   "clearSpacing": {
     "bottomMm": 25,
@@ -177,19 +177,19 @@
       "clauseId": "SP63.13330.2018:10.3.24",
       "method": "AnchorageRules.CalculateBasicAnchorageLength",
       "test": "AnchorageRulesTests.BasicAnchorage_MatchesIndependentFormula",
-      "sourceQuote": "l₀,an = Rₛ·d / (4·η₁·η₂·R_bt)."
+      "sourceQuote": "l<sub>0,an</sub> = R<sub>s</sub>·d / (4·η<sub>1</sub>·η<sub>2</sub>·R<sub>bt</sub>)."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.24",
       "method": "AnchorageRules.CalculateAnchorageLength",
       "test": "AnchorageRulesTests.AnchorageLength_MatchesIndependentRounding",
-      "sourceQuote": "lₐₙ = α·l₀,an·Aₛ,cal/Aₛ,ef, not less than max(0.3·l₀,an, 15d, 200 mm), rounded up to 10 mm."
+      "sourceQuote": "l<sub>an</sub> = α·l<sub>0,an</sub>·A<sub>s,cal</sub>/A<sub>s,ef</sub>, not less than max(0.3·l<sub>0,an</sub>, 15d, 200 mm), rounded up to 10 mm."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.30",
       "method": "AnchorageRules.CalculateLapLength",
       "test": "AnchorageRulesTests.LapLength_MatchesIndependentFormula",
-      "sourceQuote": "Lap length uses unrounded l₀,an and α of 1.2, 2.0, or 0.9, not less than max(0.4·α·l₀,an, 20d, 250 mm)."
+      "sourceQuote": "Lap length uses unrounded l<sub>0,an</sub> and α of 1.2, 2.0, or 0.9, not less than max(0.4·α·l<sub>0,an</sub>, 20d, 250 mm)."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.8",
@@ -201,7 +201,7 @@
       "clauseId": "SP63.13330.2018:10.3.6",
       "method": "ReinforcementLimits.MinReinforcementArea",
       "test": "ReinforcementLimitsTests.MinReinforcementArea_UsesEffectiveDepth",
-      "sourceQuote": "Minimum steel area is 0.1% of b·h₀."
+      "sourceQuote": "Minimum steel area is 0.1% of b·h<sub>0</sub>."
     },
     {
       "clauseId": "SP63.13330.2018+A1:table6.14",

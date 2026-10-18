@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Normative formulas in the Markdown pages use subscripts (`l₀,an`, `lₗ`, `η₁`, `R_bt`, `Aₛ,cal`, `h₀`). The April audit note is restored from a double-encoded copy, so its displayed formulas read again. CIE `L*a*b*` and `ΔE*76` are escaped so Markdown does not turn the stars into italics.
+- Normative formulas in the traceability table use HTML subscripts, so the indices render in the browser. Historical plans keep the symbol names as they were written.
+- The April audit note is restored from a double-encoded copy, so its displayed formulas read again. CIE Lab and delta-E stars are escaped so Markdown does not turn them into italics.
 - The public README and the docs map are rewritten in plain language around the program as it stands: the area check, the layer depths, the lap drawing, the oblique-edge stop, the best-fit floor, the ML allowlist, the SBOM attestation, and the refreshed lock. The counted phrase stays **467/467**.
 - The public README names the stage: synthetic fixtures, not a pilot and not a certificate. It places OpenRebar between the program that writes required area and AeroBIM, which checks the pack. It also records the locked restore, the hashed ML lock, Scorecard, the release SBOM, and the ImageSharp 3.1.12 hold.
 - The public README states the product boundary: deterministic slab reinforcement, no steel-saving claim, no trained segmenter, crack width and deflection left `NotEvaluated`. The current plan link is r10. The IFC section matches the bar type, swept disk, and placement already in the exporter.

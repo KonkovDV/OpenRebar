@@ -77,7 +77,7 @@ All SP 63 / GOST calculations are in `OpenRebar.Domain.Rules/`:
 
 | Module | Responsibility |
 |--------|---------------|
-| `AnchorageRules` | Anchorage length (lₐₙ), lap splices, bond stress lookup |
+| `AnchorageRules` | Anchorage length (l_an), lap splices, bond stress lookup |
 | `ReinforcementLimits` | Min/max reinforcement ratio, spacing limits per SP 63 |
 | `PolygonDecomposition` | Zone geometry → axis-aligned rectangles + auditable coverage metrics |
 
