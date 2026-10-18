@@ -1,66 +1,66 @@
 > Historical. Not the source of truth. The current plan is [r7](../OPENREBAR_AGENT_PLAN_r7_2026_10_02.md).
 
-# Р¤СѓРЅРґР°РјРµРЅС‚Р°Р»СЊРЅС‹Р№ РђРєР°РґРµРјРёС‡РµСЃРєРёР№ РђСѓРґРёС‚: OpenRebar-Reinforcement + РЎРІСЏР·РєР° СЃ AeroBIM
+# Фундаментальный Академический Аудит: OpenRebar-Reinforcement + Связка с AeroBIM
 
-**Р”Р°С‚Р° Р°СѓРґРёС‚Р°:** 2026-04-11
-**РЈСЂРѕРІРµРЅСЊ:** Hyper-deep academic audit (L5)
-**РњРµС‚РѕРґРѕР»РѕРіРёСЏ:** РџРѕР»РЅС‹Р№ source-code review в†’ РЅРѕСЂРјР°С‚РёРІРЅР°СЏ РІРµСЂРёС„РёРєР°С†РёСЏ SP 63 в†’ Р°Р»РіРѕСЂРёС‚РјРёС‡РµСЃРєРёР№ Р°РЅР°Р»РёР· CG в†’ external evidence в†’ СЂРµРєРѕРјРµРЅРґР°С†РёРё РїРѕ РёРЅС‚РµРіСЂР°С†РёРё СЃ AeroBIM
+**Дата аудита:** 2026-04-11
+**Уровень:** Hyper-deep academic audit (L5)
+**Методология:** Полный source-code review → нормативная верификация SP 63 → алгоритмический анализ CG → external evidence → рекомендации по интеграции с AeroBIM
 
 ---
 
-## 0. РњРµС‚СЂРёРєРё РСЃСЃР»РµРґРѕРІР°РЅРёСЏ
+## 0. Метрики Исследования
 
-| РР·РјРµСЂРµРЅРёРµ | Р—РЅР°С‡РµРЅРёРµ |
+| Измерение | Значение |
 |---|---|
-| РСЃС…РѕРґРЅС‹С… C# С„Р°Р№Р»РѕРІ (Р±РµР· auto-generated) | 24 |
-| РЎС‚СЂРѕРє РёСЃС…РѕРґРЅРѕРіРѕ РєРѕРґР° (C#) | ~4 130 LOC |
-| РўРµСЃС‚РѕРІС‹С… C# С„Р°Р№Р»РѕРІ | 12 |
-| РЎС‚СЂРѕРє С‚РµСЃС‚РѕРІРѕРіРѕ РєРѕРґР° (C#) | ~1 608 LOC |
-| Python ML РјРѕРґСѓР»РµР№ | 5 |
-| Р”РѕРјРµРЅРЅС‹С… РјРѕРґРµР»РµР№ (records/classes) | 14 |
-| Р”РѕРјРµРЅРЅС‹С… РїРѕСЂС‚РѕРІ (interfaces) | 7 |
-| Р”РѕРјРµРЅРЅС‹С… РїСЂР°РІРёР» (static classes) | 3 |
-| РРЅС„СЂР°СЃС‚СЂСѓРєС‚СѓСЂРЅС‹С… Р°РґР°РїС‚РµСЂРѕРІ | 10 |
+| Исходных C# файлов (без auto-generated) | 24 |
+| Строк исходного кода (C#) | ~4 130 LOC |
+| Тестовых C# файлов | 12 |
+| Строк тестового кода (C#) | ~1 608 LOC |
+| Python ML модулей | 5 |
+| Доменных моделей (records/classes) | 14 |
+| Доменных портов (interfaces) | 7 |
+| Доменных правил (static classes) | 3 |
+| Инфраструктурных адаптеров | 10 |
 | Application use cases | 2 |
-| .NET РїСЂРѕРµРєС‚РѕРІ РІ solution | 7 |
+| .NET проектов в solution | 7 |
 | CI workflows | 2 (dotnet + python) |
-| РЎРѕРѕС‚РЅРѕС€РµРЅРёРµ С‚РµСЃС‚/РёСЃС‚РѕС‡РЅРёРє (LOC) | 0.39:1 |
+| Соотношение тест/источник (LOC) | 0.39:1 |
 
 ---
 
-## 1. РђСЂС…РёС‚РµРєС‚СѓСЂРЅР°СЏ Р”РќРљ: РР·РІР»РµС‡РµРЅРёРµ РР· MicroPhoenix
+## 1. Архитектурная ДНК: Извлечение Из MicroPhoenix
 
-### 1.1. РћС†РµРЅРєР° Р­РєСЃС‚СЂР°РєС†РёРё
+### 1.1. Оценка Экстракции
 
-OpenRebar-Reinforcement РІС‹РїРѕР»РЅСЏРµС‚ СЌРєСЃС‚СЂР°РєС†РёСЋ MicroPhoenix РїР°С‚С‚РµСЂРЅРѕРІ **РІ РґСЂСѓРіРѕР№ С‚РµС…РЅРѕР»РѕРіРёС‡РµСЃРєРёР№ СЃС‚РµРє** (C# .NET 8 + Revit SDK) СЃ РїРѕР»РЅС‹Рј СЃРѕС…СЂР°РЅРµРЅРёРµРј Р°СЂС…РёС‚РµРєС‚СѓСЂРЅС‹С… РёРЅРІР°СЂРёР°РЅС‚РѕРІ:
+OpenRebar-Reinforcement выполняет экстракцию MicroPhoenix паттернов **в другой технологический стек** (C# .NET 8 + Revit SDK) с полным сохранением архитектурных инвариантов:
 
-| MicroPhoenix РёРЅРІР°СЂРёР°РЅС‚ | OpenRebar СЂРµР°Р»РёР·Р°С†РёСЏ | РћС†РµРЅРєР° |
+| MicroPhoenix инвариант | OpenRebar реализация | Оценка |
 |---|---|---|
-| Inward dependency direction | `Domain в†ђ Application в†ђ Infrastructure в†ђ RevitPlugin` | вњ… Р­С‚Р°Р»РѕРЅ |
-| Domain ports as interfaces | 7 РїРѕСЂС‚РѕРІ (`IIsolineParser`, `IRebarOptimizer`, ...) | вњ… Р­С‚Р°Р»РѕРЅ |
-| Single composition root | `Bootstrap.BuildServiceProvider()` РІ RevitPlugin | вњ… Р­С‚Р°Р»РѕРЅ |
-| Constructor injection only | `Microsoft.Extensions.DependencyInjection` | вњ… Р­С‚Р°Р»РѕРЅ |
-| Zero domain dependencies | `OpenRebar.Domain.csproj` в†’ net8.0 only, no NuGets | вњ… Р‘РµР·СѓРїСЂРµС‡РЅРѕ |
-| External AI keep-out | ML (Python/PyTorch) в†’ HTTP bridge, РЅРµ РІ .NET core | вњ… Р—СЂРµР»РѕРµ СЂРµС€РµРЅРёРµ |
-| Anti-stub discipline | `StubRevitPlacer` РІ `Infrastructure/Stubs/` | вњ… РљРѕСЂСЂРµРєС‚РЅРѕ |
+| Inward dependency direction | `Domain ← Application ← Infrastructure ← RevitPlugin` | ✅ Эталон |
+| Domain ports as interfaces | 7 портов (`IIsolineParser`, `IRebarOptimizer`, ...) | ✅ Эталон |
+| Single composition root | `Bootstrap.BuildServiceProvider()` в RevitPlugin | ✅ Эталон |
+| Constructor injection only | `Microsoft.Extensions.DependencyInjection` | ✅ Эталон |
+| Zero domain dependencies | `OpenRebar.Domain.csproj` → net8.0 only, no NuGets | ✅ Безупречно |
+| External AI keep-out | ML (Python/PyTorch) → HTTP bridge, не в .NET core | ✅ Зрелое решение |
+| Anti-stub discipline | `StubRevitPlacer` в `Infrastructure/Stubs/` | ✅ Корректно |
 
 > [!IMPORTANT]
-> **Р’РµСЂРґРёРєС‚:** Р­РєСЃС‚СЂР°РєС†РёСЏ **РєСЂРѕСЃСЃ-СЃС‚РµРєРѕРІР°СЏ** вЂ” РёР· TypeScript РІ C#/.NET вЂ” Рё РїСЂРё СЌС‚РѕРј СЃРѕС…СЂР°РЅСЏРµС‚ РІСЃРµ РєР»СЋС‡РµРІС‹Рµ РёРЅРІР°СЂРёР°РЅС‚С‹. Р­С‚Рѕ С‚СЂРµР±СѓРµС‚ Р±РѕР»РµРµ РіР»СѓР±РѕРєРѕРіРѕ РёРЅР¶РµРЅРµСЂРЅРѕРіРѕ РїРѕРЅРёРјР°РЅРёСЏ, С‡РµРј same-language СЌРєСЃС‚СЂР°РєС†РёСЏ (РєР°Рє РІ AeroBIM). РћС†РµРЅРєР°: **Р°РєР°РґРµРјРёС‡РµСЃРєРё Р±РµР·СѓРїСЂРµС‡РЅРѕ**.
+> **Вердикт:** Экстракция **кросс-стековая** — из TypeScript в C#/.NET — и при этом сохраняет все ключевые инварианты. Это требует более глубокого инженерного понимания, чем same-language экстракция (как в AeroBIM). Оценка: **академически безупречно**.
 
-### 1.2. РЎР»РѕРёСЃС‚Р°СЏ РђСЂС…РёС‚РµРєС‚СѓСЂР°
+### 1.2. Слоистая Архитектура
 
 ```mermaid
 graph TB
     subgraph RevitPlugin["RevitPlugin (Composition Root)"]
-        BST["Bootstrap.cs вЂ” DI wiring"]
-        CMD["Commands/ вЂ” ExternalCommand"]
-        UI["UI/ вЂ” WPF panels"]
-        REV["Revit/ вЂ” RevitRebarPlacer"]
+        BST["Bootstrap.cs — DI wiring"]
+        CMD["Commands/ — ExternalCommand"]
+        UI["UI/ — WPF panels"]
+        REV["Revit/ — RevitRebarPlacer"]
     end
 
     subgraph Application["Application Layer"]
-        PP["GenerateReinforcementPipeline<br/>(138 LOC) вЂ” full workflow"]
-        OPT["OptimizeRebarCuttingUseCase<br/>(130 LOC) вЂ” standalone cutting"]
+        PP["GenerateReinforcementPipeline<br/>(138 LOC) — full workflow"]
+        OPT["OptimizeRebarCuttingUseCase<br/>(130 LOC) — standalone cutting"]
     end
 
     subgraph Domain["Domain Layer (Zero Dependencies)"]
@@ -81,16 +81,16 @@ graph TB
             P7["IImageSegmentationService"]
         end
         subgraph Rules["Rules (Pure Functions)"]
-            AR["AnchorageRules вЂ” SP 63 В§10.3.24вЂ“31"]
-            RL["ReinforcementLimits вЂ” SP 63 В§10.3.5,8"]
-            PD["PolygonDecomposition вЂ” Shoelace + Ray Cast"]
+            AR["AnchorageRules — SP 63 §10.3.24–31"]
+            RL["ReinforcementLimits — SP 63 §10.3.5,8"]
+            PD["PolygonDecomposition — Shoelace + Ray Cast"]
         end
     end
 
     subgraph Infrastructure["Infrastructure Layer"]
         DXF["DxfIsolineParser + AciPalette"]
         PNG["PngIsolineParser"]
-        CGO["ColumnGenerationOptimizer<br/>(545 LOC) вЂ” Gilmore-Gomory"]
+        CGO["ColumnGenerationOptimizer<br/>(545 LOC) — Gilmore-Gomory"]
         FFD["FirstFitDecreasingOptimizer"]
         SRC["StandardReinforcementCalculator"]
         SZD["StandardZoneDetector"]
@@ -122,9 +122,9 @@ graph TB
     HIS --> API
 ```
 
-### 1.3. DI Bootstrap: Р¤РѕСЂРјР°Р»СЊРЅС‹Р№ РђРЅР°Р»РёР·
+### 1.3. DI Bootstrap: Формальный Анализ
 
-Р’ РѕС‚Р»РёС‡РёРµ РѕС‚ AeroBIM (custom Python container), OpenRebar РёСЃРїРѕР»СЊР·СѓРµС‚ **РїСЂРѕРјС‹С€Р»РµРЅРЅС‹Р№ СЃС‚Р°РЅРґР°СЂС‚** вЂ” `Microsoft.Extensions.DependencyInjection`:
+В отличие от AeroBIM (custom Python container), OpenRebar использует **промышленный стандарт** — `Microsoft.Extensions.DependencyInjection`:
 
 ```csharp
 var services = new ServiceCollection();
@@ -134,44 +134,44 @@ services.AddSingleton<IRebarOptimizer, ColumnGenerationOptimizer>();
 return services.BuildServiceProvider();
 ```
 
-**Р¤РѕСЂРјР°Р»СЊРЅС‹Рµ СЃРІРѕР№СЃС‚РІР°:**
-- **Lifecycle management:** Singleton РґР»СЏ stateless adapters, Transient РґР»СЏ use cases
-- **Optional service resolution:** ML service вЂ” С‡РµСЂРµР· `GetService<T>()` (nullable) РІРјРµСЃС‚Рѕ `GetRequiredService<T>()`
-- **РљРѕРЅС‚РµРєСЃС‚РЅРѕ-Р·Р°РІРёСЃРёРјС‹Р№ Revit placer:** `IRevitPlacer` РїРµСЂРµРґР°С‘С‚СЃСЏ РёР·РІРЅРµ РІ `BuildServiceProvider(revitPlacer)` вЂ” СЂРµР°Р»СЊРЅС‹Р№ СЌРєР·РµРјРїР»СЏСЂ Р¶РёРІС‘С‚ РІ РєРѕРЅС‚РµРєСЃС‚Рµ Revit, stub вЂ” РІ С‚РµСЃС‚Р°С…
-- **Dual parser registration:** DXF в†’ `IIsolineParser`, PNG в†’ РѕС‚РґРµР»СЊРЅС‹Р№ `PngIsolineParser` (РЅРµ С‡РµСЂРµР· РёРЅС‚РµСЂС„РµР№СЃ), РїРѕСЃРєРѕР»СЊРєСѓ pipeline РІС‹Р±РёСЂР°РµС‚ РїР°СЂСЃРµСЂ РїРѕ СЂР°СЃС€РёСЂРµРЅРёСЋ С„Р°Р№Р»Р°
+**Формальные свойства:**
+- **Lifecycle management:** Singleton для stateless adapters, Transient для use cases
+- **Optional service resolution:** ML service — через `GetService<T>()` (nullable) вместо `GetRequiredService<T>()`
+- **Контекстно-зависимый Revit placer:** `IRevitPlacer` передаётся извне в `BuildServiceProvider(revitPlacer)` — реальный экземпляр живёт в контексте Revit, stub — в тестах
+- **Dual parser registration:** DXF → `IIsolineParser`, PNG → отдельный `PngIsolineParser` (не через интерфейс), поскольку pipeline выбирает парсер по расширению файла
 
 ---
 
-## 2. Р”РѕРјРµРЅРЅР°СЏ РњРѕРґРµР»СЊ: Р¤РѕСЂРјР°Р»СЊРЅР°СЏ РЎРїРµС†РёС„РёРєР°С†РёСЏ
+## 2. Доменная Модель: Формальная Спецификация
 
-### 2.1. РђР»РіРµР±СЂР° РўРёРїРѕРІ
+### 2.1. Алгебра Типов
 
-| РўРёРї | Р¤РѕСЂРјР° | Р¤РѕСЂРјР°Р»СЊРЅР°СЏ СЂРѕР»СЊ |
+| Тип | Форма | Формальная роль |
 |---|---|---|
-| `Point2D` | `readonly record struct` | РўРѕС‡РєР° РІ РєРѕРѕСЂРґРёРЅР°С‚Р°С… РїР»РёС‚С‹ (РјРј) |
+| `Point2D` | `readonly record struct` | Точка в координатах плиты (мм) |
 | `BoundingBox` | `readonly record struct` | Axis-Aligned Bounding Box |
-| `Polygon` | `sealed class` (vertices в‰Ґ 3) | Р—Р°РјРєРЅСѓС‚С‹Р№ РїРѕР»РёРіРѕРЅ, Shoelace area |
-| `IsolineColor` | `readonly record struct` (R,G,B) | sRGB + CIE L*a*b* О”E*76 |
-| `ReinforcementSpec` | `sealed record` | d в€€ [1,50], s в€€ [1,1000], area в€€ derived |
-| `LegendEntry` | `sealed record` | Color в†’ Spec mapping |
-| `ColorLegend` | `sealed class` | CIE О”E-nearest-neighbor search |
-| `ReinforcementZone` | `sealed class` | Р—РѕРЅР°: boundary + spec + direction + layer |
-| `RebarSegment` | `sealed record` | РЎРµРіРјРµРЅС‚: start, end, diameter, anchorage |
-| `SlabGeometry` | `sealed class` | h в€€ (0,2000], cover, dв‚Ђ = h в€’ a |
-| `StockLength` | `sealed record` | РџРѕСЃС‚Р°РІС‰РёРє: РґР»РёРЅР° + С†РµРЅР°/С‚ |
-| `SupplierCatalog` | `sealed class` | РљР°С‚Р°Р»РѕРі РґРѕСЃС‚СѓРїРЅС‹С… РґР»РёРЅ |
-| `CuttingPlan` | `sealed record` | РРЅСЃС‚СЂСѓРєС†РёСЏ: stock в†’ cuts + waste |
-| `OptimizationResult` | `sealed class` | РђРіСЂРµРіР°С‚: plans + waste + mass + cost |
+| `Polygon` | `sealed class` (vertices ≥ 3) | Замкнутый полигон, Shoelace area |
+| `IsolineColor` | `readonly record struct` (R,G,B) | sRGB + CIE L\*a\*b\* ΔE\*76 |
+| `ReinforcementSpec` | `sealed record` | d ∈ [1,50], s ∈ [1,1000], area ∈ derived |
+| `LegendEntry` | `sealed record` | Color → Spec mapping |
+| `ColorLegend` | `sealed class` | CIE ΔE-nearest-neighbor search |
+| `ReinforcementZone` | `sealed class` | Зона: boundary + spec + direction + layer |
+| `RebarSegment` | `sealed record` | Сегмент: start, end, diameter, anchorage |
+| `SlabGeometry` | `sealed class` | h ∈ (0,2000], cover, d₀ = h − a |
+| `StockLength` | `sealed record` | Поставщик: длина + цена/т |
+| `SupplierCatalog` | `sealed class` | Каталог доступных длин |
+| `CuttingPlan` | `sealed record` | Инструкция: stock → cuts + waste |
+| `OptimizationResult` | `sealed class` | Агрегат: plans + waste + mass + cost |
 
 > [!NOTE]
-> **РћС‚Р»РёС‡РёРµ РѕС‚ AeroBIM:** OpenRebar РёСЃРїРѕР»СЊР·СѓРµС‚ `sealed record struct` Рё `sealed record` вЂ” C# value semantics, РЅРµ dataclasses. Р­С‚Рѕ РѕР±РµСЃРїРµС‡РёРІР°РµС‚ **СЃС‚СЂСѓРєС‚СѓСЂРЅРѕРµ СЂР°РІРµРЅСЃС‚РІРѕ** (value equality) РёР· РєРѕСЂРѕР±РєРё, Р±РµР· РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё РІ `frozen=True`.
+> **Отличие от AeroBIM:** OpenRebar использует `sealed record struct` и `sealed record` — C# value semantics, не dataclasses. Это обеспечивает **структурное равенство** (value equality) из коробки, без необходимости в `frozen=True`.
 
 ### 2.2. Invariant Guards
 
-Р”РѕРјРµРЅРЅС‹Рµ РјРѕРґРµР»Рё СЃРѕРґРµСЂР¶Р°С‚ **Р°РєС‚РёРІРЅС‹Рµ РёРЅРІР°СЂРёР°РЅС‚С‹** СЃ compile-time Рё runtime enforcement:
+Доменные модели содержат **активные инварианты** с compile-time и runtime enforcement:
 
 ```csharp
-// SlabGeometry.ThicknessMm вЂ” domain invariant
+// SlabGeometry.ThicknessMm — domain invariant
 public required double ThicknessMm {
     init {
         if (value is <= 0 or > 2000)
@@ -181,79 +181,79 @@ public required double ThicknessMm {
 }
 ```
 
-| РњРѕРґРµР»СЊ | РРЅРІР°СЂРёР°РЅС‚ | РўРёРї Р·Р°С‰РёС‚С‹ |
+| Модель | Инвариант | Тип защиты |
 |---|---|---|
-| `Polygon.Vertices` | `count в‰Ґ 3` | Runtime exception |
-| `ReinforcementSpec.DiameterMm` | `1 в‰¤ d в‰¤ 50` | Runtime, init-only |
-| `ReinforcementSpec.SpacingMm` | `1 в‰¤ s в‰¤ 1000` | Runtime, init-only |
-| `SlabGeometry.ThicknessMm` | `0 < h в‰¤ 2000` | Runtime, init-only |
-| `SlabGeometry.CoverMm` | `0 в‰¤ a в‰¤ 200` | Runtime, init-only |
+| `Polygon.Vertices` | `count ≥ 3` | Runtime exception |
+| `ReinforcementSpec.DiameterMm` | `1 ≤ d ≤ 50` | Runtime, init-only |
+| `ReinforcementSpec.SpacingMm` | `1 ≤ s ≤ 1000` | Runtime, init-only |
+| `SlabGeometry.ThicknessMm` | `0 < h ≤ 2000` | Runtime, init-only |
+| `SlabGeometry.CoverMm` | `0 ≤ a ≤ 200` | Runtime, init-only |
 
 ---
 
-## 3. РќРѕСЂРјР°С‚РёРІРЅС‹Р№ Р”РІРёР¶РѕРє: Р’РµСЂРёС„РёРєР°С†РёСЏ SP 63.13330.2018
+## 3. Нормативный Движок: Верификация SP 63.13330.2018
 
-### 3.1. РђРЅРєРµСЂРѕРІРєР°: РњР°С‚РµРјР°С‚РёС‡РµСЃРєР°СЏ Р’РµСЂРёС„РёРєР°С†РёСЏ
+### 3.1. Анкеровка: Математическая Верификация
 
-**Р РµР°Р»РёР·Р°С†РёСЏ РІ РєРѕРґРµ** (`AnchorageRules.CalculateAnchorageLength`):
+**Реализация в коде** (`AnchorageRules.CalculateAnchorageLength`):
 
 $$l_{0,an} = \frac{R_s \cdot d}{4 \cdot R_{bond}} = \frac{R_s \cdot d}{4 \cdot \eta_1 \cdot \eta_2 \cdot R_{bt}}$$
 
-**Р’РµСЂРёС„РёРєР°С†РёСЏ РїРѕ SP 63 В§10.3.24:**
+**Верификация по SP 63 §10.3.24:**
 
-| РџР°СЂР°РјРµС‚СЂ | РљРѕРґ | SP 63 | Р’РµСЂРЅРѕ? |
+| Параметр | Код | SP 63 | Верно? |
 |---|---|---|---|
-| $\eta_1$ (СЂРёС„Р»С‘РЅР°СЏ) | 2.5 | 2.5 (В§10.3.24, С‚Р°Р±Р».) | вњ… |
-| $\eta_1$ (РіР»Р°РґРєР°СЏ) | 1.5 | 1.5 | вњ… |
-| $\eta_2$ (С…РѕСЂРѕС€РёРµ СѓСЃР»РѕРІРёСЏ) | 1.0 | 1.0 (В§10.3.24) | вњ… |
-| $\eta_2$ (РїР»РѕС…РёРµ СѓСЃР»РѕРІРёСЏ) | 0.7 | 0.7 | вњ… |
-| $R_{bt}$, B25 | 1.05 РњРџР° | 1.05 РњРџР° (С‚Р°Р±Р». 6.8) | вњ… |
-| $R_s$, A500C | 435 РњРџР° | 435 РњРџР° (С‚Р°Р±Р». 6.14) | вњ… |
-| min(tension) | `max(15d, 200)` | `max(15d, 200)` (В§10.3.27) | вњ… |
-| min(compression) | `max(10d, 150)` | `max(10d, 150)` (В§10.3.27) | вњ… |
-| РћРєСЂСѓРіР»РµРЅРёРµ | `Ceiling(x/10)*10` | РџСЂР°РєС‚РёРєР°: РІРІРµСЂС… РґРѕ 10 РјРј | вњ… |
+| $\eta_1$ (рифлёная) | 2.5 | 2.5 (§10.3.24, табл.) | ✅ |
+| $\eta_1$ (гладкая) | 1.5 | 1.5 | ✅ |
+| $\eta_2$ (хорошие условия) | 1.0 | 1.0 (§10.3.24) | ✅ |
+| $\eta_2$ (плохие условия) | 0.7 | 0.7 | ✅ |
+| $R_{bt}$, B25 | 1.05 МПа | 1.05 МПа (табл. 6.8) | ✅ |
+| $R_s$, A500C | 435 МПа | 435 МПа (табл. 6.14) | ✅ |
+| min(tension) | `max(15d, 200)` | `max(15d, 200)` (§10.3.27) | ✅ |
+| min(compression) | `max(10d, 150)` | `max(10d, 150)` (§10.3.27) | ✅ |
+| Округление | `Ceiling(x/10)*10` | Практика: вверх до 10 мм | ✅ |
 
-**РљРѕРЅС‚СЂРѕР»СЊРЅС‹Р№ СЂР°СЃС‡С‘С‚** (d12, A500C, B25, Good):
+**Контрольный расчёт** (d12, A500C, B25, Good):
 
-$$l_{0,an} = \frac{435 \times 12}{4 \times 2.5 \times 1.0 \times 1.05} = \frac{5220}{10.5} = 497.14 \text{ РјРј}$$
+$$l_{0,an} = \frac{435 \times 12}{4 \times 2.5 \times 1.0 \times 1.05} = \frac{5220}{10.5} = 497.14 \text{ мм}$$
 
-$$l_{an} = \text{max}(497.14,\ 15 \times 12,\ 200) = \text{max}(497.14,\ 180,\ 200) = 497.14 \to \lceil 50 \rceil = 500 \text{ РјРј}$$
+$$l_{an} = \text{max}(497.14,\ 15 \times 12,\ 200) = \text{max}(497.14,\ 180,\ 200) = 497.14 \to \lceil 50 \rceil = 500 \text{ мм}$$
 
-**РўРµСЃС‚ РїРѕРґС‚РІРµСЂР¶РґР°РµС‚:** `result.Should().BeInRange(450, 550)` вњ…
+**Тест подтверждает:** `result.Should().BeInRange(450, 550)` ✅
 
 > [!IMPORTANT]
-> **РђРєР°РґРµРјРёС‡РµСЃРєР°СЏ РѕС†РµРЅРєР°:** Р¤РѕСЂРјСѓР»С‹ SP 63 СЂРµР°Р»РёР·РѕРІР°РЅС‹ **РјР°С‚РµРјР°С‚РёС‡РµСЃРєРё РєРѕСЂСЂРµРєС‚РЅРѕ**. Р’СЃРµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ ($\eta_1$, $\eta_2$, $R_{bt}$, $R_s$) СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‚ С‚Р°Р±Р»РёС‡РЅС‹Рј Р·РЅР°С‡РµРЅРёСЏРј РЅРѕСЂРјР°С‚РёРІРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°. РќРµС‚ СѓРїСЂРѕС‰РµРЅРёР№, РёСЃРєР°Р¶Р°СЋС‰РёС… СЂРµР·СѓР»СЊС‚Р°С‚. Р’РµСЂРёС„РёРєР°С†РёСЏ РїРѕРґС‚РІРµСЂР¶РґРµРЅР° РєР°Рє СЂСѓС‡РЅС‹Рј РєРѕРЅС‚СЂРѕР»СЊРЅС‹Рј СЂР°СЃС‡С‘С‚РѕРј, С‚Р°Рє Рё unit-С‚РµСЃС‚Р°РјРё.
+> **Академическая оценка:** Формулы SP 63 реализованы **математически корректно**. Все коэффициенты ($\eta_1$, $\eta_2$, $R_{bt}$, $R_s$) соответствуют табличным значениям нормативного документа. Нет упрощений, искажающих результат. Верификация подтверждена как ручным контрольным расчётом, так и unit-тестами.
 
-### 3.2. РќР°С…Р»С‘СЃС‚ (Lap Splice): SP 63 В§10.3.31
+### 3.2. Нахлёст (Lap Splice): SP 63 §10.3.31
 
-$$l_{lap} = \alpha \cdot l_{0,an}; \quad \alpha = \begin{cases} 1.2 & \text{в‰¤25\%} \\ 1.4 & \text{26вЂ“50\%} \\ 2.0 & \text{51вЂ“100\%} \end{cases}$$
+$$l_{lap} = \alpha \cdot l_{0,an}; \quad \alpha = \begin{cases} 1.2 & \text{≤25\%} \\ 1.4 & \text{26–50\%} \\ 2.0 & \text{51–100\%} \end{cases}$$
 
-$$l_{lap,min} = \begin{cases} \text{max}(20d, 250) & \text{СЂР°СЃС‚СЏР¶РµРЅРёРµ} \\ \text{max}(15d, 200) & \text{СЃР¶Р°С‚РёРµ} \end{cases}$$
+$$l_{lap,min} = \begin{cases} \text{max}(20d, 250) & \text{растяжение} \\ \text{max}(15d, 200) & \text{сжатие} \end{cases}$$
 
-**Р’РµСЂРёС„РёС†РёСЂРѕРІР°РЅРѕ:** РљРѕРґ РёРґРµРЅС‚РёС‡РµРЅ РЅРѕСЂРјР°С‚РёРІРЅС‹Рј С„РѕСЂРјСѓР»Р°Рј. РўРµСЃС‚ `LapLength_ShouldRespectMinimum20d` вњ…
+**Верифицировано:** Код идентичен нормативным формулам. Тест `LapLength_ShouldRespectMinimum20d` ✅
 
-### 3.3. РћРіСЂР°РЅРёС‡РµРЅРёСЏ РїРѕ Р°СЂРјРёСЂРѕРІР°РЅРёСЋ: SP 63 В§10.3.5, В§10.3.8
+### 3.3. Ограничения по армированию: SP 63 §10.3.5, §10.3.8
 
-| РџСЂР°РІРёР»Рѕ | РљРѕРґ | SP 63 |
+| Правило | Код | SP 63 |
 |---|---|---|
-| $\mu_{min} = 0.1\%$ | `0.001 * h * b` | В§10.3.5 вњ… |
-| Primary spacing max | `min(1.5h, 400)` | В§10.3.8 вњ… |
-| Secondary spacing max | `min(3.5h, 500)` | В§10.3.8 вњ… |
-| Linear mass, Р“РћРЎРў 5781 | Lookup table (14 entries) | Table verified вњ… |
-| Fallback mass formula | `ПЂ(d/2)ВІ Г— 7850` РєРі/РјВі | Р¤РёР·РёС‡РµСЃРєРё РєРѕСЂСЂРµРєС‚РЅРѕ вњ… |
+| $\mu_{min} = 0.1\%$ | `0.001 * h * b` | §10.3.5 ✅ |
+| Primary spacing max | `min(1.5·h, 400)` | §10.3.8 ✅ |
+| Secondary spacing max | `min(3.5·h, 500)` | §10.3.8 ✅ |
+| Linear mass, ГОСТ 5781 | Lookup table (14 entries) | Table verified ✅ |
+| Fallback mass formula | `π(d/2)² × 7850` кг/м³ | Физически корректно ✅ |
 
 ---
 
-## 4. РђР»РіРѕСЂРёС‚Рј РћРїС‚РёРјРёР·Р°С†РёРё Р Р°СЃРєСЂРѕСЏ: РђРЅР°Р»РёР· Column Generation
+## 4. Алгоритм Оптимизации Раскроя: Анализ Column Generation
 
-### 4.1. РћР±С‰Р°СЏ РЎС…РµРјР° (Gilmore & Gomory, 1961)
+### 4.1. Общая Схема (Gilmore & Gomory, 1961)
 
 ```mermaid
 flowchart TD
     A["1. Aggregate demand<br/>(group by length, +saw cut)"] --> B["2. Build initial patterns<br/>(max-fit per item type)"]
     B --> C["3. Solve Restricted Master LP<br/>(coordinate descent)"]
     C --> D["4. Solve Pricing Subproblem<br/>(bounded knapsack DP)"]
-    D --> E{"Reduced cost<br/>< в€’Оµ?"}
+    D --> E{"Reduced cost<br/>< −ε?"}
     E -->|Yes| F["5. Add column to pattern pool"]
     F --> C
     E -->|No| G["6. Final LP solve"]
@@ -263,127 +263,127 @@ flowchart TD
     J --> K["10. Return best solution"]
 ```
 
-### 4.2. LP Solver: РљСЂРёС‚РёС‡РµСЃРєРёР№ РђРЅР°Р»РёР·
+### 4.2. LP Solver: Критический Анализ
 
 > [!WARNING]
-> **РђРєР°РґРµРјРёС‡РµСЃРєРё С‡РµСЃС‚РЅР°СЏ РѕС†РµРЅРєР° LP:** РўРµРєСѓС‰Р°СЏ СЂРµР°Р»РёР·Р°С†РёСЏ `SolveRestrictedMasterLP` РёСЃРїРѕР»СЊР·СѓРµС‚ **РєРѕРѕСЂРґРёРЅР°С‚РЅС‹Р№ СЃРїСѓСЃРє** (coordinate descent), Р° РЅРµ РїРѕР»РЅРѕС†РµРЅРЅС‹Р№ Revised Simplex РјРµС‚РѕРґ. Р­С‚Рѕ СѓРїСЂРѕС‰РµРЅРёРµ:
+> **Академически честная оценка LP:** Текущая реализация `SolveRestrictedMasterLP` использует **координатный спуск** (coordinate descent), а не полноценный Revised Simplex метод. Это упрощение:
 >
-> - вњ… **Р Р°Р±РѕС‚Р°РµС‚** РґР»СЏ РјР°Р»С‹С… Р·Р°РґР°С‡ (С‚РёРїРёС‡РЅС‹Р№ slab: 5вЂ“30 С‚РёРїРѕСЂР°Р·РјРµСЂРѕРІ, 10вЂ“50 РїР°С‚С‚РµСЂРЅРѕРІ)
-> - вљ пёЏ **РќРµ РіР°СЂР°РЅС‚РёСЂСѓРµС‚** РѕРїС‚РёРјР°Р»СЊРЅРѕСЃС‚СЊ LP-СЂРµР»Р°РєСЃР°С†РёРё РґР»СЏ РїСЂРѕРёР·РІРѕР»СЊРЅС‹С… Р·Р°РґР°С‡
-> - вљ пёЏ **Р”РІРѕР№СЃС‚РІРµРЅРЅС‹Рµ С†РµРЅС‹** (`dualPrices`) РІС‹С‡РёСЃР»СЏСЋС‚СЃСЏ РїСЂРёР±Р»РёР¶С‘РЅРЅРѕ С‡РµСЂРµР· `1/maxCover`, Р° РЅРµ С‡РµСЂРµР· СЃРёРјРїР»РµРєСЃ-С‚Р°Р±Р»РёС†Сѓ
+> - ✅ **Работает** для малых задач (типичный slab: 5–30 типоразмеров, 10–50 паттернов)
+> - ⚠️ **Не гарантирует** оптимальность LP-релаксации для произвольных задач
+> - ⚠️ **Двойственные цены** (`dualPrices`) вычисляются приближённо через `1/maxCover`, а не через симплекс-таблицу
 >
-> **РРјРїР°РєС‚:** Pricing subproblem РјРѕР¶РµС‚ РЅРµ РЅР°С…РѕРґРёС‚СЊ РёСЃС‚РёРЅРЅРѕ РЅР°РёР»СѓС‡С€РёР№ СЃС‚РѕР»Р±РµС† в†’ CG РјРѕР¶РµС‚ СЃС…РѕРґРёС‚СЊСЃСЏ Рє СЃСѓР±РѕРїС‚РёРјР°Р»СЊРЅРѕРјСѓ LP-СЂРµС€РµРЅРёСЋ. Р”Р»СЏ РїСЂРѕРјС‹С€Р»РµРЅРЅС‹С… Р·Р°РґР°С‡ (в‰¤100 СЃС‚РµСЂР¶РЅРµР№ РЅР° СЌС‚Р°Р¶) СЌС‚Рѕ РїСЂРёРµРјР»РµРјРѕ, РїРѕСЃРєРѕР»СЊРєСѓ:
-> 1. FFD baseline РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РєР°Рє floor
-> 2. Р¤РёРЅР°Р»СЊРЅС‹Р№ `IsBaselineBetter()` СЃСЂР°РІРЅРёРІР°РµС‚ РѕР±Р° СЂРµС€РµРЅРёСЏ
+> **Импакт:** Pricing subproblem может не находить истинно наилучший столбец → CG может сходиться к субоптимальному LP-решению. Для промышленных задач (≤100 стержней на этаж) это приемлемо, поскольку:
+> 1. FFD baseline используется как floor
+> 2. Финальный `IsBaselineBetter()` сравнивает оба решения
 
 ### 4.3. Pricing Subproblem: Bounded Knapsack DP
 
 ```csharp
 // Discretization: 0.1mm resolution
 int capacity = (int)(stockLength * 10);
-// DP: O(m Г— capacity Г— maxCount)
+// DP: O(m × capacity × maxCount)
 ```
 
-**Р¤РѕСЂРјР°Р»СЊРЅР°СЏ СЃР»РѕР¶РЅРѕСЃС‚СЊ:**
-- Capacity = stockLength Г— 10 в‰€ 117,000 СЏС‡РµРµРє
-- Items = 5вЂ“30 С‚РёРїРѕСЂР°Р·РјРµСЂРѕРІ
-- **РС‚РѕРіРѕ:** $O(m \cdot C \cdot k_{max})$ в‰€ $O(30 \times 117000 \times 10) \approx 35M$ РѕРїРµСЂР°С†РёР№ вЂ” РґРѕРїСѓСЃС‚РёРјРѕ
+**Формальная сложность:**
+- Capacity = stockLength × 10 ≈ 117,000 ячеек
+- Items = 5–30 типоразмеров
+- **Итого:** $O(m \cdot C \cdot k_{max})$ ≈ $O(30 \times 117000 \times 10) \approx 35M$ операций — допустимо
 
 > [!NOTE]
-> Discretization СЃ С€Р°РіРѕРј 0.1 РјРј вЂ” СЂР°Р·СѓРјРЅС‹Р№ РєРѕРјРїСЂРѕРјРёСЃСЃ: С‚РѕС‡РЅРѕСЃС‚СЊ РІС‹С€Рµ, С‡РµРј РєРѕРЅСЃС‚СЂСѓРєС‚РёРІРЅС‹Рµ РґРѕРїСѓСЃРєРё (В±1 РјРј), РїСЂРё РїСЂРёРµРјР»РµРјРѕРј СЂР°СЃС…РѕРґРµ РїР°РјСЏС‚Рё (~1 MB РЅР° DP-С‚Р°Р±Р»РёС†Сѓ).
+> Discretization с шагом 0.1 мм — разумный компромисс: точность выше, чем конструктивные допуски (±1 мм), при приемлемом расходе памяти (~1 MB на DP-таблицу).
 
 ### 4.4. Integer Rounding: Largest-Remainder + Greedy Repair
 
-РЎС‚СЂР°С‚РµРіРёСЏ:
-1. **Floor** LP-СЂРµС€РµРЅРёСЏ в†’ baseline integer
-2. **Largest-remainder** в†’ РѕРєСЂСѓРіР»РµРЅРёРµ РІРІРµСЂС… РїРѕ СѓР±С‹РІР°РЅРёСЋ РґСЂРѕР±РЅРѕР№ С‡Р°СЃС‚Рё
-3. **Greedy repair** вЂ” РµСЃР»Рё demand РЅРµ РїРѕРєСЂС‹С‚, РґРѕР±Р°РІР»СЏСЋС‚СЃСЏ РїР°С‚С‚РµСЂРЅС‹ СЃ РЅР°РёР»СѓС‡С€РёРј РїРѕРєСЂС‹С‚РёРµРј
+Стратегия:
+1. **Floor** LP-решения → baseline integer
+2. **Largest-remainder** → округление вверх по убыванию дробной части
+3. **Greedy repair** — если demand не покрыт, добавляются паттерны с наилучшим покрытием
 
 > [!TIP]
-> Р”Р»СЏ РїСЂРѕРјС‹С€Р»РµРЅРЅРѕРіРѕ СѓСЂРѕРІРЅСЏ СЂРµРєРѕРјРµРЅРґСѓРµС‚СЃСЏ СЌРІРѕР»СЋС†РёСЏ Рє **Branch-and-Price** (Ryan-Foster branching) вЂ” С‚РµРєСѓС‰Р°СЏ architetctura СѓР¶Рµ РіРѕС‚РѕРІР° Рє СЌС‚РѕРјСѓ, РїРѕСЃРєРѕР»СЊРєСѓ pricing subproblem РёР·РѕР»РёСЂРѕРІР°РЅ Р·Р° С‡С‘С‚РєРёРј API.
+> Для промышленного уровня рекомендуется эволюция к **Branch-and-Price** (Ryan-Foster branching) — текущая architetctura уже готова к этому, поскольку pricing subproblem изолирован за чётким API.
 
 ---
 
-## 5. Р¦РІРµС‚РѕРІРѕРµ Р Р°СЃРїРѕР·РЅР°РІР°РЅРёРµ: CIE L\*a\*b\* О”E\*76
+## 5. Цветовое Распознавание: CIE L\*a\*b\* ΔE\*76
 
-### 5.1. Р РµР°Р»РёР·Р°С†РёСЏ sRGB в†’ L\*a\*b\*
+### 5.1. Реализация sRGB → L\*a\*b\*
 
 ```
-sRGB в†’ Linearization в†’ XYZ (sRGB D65 matrix) в†’ L*a*b* (D65 white point)
+sRGB → Linearization → XYZ (sRGB D65 matrix) → L\*a\*b\* (D65 white point)
 ```
 
-**РњР°С‚РµРјР°С‚РёС‡РµСЃРєР°СЏ РІРµСЂРёС„РёРєР°С†РёСЏ:**
+**Математическая верификация:**
 
-| РЁР°Рі | Р¤РѕСЂРјСѓР»Р° | РЎС‚Р°РЅРґР°СЂС‚ | Р’РµСЂРЅРѕ? |
+| Шаг | Формула | Стандарт | Верно? |
 |---|---|---|---|
-| sRGB в†’ Linear | $c \leq 0.04045 \Rightarrow c/12.92$; else $((c+0.055)/1.055)^{2.4}$ | IEC 61966-2-1 | вњ… |
-| RGB в†’ XYZ | РњР°С‚СЂРёС†Р° M (sRGB D65) | ISO 11664-2 | вњ… |
-| XYZ в†’ L\*a\*b\* | $f(t) = t^{1/3}$ or $(903.3t + 16)/116$ | ISO/CIE 11664-4 | вњ… |
-| D65 Р±РµР»Р°СЏ С‚РѕС‡РєР° | (0.95047, 1.0, 1.08883) | CIE Standard | вњ… |
-| О”E\*76 | $\sqrt{(\Delta L^*)^2 + (\Delta a^*)^2 + (\Delta b^*)^2}$ | ISO/CIE 11664-4 | вњ… |
+| sRGB → Linear | $c \leq 0.04045 \Rightarrow c/12.92$; else $((c+0.055)/1.055)^{2.4}$ | IEC 61966-2-1 | ✅ |
+| RGB → XYZ | Матрица M (sRGB D65) | ISO 11664-2 | ✅ |
+| XYZ → L\*a\*b\* | $f(t) = t^{1/3}$ or $(903.3t + 16)/116$ | ISO/CIE 11664-4 | ✅ |
+| D65 белая точка | (0.95047, 1.0, 1.08883) | CIE Standard | ✅ |
+| ΔE\*76 | $\sqrt{(\Delta L^*)^2 + (\Delta a^*)^2 + (\Delta b^*)^2}$ | ISO/CIE 11664-4 | ✅ |
 
 > [!IMPORTANT]
-> **РђРєР°РґРµРјРёС‡РµСЃРєРё СЃРёР»СЊРЅРѕРµ СЂРµС€РµРЅРёРµ:** РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ CIE О”E\*76 **РІРјРµСЃС‚Рѕ RGB Euclidean** РґР»СЏ СЃРѕРїРѕСЃС‚Р°РІР»РµРЅРёСЏ С†РІРµС‚РѕРІ РёР·РѕР»РёРЅРёР№ вЂ” **СЃС‚Р°РЅРґР°СЂС‚ РїСЂРѕРјС‹С€Р»РµРЅРЅРѕСЃС‚Рё**. RGB Euclidean РЅРµ СѓС‡РёС‚С‹РІР°РµС‚ РЅРµР»РёРЅРµР№РЅРѕСЃС‚СЊ С‡РµР»РѕРІРµС‡РµСЃРєРѕРіРѕ РІРѕСЃРїСЂРёСЏС‚РёСЏ С†РІРµС‚Р° Рё РґР°С‘С‚ Р°СЂС‚РµС„Р°РєС‚С‹ РЅР° Р·РµР»РµРЅРѕ-Р¶С‘Р»С‚РѕРј СЃРїРµРєС‚СЂРµ (РЅР°РёР±РѕР»РµРµ С‡Р°СЃС‚РѕРј РІ РёР·РѕР»РёРЅРёСЏС… LIRA/Stark-ES).
+> **Академически сильное решение:** Использование CIE ΔE\*76 **вместо RGB Euclidean** для сопоставления цветов изолиний — **стандарт промышленности**. RGB Euclidean не учитывает нелинейность человеческого восприятия цвета и даёт артефакты на зелено-жёлтом спектре (наиболее частом в изолиниях LIRA/Stark-ES).
 
 ---
 
-## 6. РРЅС„СЂР°СЃС‚СЂСѓРєС‚СѓСЂРЅС‹Рµ РђРґР°РїС‚РµСЂС‹
+## 6. Инфраструктурные Адаптеры
 
 ### 6.1. DxfIsolineParser (13,467 bytes)
-- РџРѕР»РЅС‹Р№ 256-С†РІРµС‚РЅС‹Р№ AutoCAD ACI palette (`AciPalette.cs`, 9.8 KB)
-- ByLayer resolution: РµСЃР»Рё С†РІРµС‚ entity = 256 (ByLayer), РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ С†РІРµС‚ СЃР»РѕСЏ
-- Polyline в†’ Polygon conversion СЃ Р·Р°РјС‹РєР°РЅРёРµРј
-- netDxf NuGet РґР»СЏ РїР°СЂСЃРёРЅРіР° DXF
+- Полный 256-цветный AutoCAD ACI palette (`AciPalette.cs`, 9.8 KB)
+- ByLayer resolution: если цвет entity = 256 (ByLayer), используется цвет слоя
+- Polyline → Polygon conversion с замыканием
+- netDxf NuGet для парсинга DXF
 
 ### 6.2. PngIsolineParser (7,880 bytes)
-- **Dual-mode:** ML (С‡РµСЂРµР· `HttpImageSegmentationService`) РёР»Рё color quantization fallback
-- Connected components в†’ polygon extraction
-- О”E threshold matching Рє `ColorLegend`
+- **Dual-mode:** ML (через `HttpImageSegmentationService`) или color quantization fallback
+- Connected components → polygon extraction
+- ΔE threshold matching к `ColorLegend`
 
 ### 6.3. StandardReinforcementCalculator (204 LOC)
-- Scanline rebar placement (РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕ РґР»СЏ X, РІРµСЂС‚РёРєР°Р»СЊРЅРѕ РґР»СЏ Y)
-- **Opening subtraction:** РєРѕСЂСЂРµРєС‚РЅР°СЏ РІС‹С‡РёС‚Р°РЅРёРµ РёРЅС‚РµСЂРІР°Р»РѕРІ РїСЂРѕС‘РјРѕРІ
-- Bond condition: Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРёР№ РІС‹Р±РѕСЂ О·в‚‚ РїРѕ layer (Top в†’ Poor, Bottom в†’ Good)
+- Scanline rebar placement (горизонтально для X, вертикально для Y)
+- **Opening subtraction:** корректная вычитание интервалов проёмов
+- Bond condition: автоматический выбор η₂ по layer (Top → Poor, Bottom → Good)
 - SP 63 spacing validation
 
 ### 6.4. StandardZoneDetector
 - Classification: Simple (rectangular) / Complex (L-shaped) / Special (openings)
-- Polygon decomposition: grid в†’ merge в†’ rectangles
+- Polygon decomposition: grid → merge → rectangles
 
 ### 6.5. FileSupplierCatalogLoader
-- JSON РґРµСЃРµСЂРёР°Р»РёР·Р°С†РёСЏ РєР°С‚Р°Р»РѕРіРѕРІ РїРѕСЃС‚Р°РІС‰РёРєРѕРІ
-- Default catalog: 6000, 9000, 11700, 12000 РјРј
+- JSON десериализация каталогов поставщиков
+- Default catalog: 6000, 9000, 11700, 12000 мм
 
 ---
 
-## 7. ML РњРѕРґСѓР»СЊ (Python)
+## 7. ML Модуль (Python)
 
-### 7.1. РђСЂС…РёС‚РµРєС‚СѓСЂР°
+### 7.1. Архитектура
 
-| РљРѕРјРїРѕРЅРµРЅС‚ | Р РѕР»СЊ | РўРµС…РЅРѕР»РѕРіРёСЏ |
+| Компонент | Роль | Технология |
 |---|---|---|
-| `model.py` | U-Net Р°СЂС…РёС‚РµРєС‚СѓСЂР° (encoder-decoder) | PyTorch |
-| `predict.py` | Inference pipeline: image в†’ mask в†’ polygons | OpenCV + SciKit-Image |
-| `server.py` | HTTP API РґР»СЏ C#-СЃС‚РѕСЂРѕРЅС‹ | FastAPI :8101 |
-| `requirements.txt` | 12 Р·Р°РІРёСЃРёРјРѕСЃС‚РµР№, version-pinned | pip |
+| `model.py` | U-Net архитектура (encoder-decoder) | PyTorch |
+| `predict.py` | Inference pipeline: image → mask → polygons | OpenCV + SciKit-Image |
+| `server.py` | HTTP API для C#-стороны | FastAPI :8101 |
+| `requirements.txt` | 12 зависимостей, version-pinned | pip |
 
-### 7.2. РћС†РµРЅРєР°
+### 7.2. Оценка
 
 > [!WARNING]
-> ML РјРѕРґСѓР»СЊ **Р°СЂС…РёС‚РµРєС‚СѓСЂРЅРѕ РёР·РѕР»РёСЂРѕРІР°РЅ** (HTTP bridge), РЅРѕ **РЅРµ РёРјРµРµС‚ РѕР±СѓС‡РµРЅРЅРѕР№ РјРѕРґРµР»Рё**. РўСЂРµР±СѓРµС‚СЃСЏ:
-> 1. РђРЅРЅРѕС‚РёСЂРѕРІР°РЅРЅС‹Р№ РґР°С‚Р°СЃРµС‚ РёР·РѕР»РёРЅРёР№ LIRA-SAPR / Stark-ES
-> 2. РћР±СѓС‡РµРЅРёРµ U-Net РЅР° СЃРµРіРјРµРЅС‚Р°С†РёСЋ С†РІРµС‚РѕРІС‹С… Р·РѕРЅ
-> 3. ONNX СЌРєСЃРїРѕСЂС‚ РґР»СЏ РёРЅС„РµСЂРµРЅСЃР° Р±РµР· PyTorch
+> ML модуль **архитектурно изолирован** (HTTP bridge), но **не имеет обученной модели**. Требуется:
+> 1. Аннотированный датасет изолиний LIRA-SAPR / Stark-ES
+> 2. Обучение U-Net на сегментацию цветовых зон
+> 3. ONNX экспорт для инференса без PyTorch
 
 ---
 
-## 8. РўРµСЃС‚РѕРІРѕРµ РџРѕРєСЂС‹С‚РёРµ
+## 8. Тестовое Покрытие
 
-| РўРµСЃС‚РѕРІС‹Р№ РјРѕРґСѓР»СЊ | Layer | Focus |
+| Тестовый модуль | Layer | Focus |
 |---|---|---|
-| `AnchorageRulesTests` | Domain | SP 63 С„РѕСЂРјСѓР»С‹, min constraints |
+| `AnchorageRulesTests` | Domain | SP 63 формулы, min constraints |
 | `PolygonDecompositionTests` | Domain | Ray casting, area, decomposition |
-| `ColorLegendTests` | Domain | CIE О”E matching, threshold |
+| `ColorLegendTests` | Domain | CIE ΔE matching, threshold |
 | `ColumnGenerationOptimizerTests` | Infrastructure | CG: empty, single, pack, mixed, realistic |
 | `FirstFitDecreasingOptimizerTests` | Infrastructure | FFD baseline correctness |
 | `StandardReinforcementCalculatorTests` | Infrastructure | Scanline placement, opening subtraction |
@@ -396,70 +396,70 @@ sRGB в†’ Linearization в†’ XYZ (sRGB D65 matrix) в†’ L*a*b* (D65 
 | `OptimizeRebarCuttingUseCaseTests` | Application | Standalone cutting |
 
 > [!NOTE]
-> **РЎРѕРѕС‚РЅРѕС€РµРЅРёРµ 0.39:1** (test/source LOC) вЂ” РЅРёР¶Рµ, С‡РµРј Сѓ AeroBIM (0.96:1), РЅРѕ **Р°РґРµРєРІР°С‚РЅРѕ РґР»СЏ .NET BIM**: domain rules Рё Р°Р»РіРѕСЂРёС‚РјС‹ РїРѕРєСЂС‹С‚С‹ РїР»РѕС‚РЅРѕ, UI/Revit-СЃР»РѕР№ РЅРµ С‚РµСЃС‚РёСЂСѓРµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.
+> **Соотношение 0.39:1** (test/source LOC) — ниже, чем у AeroBIM (0.96:1), но **адекватно для .NET BIM**: domain rules и алгоритмы покрыты плотно, UI/Revit-слой не тестируется автоматически.
 
 ---
 
-## 9. РРґРµРЅС‚РёС„РёС†РёСЂРѕРІР°РЅРЅС‹Рµ Р РёСЃРєРё
+## 9. Идентифицированные Риски
 
-### РљСЂРёС‚РёС‡РµСЃРєРёРµ
+### Критические
 
-| ID | Р РёСЃРє | РРјРїР°РєС‚ | Р РµРєРѕРјРµРЅРґР°С†РёСЏ |
+| ID | Риск | Импакт | Рекомендация |
 |---|---|---|---|
-| R-01 | LP solver вЂ” coordinate descent, РЅРµ Simplex | РЎСѓР±РѕРїС‚РёРјР°Р»СЊРЅС‹Рµ pattern choices | Р—Р°РјРµРЅРёС‚СЊ РЅР° HiGHS/CLP sparse LP |
-| R-02 | Dual prices вЂ” СЌРІСЂРёСЃС‚РёРєР° `1/maxCover` | Pricing subproblem РјРѕР¶РµС‚ РїСЂРѕРїСѓСЃС‚РёС‚СЊ Р»СѓС‡С€РёР№ СЃС‚РѕР»Р±РµС† | Р’С‹С‡РёСЃР»СЏС‚СЊ dual РёР· СЃРёРјРїР»РµРєСЃ-С‚Р°Р±Р»РёС†С‹ |
-| R-03 | ML РјРѕРґРµР»СЊ РЅРµ РѕР±СѓС‡РµРЅР° | PNG parsing вЂ” С‚РѕР»СЊРєРѕ color quantization | РЎРѕР±СЂР°С‚СЊ РґР°С‚Р°СЃРµС‚, РѕР±СѓС‡РёС‚СЊ U-Net |
-| R-04 | `_markCounter` вЂ” mutable state РІ Calculator | РќРµ thread-safe РїСЂРё РїР°СЂР°Р»Р»РµР»СЊРЅРѕР№ РѕР±СЂР°Р±РѕС‚РєРµ СЌС‚Р°Р¶РµР№ | РџРµСЂРµРґР°РІР°С‚СЊ counter С‡РµСЂРµР· РїР°СЂР°РјРµС‚СЂ |
+| R-01 | LP solver — coordinate descent, не Simplex | Субоптимальные pattern choices | Заменить на HiGHS/CLP sparse LP |
+| R-02 | Dual prices — эвристика `1/maxCover` | Pricing subproblem может пропустить лучший столбец | Вычислять dual из симплекс-таблицы |
+| R-03 | ML модель не обучена | PNG parsing — только color quantization | Собрать датасет, обучить U-Net |
+| R-04 | `_markCounter` — mutable state в Calculator | Не thread-safe при параллельной обработке этажей | Передавать counter через параметр |
 
-### Р—РЅР°С‡РёС‚РµР»СЊРЅС‹Рµ
+### Значительные
 
-| ID | Р РёСЃРє | РРјРїР°РєС‚ | Р РµРєРѕРјРµРЅРґР°С†РёСЏ |
+| ID | Риск | Импакт | Рекомендация |
 |---|---|---|---|
-| R-05 | РќРµС‚ IFC-СЌРєСЃРїРѕСЂС‚Р° СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ | Р—Р°РјРєРЅСѓС‚РѕСЃС‚СЊ РІ Revit | Р”РѕР±Р°РІРёС‚СЊ `IIfcExporter` port |
-| R-06 | PolygonDecomposition вЂ” grid-based (O(nВІ)) | РњРµРґР»РµРЅРЅРѕ РґР»СЏ СЃР»РѕР¶РЅС‹С… РїРѕР»РёРіРѕРЅРѕРІ | Р Р°СЃСЃРјРѕС‚СЂРµС‚СЊ trapezoidal decomposition |
-| R-07 | РќРµС‚ persistence СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ | РџРѕС‚РµСЂСЏ РґР°РЅРЅС‹С… РїСЂРё РїРµСЂРµР·Р°РїСѓСЃРєРµ | Р”РѕР±Р°РІРёС‚СЊ report store (JSON/SQLite) |
-| R-08 | РќРµС‚ structured logging | РќРµРІРѕР·РјРѕР¶РЅР° РѕС‚Р»Р°РґРєР° РІ production | Р”РѕР±Р°РІРёС‚СЊ `IStructuredLogger` port |
+| R-05 | Нет IFC-экспорта результатов | Замкнутость в Revit | Добавить `IIfcExporter` port |
+| R-06 | PolygonDecomposition — grid-based (O(n²)) | Медленно для сложных полигонов | Рассмотреть trapezoidal decomposition |
+| R-07 | Нет persistence результатов | Потеря данных при перезапуске | Добавить report store (JSON/SQLite) |
+| R-08 | Нет structured logging | Невозможна отладка в production | Добавить `IStructuredLogger` port |
 
 ---
 
-## 10. РС‚РѕРіРѕРІР°СЏ РћС†РµРЅРєР° OpenRebar
+## 10. Итоговая Оценка OpenRebar
 
-| РђСЃРїРµРєС‚ | РћС†РµРЅРєР° | РћР±РѕСЃРЅРѕРІР°РЅРёРµ |
+| Аспект | Оценка | Обоснование |
 |---|---|---|
-| РђСЂС…РёС‚РµРєС‚СѓСЂРЅР°СЏ Р·СЂРµР»РѕСЃС‚СЊ | **A** | Р‘РµР·СѓРїСЂРµС‡РЅР°СЏ Clean Architecture, РєСЂРѕСЃСЃ-СЃС‚РµРєРѕРІР°СЏ СЌРєСЃС‚СЂР°РєС†РёСЏ |
-| РќРѕСЂРјР°С‚РёРІРЅР°СЏ С‚РѕС‡РЅРѕСЃС‚СЊ SP 63 | **A+** | Р’СЃРµ С„РѕСЂРјСѓР»С‹ РІРµСЂРёС„РёС†РёСЂРѕРІР°РЅС‹, РІСЃРµ РєРѕСЌС„С„РёС†РёРµРЅС‚С‹ РєРѕСЂСЂРµРєС‚РЅС‹ |
-| РђР»РіРѕСЂРёС‚РјРёС‡РµСЃРєР°СЏ РіР»СѓР±РёРЅР° | **Aв€’** | CG framework РїСЂР°РІРёР»СЊРЅС‹Р№, LP solver вЂ” СѓРїСЂРѕС‰С‘РЅРЅС‹Р№ (С‡РµСЃС‚РЅР°СЏ РїРѕРјРµС‚РєР°) |
-| Р¦РІРµС‚РѕРІРѕРµ СЂР°СЃРїРѕР·РЅР°РІР°РЅРёРµ | **A** | CIE L\*a\*b\* О”E\*76 вЂ” РїСЂРѕРјС‹С€Р»РµРЅРЅС‹Р№ СЃС‚Р°РЅРґР°СЂС‚ |
-| РўРµСЃС‚РѕРІРѕРµ РїРѕРєСЂС‹С‚РёРµ | **B+** | РџР»РѕС‚РЅРѕРµ РЅР° Rules/Optimization, СЃР»Р°Р±РѕРµ РЅР° UI/Revit |
-| РџСЂРѕРјС‹С€Р»РµРЅРЅР°СЏ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ | **B** | ML РЅРµ РѕР±СѓС‡РµРЅ, РЅРµС‚ IFC export, РЅРµС‚ persistence |
-| Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ | **B+** | Architecture doc + README, РЅРµС‚ API docs |
+| Архитектурная зрелость | **A** | Безупречная Clean Architecture, кросс-стековая экстракция |
+| Нормативная точность SP 63 | **A+** | Все формулы верифицированы, все коэффициенты корректны |
+| Алгоритмическая глубина | **A−** | CG framework правильный, LP solver — упрощённый (честная пометка) |
+| Цветовое распознавание | **A** | CIE L\*a\*b\* ΔE\*76 — промышленный стандарт |
+| Тестовое покрытие | **B+** | Плотное на Rules/Optimization, слабое на UI/Revit |
+| Промышленная готовность | **B** | ML не обучен, нет IFC export, нет persistence |
+| Документация | **B+** | Architecture doc + README, нет API docs |
 
 ---
 
-## 11. РРќРўР•Р“Р РђР¦РРЇ AeroBIM Г— OpenRebar: РЎС‚СЂР°С‚РµРіРёС‡РµСЃРєР°СЏ РЎРІСЏР·РєР°
+## 11. ИНТЕГРАЦИЯ AeroBIM × OpenRebar: Стратегическая Связка
 
-Р­С‚Рѕ СЏРґСЂРѕ Р°СѓРґРёС‚Р°: РєР°Рє РґРІР° РїСЂРѕРµРєС‚Р° СѓСЃРёР»РёРІР°СЋС‚ РґСЂСѓРі РґСЂСѓРіР°.
+Это ядро аудита: как два проекта усиливают друг друга.
 
-### 11.1. РђСЂС…РёС‚РµРєС‚СѓСЂРЅР°СЏ РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ
+### 11.1. Архитектурная Совместимость
 
-| РђСЃРїРµРєС‚ | AeroBIM (Python) | OpenRebar (C# .NET 8) | РЎРѕРІРјРµСЃС‚РёРјРѕСЃС‚СЊ |
+| Аспект | AeroBIM (Python) | OpenRebar (C# .NET 8) | Совместимость |
 |---|---|---|---|
-| Architecture | Clean Arch, Port/Adapter | Clean Arch, Port/Adapter | вњ… РРґРµРЅС‚РёС‡РЅРѕ |
-| DI pattern | Custom token container | MS DI | вњ… Р­РєРІРёРІР°Р»РµРЅС‚ |
-| Domain isolation | `Protocol`-based ports | `interface`-based ports | вњ… РР·РѕРјРѕСЂС„РЅРѕ |
-| Immutability | `frozen dataclass` | `sealed record` | вњ… Р­РєРІРёРІР°Р»РµРЅС‚ |
-| Entry chain | `main.py в†’ bootstrap в†’ FastAPI` | `Bootstrap в†’ ServiceProvider в†’ Revit` | вњ… РџР°СЂР°Р»Р»РµР»СЊРЅРѕ |
-| MicroPhoenix lineage | Direct extraction | Direct extraction | вњ… РћР±С‰РёР№ РїСЂРµРґРѕРє |
+| Architecture | Clean Arch, Port/Adapter | Clean Arch, Port/Adapter | ✅ Идентично |
+| DI pattern | Custom token container | MS DI | ✅ Эквивалент |
+| Domain isolation | `Protocol`-based ports | `interface`-based ports | ✅ Изоморфно |
+| Immutability | `frozen dataclass` | `sealed record` | ✅ Эквивалент |
+| Entry chain | `main.py → bootstrap → FastAPI` | `Bootstrap → ServiceProvider → Revit` | ✅ Параллельно |
+| MicroPhoenix lineage | Direct extraction | Direct extraction | ✅ Общий предок |
 
 > [!TIP]
-> **РљР»СЋС‡РµРІРѕР№ РёРЅСЃР°Р№С‚:** РћР±Р° РїСЂРѕРµРєС‚Р° вЂ” **РёР·РѕРјРѕСЂС„РЅС‹Рµ СЌРєСЃС‚СЂР°РєС‚С‹ РѕРґРЅРѕРіРѕ Р°СЂС…РёС‚РµРєС‚СѓСЂРЅРѕРіРѕ РіРµРЅРѕРјР°** (MicroPhoenix). Р­С‚Рѕ РґРµР»Р°РµС‚ РёС… РёРЅС‚РµРіСЂР°С†РёСЋ **РµСЃС‚РµСЃС‚РІРµРЅРЅРѕР№**, Р° РЅРµ РёСЃРєСѓСЃСЃС‚РІРµРЅРЅРѕР№.
+> **Ключевой инсайт:** Оба проекта — **изоморфные экстракты одного архитектурного генома** (MicroPhoenix). Это делает их интеграцию **естественной**, а не искусственной.
 
-### 11.2. РўРѕС‡РєРё РРЅС‚РµРіСЂР°С†РёРё
+### 11.2. Точки Интеграции
 
 ```mermaid
 flowchart LR
     subgraph OpenRebar["OpenRebar-Reinforcement (.NET/Revit)"]
-        IFC_OUT["IFC Export<br/>(СЂРµРєРѕРјРµРЅРґСѓРµРјС‹Р№ РїРѕСЂС‚)"]
+        IFC_OUT["IFC Export<br/>(рекомендуемый порт)"]
         ZONES["ReinforcementZone[]<br/>+ CuttingPlan[]"]
         REVIT["Revit Model<br/>(shape-driven Rebar)"]
     end
@@ -487,45 +487,45 @@ flowchart LR
     style Contract fill:#2d3748,stroke:#4fd1c5,color:#e2e8f0
 ```
 
-### 11.3. РЎС†РµРЅР°СЂРёРё РРЅС‚РµРіСЂР°С†РёРё (РџСЂРёРѕСЂРёС‚РёР·РёСЂРѕРІР°РЅРЅС‹Рµ)
+### 11.3. Сценарии Интеграции (Приоритизированные)
 
-#### РЎС†РµРЅР°СЂРёР№ 1: **Post-Placement Validation** (Р¤Р°Р·Р° 1, РјРёРЅРёРјР°Р»СЊРЅС‹Р№ MVP)
+#### Сценарий 1: **Post-Placement Validation** (Фаза 1, минимальный MVP)
 
 **Workflow:**
-1. OpenRebar СЂР°Р·РјРµС‰Р°РµС‚ Р°СЂРјР°С‚СѓСЂСѓ РІ Revit в†’ СЌРєСЃРїРѕСЂС‚ `.ifc`
-2. AeroBIM РїСЂРёРЅРёРјР°РµС‚ `.ifc` + IDS-С„Р°Р№Р» СЃ С‚СЂРµР±РѕРІР°РЅРёСЏРјРё РїРѕ Р°СЂРјРёСЂРѕРІР°РЅРёСЋ
-3. AeroBIM РїСЂРѕРІРµСЂСЏРµС‚:
-   - РЁР°Рі Р°СЂРјР°С‚СѓСЂС‹ в‰¤ `min(1.5h, 400)` (SP 63 В§10.3.8)
-   - Р”РёР°РјРµС‚СЂ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ РїСЂРѕРµРєС‚Сѓ
-   - Р—Р°С‰РёС‚РЅС‹Р№ СЃР»РѕР№ РІ РїСЂРµРґРµР»Р°С… РЅРѕСЂРјС‹
-   - РџР»РѕС‰Р°РґСЊ Р°СЂРјРёСЂРѕРІР°РЅРёСЏ в‰Ґ Ој_min Г— h Г— b
-4. AeroBIM РіРµРЅРµСЂРёСЂСѓРµС‚ РѕС‚С‡С‘С‚ + BCF СЃ РїСЂРѕР±Р»РµРјРЅС‹РјРё СЌР»РµРјРµРЅС‚Р°РјРё
-5. BCF Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ РѕР±СЂР°С‚РЅРѕ РІ Revit С‡РµСЂРµР· BIMcollab / Navisworks в†’ OpenRebar РїР»Р°РіРёРЅ С„РѕРєСѓСЃРёСЂСѓРµС‚ РЅР° РѕС€РёР±РєР°С…
+1. OpenRebar размещает арматуру в Revit → экспорт `.ifc`
+2. AeroBIM принимает `.ifc` + IDS-файл с требованиями по армированию
+3. AeroBIM проверяет:
+   - Шаг арматуры ≤ `min(1.5·h, 400)` (SP 63 §10.3.8)
+   - Диаметр соответствует проекту
+   - Защитный слой в пределах нормы
+   - Площадь армирования ≥ μ_min × h × b
+4. AeroBIM генерирует отчёт + BCF с проблемными элементами
+5. BCF загружается обратно в Revit через BIMcollab / Navisworks → OpenRebar плагин фокусирует на ошибках
 
-**РўСЂРµР±СѓРµРјС‹Рµ РґРѕСЂР°Р±РѕС‚РєРё:**
+**Требуемые доработки:**
 
-| РџСЂРѕРµРєС‚ | Р”РѕСЂР°Р±РѕС‚РєР° | РћР±СЉС‘Рј |
+| Проект | Доработка | Объём |
 |---|---|---|
-| OpenRebar | Р”РѕР±Р°РІРёС‚СЊ `IIfcExporter` port + adapter (С‡РµСЂРµР· IfcOpenShell / xBIM) | ~300 LOC |
-| AeroBIM | Р”РѕР±Р°РІРёС‚СЊ set IDS-РїСЂР°РІРёР» РґР»СЏ Р°СЂРјРёСЂРѕРІР°РЅРёСЏ РїР»РёС‚ (spacing, diameter, cover) | ~50 РїСЂР°РІРёР» |
-| AeroBIM | Р Р°СЃС€РёСЂРёС‚СЊ `IfcOpenShellValidator` РґР»СЏ `IfcReinforcingBar`, `IfcReinforcingBarType` | ~150 LOC |
+| OpenRebar | Добавить `IIfcExporter` port + adapter (через IfcOpenShell / xBIM) | ~300 LOC |
+| AeroBIM | Добавить set IDS-правил для армирования плит (spacing, diameter, cover) | ~50 правил |
+| AeroBIM | Расширить `IfcOpenShellValidator` для `IfcReinforcingBar`, `IfcReinforcingBarType` | ~150 LOC |
 
-#### РЎС†РµРЅР°СЂРёР№ 2: **Cross-Document Reinforcement Verification** (Р¤Р°Р·Р° 2)
+#### Сценарий 2: **Cross-Document Reinforcement Verification** (Фаза 2)
 
 **Workflow:**
-1. OpenRebar РіРµРЅРµСЂРёСЂСѓРµС‚ РѕС‚С‡С‘С‚ Рѕ СЂР°СЃРєСЂРѕРµ (CuttingOptimizationReport) в†’ JSON
-2. AeroBIM РїСЂРёРЅРёРјР°РµС‚:
-   - JSON РѕС‚С‡С‘С‚ OpenRebar (Р·РѕРЅС‹, РґРёР°РјРµС‚СЂС‹, С€Р°РіРё) РєР°Рє `RequirementSource`
-   - IFC РјРѕРґРµР»СЊ РёР· Revit
-   - Р Р°СЃС‡С‘С‚РЅС‹Рµ РёР·РѕР»РёРЅРёРё LIRA-SAPR (РєР°Рє С‚РµС…РЅРёС‡РµСЃРєРёРµ СЃРїРµС†РёС„РёРєР°С†РёРё)
+1. OpenRebar генерирует отчёт о раскрое (CuttingOptimizationReport) → JSON
+2. AeroBIM принимает:
+   - JSON отчёт OpenRebar (зоны, диаметры, шаги) как `RequirementSource`
+   - IFC модель из Revit
+   - Расчётные изолинии LIRA-SAPR (как технические спецификации)
 3. AeroBIM `_detect_cross_document_contradictions`:
-   - РР·РѕР»РёРЅРёСЏ LIRA РіРѕРІРѕСЂРёС‚: Р·РѕРЅР° 1 в†’ Г12 С€Р°Рі 200
-   - OpenRebar placement РіРѕРІРѕСЂРёС‚: Р·РѕРЅР° 1 в†’ Г12 С€Р°Рі 200 вњ…
-   - IFC РјРѕРґРµР»СЊ СЃРѕРґРµСЂР¶РёС‚: `IfcReinforcingBar.NominalDiameter` = 10 вќЊ в†’ CROSS_DOCUMENT issue
+   - Изолиния LIRA говорит: зона 1 → Ø12 шаг 200
+   - OpenRebar placement говорит: зона 1 → Ø12 шаг 200 ✅
+   - IFC модель содержит: `IfcReinforcingBar.NominalDiameter` = 10 ❌ → CROSS_DOCUMENT issue
 
-**Р­С‚Рѕ СѓРЅРёРєР°Р»СЊРЅР°СЏ РЅРёС€Р°, РЅРµРґРѕСЃС‚СѓРїРЅР°СЏ С‚РµРєСѓС‰РёРј РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°Рј.**
+**Это уникальная ниша, недоступная текущим инструментам.**
 
-#### РЎС†РµРЅР°СЂРёР№ 3: **Bi-Directional BIM Validation Loop** (Р¤Р°Р·Р° 3+)
+#### Сценарий 3: **Bi-Directional BIM Validation Loop** (Фаза 3+)
 
 ```mermaid
 sequenceDiagram
@@ -541,15 +541,15 @@ sequenceDiagram
     Note over AeroBIM: Validate IFC vs IDS<br/>+ SP 63 rules<br/>+ isoline requirements
     AeroBIM->>AeroBIM: Cross-doc detection
     AeroBIM->>Review: Validation Report + BCF
-    Review->>Revit: BCF issues в†’ element focus
-    Revit->>OpenRebar: Fix в†’ re-optimize
+    Review->>Revit: BCF issues → element focus
+    Revit->>OpenRebar: Fix → re-optimize
     OpenRebar->>Revit: Re-place
     Note over Revit,AeroBIM: Iterate until 0 issues
 ```
 
-### 11.4. РљРѕРЅС‚СЂР°РєС‚ РћР±РјРµРЅР° Р”Р°РЅРЅС‹РјРё
+### 11.4. Контракт Обмена Данными
 
-Р”Р»СЏ РёРЅС‚РµРіСЂР°С†РёРё РЅРµРѕР±С…РѕРґРёРј **С„РѕСЂРјР°Р»СЊРЅС‹Р№ РєРѕРЅС‚СЂР°РєС‚ РѕР±РјРµРЅР°**:
+Для интеграции необходим **формальный контракт обмена**:
 
 ```json
 {
@@ -575,9 +575,9 @@ sequenceDiagram
 }
 ```
 
-AeroBIM РїР°СЂСЃРёС‚ СЌС‚РѕС‚ JSON С‡РµСЂРµР· `NarrativeRuleSynthesizer`-compatible adapter в†’ РЅРѕСЂРјР°Р»РёР·СѓРµС‚ РІ `ParsedRequirement[]` в†’ СЃРѕРїРѕСЃС‚Р°РІР»СЏРµС‚ СЃ IFC РјРѕРґРµР»СЊСЋ.
+AeroBIM парсит этот JSON через `NarrativeRuleSynthesizer`-compatible adapter → нормализует в `ParsedRequirement[]` → сопоставляет с IFC моделью.
 
-### 11.5. РћР±С‰РёРµ IDS РџСЂР°РІРёР»Р° РґР»СЏ РђСЂРјРёСЂРѕРІР°РЅРёСЏ РџР»РёС‚
+### 11.5. Общие IDS Правила для Армирования Плит
 
 ```xml
 <!-- aerobim-reinforcement-slab.ids -->
@@ -595,82 +595,82 @@ AeroBIM РїР°СЂСЃРёС‚ СЌС‚РѕС‚ JSON С‡РµСЂРµР· 
 
 ---
 
-## 12. Р РµРєРѕРјРµРЅРґР°С†РёРё РџРѕ РРЅС‚РµРіСЂР°С†РёРё (РџСЂРёРѕСЂРёС‚РёР·РёСЂРѕРІР°РЅРЅС‹Рµ)
+## 12. Рекомендации По Интеграции (Приоритизированные)
 
-### РљР°С‚РµРіРѕСЂРёСЏ A: РќРµРјРµРґР»РµРЅРЅС‹Рµ
+### Категория A: Немедленные
 
-#### A1. IFC Export РІ OpenRebar
+#### A1. IFC Export в OpenRebar
 
-Р”РѕР±Р°РІРёС‚СЊ `IIfcExporter` domain port + xBIM РёР»Рё IfcOpenShell adapter. Р­РєСЃРїРѕСЂС‚ `IfcReinforcingBar` + `IfcReinforcingBarType` СЃ property sets:
+Добавить `IIfcExporter` domain port + xBIM или IfcOpenShell adapter. Экспорт `IfcReinforcingBar` + `IfcReinforcingBarType` с property sets:
 - `Pset_ReinforcingBarBendingsBECCommon` (diameter, length, steel class)
 - `Qto_ReinforcingElementBaseQuantities` (total weight, count)
 
-#### A2. Reinforcement-Specific IDS Pack РІ AeroBIM
+#### A2. Reinforcement-Specific IDS Pack в AeroBIM
 
-РќР°Р±РѕСЂ РёР· 15вЂ“20 IDS-РїСЂР°РІРёР» РґР»СЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕР№ РїСЂРѕРІРµСЂРєРё:
-- РЁР°Рі РЅРµ РїСЂРµРІС‹С€Р°РµС‚ SP 63 В§10.3.8 limits
-- Р”РёР°РјРµС‚СЂ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ Р·РѕРЅРµ
-- Р”Р»РёРЅР° Р°РЅРєРµСЂРѕРІРєРё в‰Ґ СЂР°СЃС‡С‘С‚РЅРѕР№
-- Р—Р°С‰РёС‚РЅС‹Р№ СЃР»РѕР№ РІ РґРѕРїСѓСЃРєРµ
+Набор из 15–20 IDS-правил для автоматической проверки:
+- Шаг не превышает SP 63 §10.3.8 limits
+- Диаметр соответствует зоне
+- Длина анкеровки ≥ расчётной
+- Защитный слой в допуске
 
-#### A3. OpenRebar Report в†’ AeroBIM RequirementSource Adapter
+#### A3. OpenRebar Report → AeroBIM RequirementSource Adapter
 
-РќРѕРІС‹Р№ Р°РґР°РїС‚РµСЂ РІ AeroBIM: `OpenRebarReportRequirementExtractor` вЂ” РїР°СЂСЃРёС‚ JSON-РѕС‚С‡С‘С‚ OpenRebar, РіРµРЅРµСЂРёСЂСѓРµС‚ `ParsedRequirement[]` РґР»СЏ cross-document detection.
+Новый адаптер в AeroBIM: `OpenRebarReportRequirementExtractor` — парсит JSON-отчёт OpenRebar, генерирует `ParsedRequirement[]` для cross-document detection.
 
-### РљР°С‚РµРіРѕСЂРёСЏ B: РЎСЂРµРґРЅРµСЃСЂРѕС‡РЅС‹Рµ
+### Категория B: Среднесрочные
 
-#### B1. Р—Р°РјРµРЅР° LP solver РІ OpenRebar РЅР° HiGHS
+#### B1. Замена LP solver в OpenRebar на HiGHS
 
-[HiGHS](https://highs.dev/) вЂ” open-source РІС‹СЃРѕРєРѕРїСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅС‹Р№ LP/MIP solver (C++ СЃ .NET bindings). Р—Р°РјРµРЅСЏРµС‚ coordinate descent РЅР° True Revised Simplex, РѕР±РµСЃРїРµС‡РёРІР°СЏ:
-- РўРѕС‡РЅС‹Рµ dual prices в†’ Р»СѓС‡С€РёР№ pricing в†’ РјРµРЅСЊС€Рµ CG РёС‚РµСЂР°С†РёР№
-- Р”РѕРєР°Р·СѓРµРјР°СЏ LP-РѕРїС‚РёРјР°Р»СЊРЅРѕСЃС‚СЊ
+[HiGHS](https://highs.dev/) — open-source высокопроизводительный LP/MIP solver (C++ с .NET bindings). Заменяет coordinate descent на True Revised Simplex, обеспечивая:
+- Точные dual prices → лучший pricing → меньше CG итераций
+- Доказуемая LP-оптимальность
 
 #### B2. BCF Round-Trip Pipeline
 
-AeroBIM РіРµРЅРµСЂРёСЂСѓРµС‚ BCF 2.1 в†’ Revit Р·Р°РіСЂСѓР¶Р°РµС‚ BCF в†’ OpenRebar plugin РїРѕРґРїРёСЃС‹РІР°РµС‚СЃСЏ РЅР° BCF topics, С„РѕРєСѓСЃРёСЂСѓРµС‚ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РЅР° РїСЂРѕР±Р»РµРјРЅС‹С… СЌР»РµРјРµРЅС‚Р°С…, РїСЂРµРґР»Р°РіР°РµС‚ re-optimization.
+AeroBIM генерирует BCF 2.1 → Revit загружает BCF → OpenRebar plugin подписывается на BCF topics, фокусирует пользователя на проблемных элементах, предлагает re-optimization.
 
 #### B3. Unified Report Format
 
-JSON-schema РґР»СЏ РµРґРёРЅРѕРіРѕ РѕС‚С‡С‘С‚Р° `AeroBIM Г— OpenRebar`:
+JSON-schema для единого отчёта `AeroBIM × OpenRebar`:
 - Reinforcement placement summary (OpenRebar)
 - Validation findings (AeroBIM)
 - Cross-document contradictions
 - Cutting optimization metrics
 - BCF issue references
 
-### РљР°С‚РµРіРѕСЂРёСЏ C: РЎС‚СЂР°С‚РµРіРёС‡РµСЃРєРёРµ
+### Категория C: Стратегические
 
 #### C1. Shared Domain Vocabularies
 
-Р•РґРёРЅС‹Р№ glossary РґР»СЏ РѕР±РѕРёС… РїСЂРѕРµРєС‚РѕРІ:
-- `ReinforcementSpec` (OpenRebar) в†” `ParsedRequirement` (AeroBIM) вЂ” РјР°РїРїРёРЅРі
-- Steel classes, concrete classes вЂ” shared enum constants
-- Coordinate system: РјРј, РїСЂР°РІР°СЏ СЃРёСЃС‚РµРјР° РєРѕРѕСЂРґРёРЅР°С‚, Z РІРІРµСЂС…
+Единый glossary для обоих проектов:
+- `ReinforcementSpec` (OpenRebar) ↔ `ParsedRequirement` (AeroBIM) — маппинг
+- Steel classes, concrete classes — shared enum constants
+- Coordinate system: мм, правая система координат, Z вверх
 
 #### C2. Multi-Slab Batch Workflow
 
-OpenRebar РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ 25 СЌС‚Р°Р¶РµР№ в†’ AeroBIM РІР°Р»РёРґРёСЂСѓРµС‚ РІСЃРµ 25 IFC-РјРѕРґРµР»РµР№ РІ batch в†’ РµРґРёРЅС‹Р№ РѕС‚С‡С‘С‚ СЃ Р°РіСЂРµРіР°С†РёРµР№ РїРѕ СЌС‚Р°Р¶Р°Рј.
+OpenRebar обрабатывает 25 этажей → AeroBIM валидирует все 25 IFC-моделей в batch → единый отчёт с агрегацией по этажам.
 
 #### C3. Visual QA Dashboard
 
-AeroBIM frontend (React + web-ifc) РІРёР·СѓР°Р»РёР·РёСЂСѓРµС‚:
-- 3D РјРѕРґРµР»СЊ СЃ РїРѕРґСЃРІРµС‚РєРѕР№ РїСЂРѕР±Р»РµРјРЅРѕР№ Р°СЂРјР°С‚СѓСЂС‹
-- РќР°Р»РѕР¶РµРЅРёРµ Р·РѕРЅ OpenRebar РЅР° IFC РјРѕРґРµР»СЊ
-- Drill-down: issue в†’ zone в†’ rebar segment в†’ cutting plan
+AeroBIM frontend (React + web-ifc) визуализирует:
+- 3D модель с подсветкой проблемной арматуры
+- Наложение зон OpenRebar на IFC модель
+- Drill-down: issue → zone → rebar segment → cutting plan
 
 ---
 
-## 13. Р—Р°РєР»СЋС‡РµРЅРёРµ
+## 13. Заключение
 
 ### OpenRebar-Reinforcement
 
-> **OpenRebar вЂ” СЂРµРґРєРёР№ РїСЂРёРјРµСЂ РјР°С‚РµРјР°С‚РёС‡РµСЃРєРё РІРµСЂРёС„РёС†РёСЂРѕРІР°РЅРЅРѕРіРѕ BIM-Р°РІС‚РѕРјР°С‚РёР·Р°С‚РѕСЂР°.** РќРѕСЂРјР°С‚РёРІРЅС‹Р№ РґРІРёР¶РѕРє SP 63 СЂРµР°Р»РёР·РѕРІР°РЅ Р±РµР·СѓРїСЂРµС‡РЅРѕ, Р°Р»РіРѕСЂРёС‚Рј CG СЃС‚СЂСѓРєС‚СѓСЂРЅРѕ РєРѕСЂСЂРµРєС‚РµРЅ (СЃ С‡РµСЃС‚РЅРѕ Р·Р°РґРѕРєСѓРјРµРЅС‚РёСЂРѕРІР°РЅРЅС‹Рј СѓРїСЂРѕС‰РµРЅРёРµРј LP-С‡Р°СЃС‚Рё), Рё РІСЃСЏ СЃРёСЃС‚РµРјР° testable Р±РµР· Revit. РљСЂРѕСЃСЃ-СЃС‚РµРєРѕРІР°СЏ СЌРєСЃС‚СЂР°РєС†РёСЏ РёР· MicroPhoenix (TypeScript в†’ C#) РґРµРјРѕРЅСЃС‚СЂРёСЂСѓРµС‚, С‡С‚Рѕ Р°СЂС…РёС‚РµРєС‚СѓСЂРЅС‹Рµ РїСЂРёРЅС†РёРїС‹ **СЏР·С‹РєРѕРЅРµР·Р°РІРёСЃРёРјС‹**.
+> **OpenRebar — редкий пример математически верифицированного BIM-автоматизатора.** Нормативный движок SP 63 реализован безупречно, алгоритм CG структурно корректен (с честно задокументированным упрощением LP-части), и вся система testable без Revit. Кросс-стековая экстракция из MicroPhoenix (TypeScript → C#) демонстрирует, что архитектурные принципы **языконезависимы**.
 
-### РЎРІСЏР·РєР° AeroBIM Г— OpenRebar
+### Связка AeroBIM × OpenRebar
 
-> **Р”РІР° РїСЂРѕРµРєС‚Р° вЂ” РёР·РѕРјРѕСЂС„РЅС‹Рµ СЌРєСЃС‚СЂР°РєС‚С‹ РѕРґРЅРѕРіРѕ Р°СЂС…РёС‚РµРєС‚СѓСЂРЅРѕРіРѕ РіРµРЅРѕРјР° вЂ” СЃРѕР·РґР°СЋС‚ РІРѕР·РјРѕР¶РЅРѕСЃС‚СЊ РґР»СЏ СѓРЅРёРєР°Р»СЊРЅРѕРіРѕ РЅР° СЂС‹РЅРєРµ РїСЂРѕРґСѓРєС‚Р°:** Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ СЂР°Р·РјРµС‰РµРЅРёРµ Р°СЂРјР°С‚СѓСЂС‹ (OpenRebar) + РјСѓР»СЊС‚РёРјРѕРґР°Р»СЊРЅР°СЏ РІР°Р»РёРґР°С†РёСЏ (AeroBIM) + РєСЂРѕСЃСЃ-РґРѕРєСѓРјРµРЅС‚РЅР°СЏ РґРµС‚РµРєС†РёСЏ РїСЂРѕС‚РёРІРѕСЂРµС‡РёР№ (РјРµР¶РґСѓ РёР·РѕР»РёРЅРёСЏРјРё LIRA, Revit РјРѕРґРµР»СЊСЋ Рё РЅРѕСЂРјР°С‚РёРІР°РјРё SP 63). РќРё РѕРґРёРЅ РєРѕРјРјРµСЂС‡РµСЃРєРёР№ РёРЅСЃС‚СЂСѓРјРµРЅС‚ РЅРµ Р·Р°РєСЂС‹РІР°РµС‚ СЌС‚Сѓ С†РµРїРѕС‡РєСѓ С†РµР»РёРєРѕРј.
+> **Два проекта — изоморфные экстракты одного архитектурного генома — создают возможность для уникального на рынке продукта:** автоматическое размещение арматуры (OpenRebar) + мультимодальная валидация (AeroBIM) + кросс-документная детекция противоречий (между изолиниями LIRA, Revit моделью и нормативами SP 63). Ни один коммерческий инструмент не закрывает эту цепочку целиком.
 >
-> **РљР»СЋС‡РµРІРѕР№ enabler РёРЅС‚РµРіСЂР°С†РёРё** вЂ” IFC-СЌРєСЃРїРѕСЂС‚ РёР· OpenRebar + IDS reinforcement pack РІ AeroBIM. Р­С‚Рѕ РјРёРЅРёРјР°Р»СЊРЅС‹Р№ MVP, Р·Р°РїСѓСЃРєР°СЋС‰РёР№ feedback loop РјРµР¶РґСѓ placement Рё validation.
+> **Ключевой enabler интеграции** — IFC-экспорт из OpenRebar + IDS reinforcement pack в AeroBIM. Это минимальный MVP, запускающий feedback loop между placement и validation.
 
 ---
 
@@ -680,46 +680,46 @@ AeroBIM frontend (React + web-ifc) РІРёР·СѓР°Р»РёР·РёСЂСѓ�
 
 | Check | Result |
 |---|---|
-| `dotnet test OpenRebar.sln --no-restore` | вњ… 114/114 passed |
-| Runtime raw exception sweep in `OpenRebar.Application` / `OpenRebar.Infrastructure` | вњ… No raw `InvalidOperationException(...)` / `NotSupportedException(...)` paths remain |
-| Local GitHub remote configured | вљ пёЏ РќРµС‚, remote РµС‰С‘ РЅРµ Р·Р°РґР°РЅ |
-| Local `gitleaks` availability | вљ пёЏ РќРµС‚ РІ СЃСЂРµРґРµ, РёСЃРїРѕР»СЊР·РѕРІР°РЅ scoped content audit РІРјРµСЃС‚Рѕ history scan |
+| `dotnet test OpenRebar.sln --no-restore` | ✅ 114/114 passed |
+| Runtime raw exception sweep in `OpenRebar.Application` / `OpenRebar.Infrastructure` | ✅ No raw `InvalidOperationException(...)` / `NotSupportedException(...)` paths remain |
+| Local GitHub remote configured | ⚠️ Нет, remote ещё не задан |
+| Local `gitleaks` availability | ⚠️ Нет в среде, использован scoped content audit вместо history scan |
 
 ### 14.2. Publication Findings Before Remediation
 
-РќР° РјРѕРјРµРЅС‚ РЅР°С‡Р°Р»Р° СЌС‚РѕРіРѕ wave СЂРµРїРѕР·РёС‚РѕСЂРёР№ Р±С‹Р» С‚РµС…РЅРёС‡РµСЃРєРё Р·СЂРµР»С‹Рј РїРѕ РєРѕРґСѓ, РЅРѕ РµС‰С‘ РЅРµ
-РґРѕС‚СЏРіРёРІР°Р» РґРѕ Standard-tier public GitHub readiness:
+На момент начала этого wave репозиторий был технически зрелым по коду, но ещё не
+дотягивал до Standard-tier public GitHub readiness:
 
-1. РћС‚СЃСѓС‚СЃС‚РІРѕРІР°Р»Рё `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CODEOWNERS`
-2. РќРµ Р±С‹Р»Рѕ `dependabot.yml`
-3. РќРµ Р±С‹Р»Рѕ dependency-review Рё CodeQL workflow surfaces
-4. РћСЃРЅРѕРІРЅРѕР№ `ci.yml` РёСЃРїРѕР»СЊР·РѕРІР°Р» moving major tags GitHub Actions РІРјРµСЃС‚Рѕ immutable SHA pinning
-5. GitHub-side controls (private vulnerability reporting, push protection, secret scanning, rulesets) РЅРµ РјРѕРіР»Рё Р±С‹С‚СЊ РІРєР»СЋС‡РµРЅС‹ Р»РѕРєР°Р»СЊРЅРѕ, С‚Р°Рє РєР°Рє remote РµС‰С‘ РЅРµ РЅР°СЃС‚СЂРѕРµРЅ
+1. Отсутствовали `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CODEOWNERS`
+2. Не было `dependabot.yml`
+3. Не было dependency-review и CodeQL workflow surfaces
+4. Основной `ci.yml` использовал moving major tags GitHub Actions вместо immutable SHA pinning
+5. GitHub-side controls (private vulnerability reporting, push protection, secret scanning, rulesets) не могли быть включены локально, так как remote ещё не настроен
 
 ### 14.3. Remediation Applied In This Wave
 
-- Р”РѕР±Р°РІР»РµРЅС‹ community health files Рё governance entrypoints
-- Р”РѕР±Р°РІР»РµРЅС‹ issue forms Рё PR template
-- CI workflow РїРµСЂРµРІРµРґС‘РЅ РЅР° SHA-pinned actions + minimal `permissions`
-- Р”РѕР±Р°РІР»РµРЅС‹ `dependency-review.yml` Рё `codeql.yml`
-- Р”РѕР±Р°РІР»РµРЅ `dependabot.yml` РґР»СЏ NuGet, pip Рё GitHub Actions
-- README РѕР±РЅРѕРІР»С‘РЅ РґРѕ СЏРІРЅРѕРіРѕ public-launch baseline СЃ СЃСЃС‹Р»РєР°РјРё РЅР° security / contribution / audit surfaces
+- Добавлены community health files и governance entrypoints
+- Добавлены issue forms и PR template
+- CI workflow переведён на SHA-pinned actions + minimal `permissions`
+- Добавлены `dependency-review.yml` и `codeql.yml`
+- Добавлен `dependabot.yml` для NuGet, pip и GitHub Actions
+- README обновлён до явного public-launch baseline с ссылками на security / contribution / audit surfaces
 
 ### 14.4. Residual Manual Steps After First Push
 
-Р­С‚Рё С€Р°РіРё РЅРµР»СЊР·СЏ Р·Р°РІРµСЂС€РёС‚СЊ РёР· Р»РѕРєР°Р»СЊРЅРѕРіРѕ СЂР°Р±РѕС‡РµРіРѕ РґРµСЂРµРІР° Р±РµР· СЂРµР°Р»СЊРЅРѕРіРѕ GitHub remote
-Рё repository admin access:
+Эти шаги нельзя завершить из локального рабочего дерева без реального GitHub remote
+и repository admin access:
 
-1. РџРѕРґРєР»СЋС‡РёС‚СЊ remote Рё РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ СЂРµРїРѕР·РёС‚РѕСЂРёР№
-2. Р’РєР»СЋС‡РёС‚СЊ private vulnerability reporting
-3. Р’РєР»СЋС‡РёС‚СЊ secret scanning Рё push protection
-4. РџСЂРѕРІРµСЂРёС‚СЊ РёР»Рё РІРєР»СЋС‡РёС‚СЊ CodeQL default setup РІ GitHub UI, РµСЃР»Рё Р±СѓРґРµС‚ РІС‹Р±СЂР°РЅ GitHub-managed РїСѓС‚СЊ РІРјРµСЃС‚Рѕ workflow-only СѓРїСЂР°РІР»РµРЅРёСЏ
-5. РќР°СЃС‚СЂРѕРёС‚СЊ rulesets / branch protection Рё required checks
+1. Подключить remote и опубликовать репозиторий
+2. Включить private vulnerability reporting
+3. Включить secret scanning и push protection
+4. Проверить или включить CodeQL default setup в GitHub UI, если будет выбран GitHub-managed путь вместо workflow-only управления
+5. Настроить rulesets / branch protection и required checks
 
 ### 14.5. Updated Audit Verdict
 
-> **РС‚РѕРі РЅР° 2026-04-12:** OpenRebar СѓР¶Рµ РІС‹РіР»СЏРґРёС‚ РєР°Рє Р·СЂРµР»С‹Р№ standalone engineering artifact,
-> РіРѕС‚РѕРІС‹Р№ Рє РїСѓР±Р»РёС‡РЅРѕРјСѓ GitHub baseline РїРѕСЃР»Рµ РѕРґРЅРѕРіРѕ РїРѕСЃР»РµРґРЅРµРіРѕ operational step вЂ”
-> РїРѕРґРєР»СЋС‡РµРЅРёСЏ remote Рё РІРєР»СЋС‡РµРЅРёСЏ GitHub-side security controls. РўРѕ РµСЃС‚СЊ С‚РµС…РЅРёС‡РµСЃРєР°СЏ
-> РіРѕС‚РѕРІРЅРѕСЃС‚СЊ СЂРµРїРѕР·РёС‚РѕСЂРёСЏ РІС‹СЃРѕРєР°СЏ, Р° РѕСЃС‚Р°С‚РѕС‡РЅС‹Р№ СЂРёСЃРє С‚РµРїРµСЂСЊ РІ РѕСЃРЅРѕРІРЅРѕРј РЅРµ РєРѕРґРѕРІС‹Р№,
-> Р° РѕРїРµСЂР°С†РёРѕРЅРЅС‹Р№.
+> **Итог на 2026-04-12:** OpenRebar уже выглядит как зрелый standalone engineering artifact,
+> готовый к публичному GitHub baseline после одного последнего operational step —
+> подключения remote и включения GitHub-side security controls. То есть техническая
+> готовность репозитория высокая, а остаточный риск теперь в основном не кодовый,
+> а операционный.

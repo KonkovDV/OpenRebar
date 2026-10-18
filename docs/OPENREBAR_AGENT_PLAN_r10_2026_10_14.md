@@ -28,7 +28,7 @@
 - Revit API только в `src/OpenRebar.RevitPlugin/` под `#if REVIT_SDK`. Две сборки: `RevitNet8`, `RevitNet10` по версии рантайма.
 - DI собирается в `ServiceCollectionExtensions` и `Bootstrap.cs`.
 - Новое поле в `*.result.json` → новое свойство в `contracts/aerobim-reinforcement-report.schema.json` (там `additionalProperties: false`), новый верхний ключ ещё и в `ExpectedTopLevelProperties` (`ReportSchemaComplianceTests`), и `SchemaVersion` в `ReinforcementReport.cs`: `2.0.0` → `2.1.0` для добавления поля, `3.0.0` для удаления или переименования.
-- Статус проверки: `Passed`, `Failed`, `NotEvaluated`. Трещины и прогиб — `NotEvaluated`, пока вход только As,req.
+- Статус проверки: `Passed`, `Failed`, `NotEvaluated`. Трещины и прогиб — `NotEvaluated`, пока вход только Aₛ,req.
 - Жёсткая коллизия сама по себе не валит верификацию; ворота — проверка площади.
 - Зачёт крюка 0. Хвост крюка по умолчанию 0 (`hooks.tailDiameters`, `source: default`). П-образные скобы не генерировать.
 - Rs: A400 340, B500 415, A500 435. Rsc A400 340 + `NotVerified` (Q-15). Rbt B55/B60 не трогать (RT-3).
