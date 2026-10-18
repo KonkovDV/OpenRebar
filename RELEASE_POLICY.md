@@ -36,7 +36,7 @@ Include:
 - A release tag must point to a commit reachable from `main`. The workflow enforces this again before building.
 - Configure the `release` GitHub Environment with a required human reviewer and no broad deployment-branch bypass.
 - The build job restores once, builds once, runs tests, and publishes with `--no-build --no-restore`. The privileged publication job only downloads that immutable workflow artifact.
-- GitHub Releases contain the CLI ZIP, SPDX SBOM, and `SHA256SUMS`. Provenance attestation covers exactly those final files.
+- GitHub Releases contain the CLI ZIP, SPDX SBOM, and `SHA256SUMS`. Provenance attestation covers exactly those final files. A separate SBOM attestation names the ZIP as its subject and the SPDX file as the document for that archive.
 - Do not publish directly from a workstation or recreate binaries after tests.
 
 ## Target frameworks
