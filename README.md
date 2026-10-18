@@ -16,7 +16,7 @@ The libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in
 
 ## Status
 
-Counted regression, the five commands under [Quick start](#quick-start): **458/458 tests passing**.
+Counted regression, the five commands under [Quick start](#quick-start): **460/460 tests passing**.
 
 | Surface | Now |
 |---|---|
@@ -143,6 +143,7 @@ Column generation is the production cutter. It records when the dual bound is `P
 
 - One drawing is one layer. A project file can name up to four drawings.
 - A Supported or Continuous edge is named on the bounding box. On any other outline the run stops with `edgesRequireRectangularSlab` (exit 3) and does not invent that box. Free edges of an oblique slab stay on the outline. An oblique bar is stepped outward by 10 mm, then clipped so its end stays inside the contour.
+- `effectiveDepthByLayer` is the distance from the far face to that layer's axis, and only a layer with bars is listed. `effectiveDepthMm` stays the figure for the largest placed bar.
 - Anchorage stops at the working area. A hook is the centerline arc and has no straight tail until a profile sets `hooks.tailDiameters`. Couplers are not modeled. Openings are counted and are still inside the checked area.
 - Column generation packs one stock length at a time.
 - The schedule is CSV. XLSX is not written.

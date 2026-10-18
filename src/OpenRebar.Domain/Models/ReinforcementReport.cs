@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Domain.Models;
@@ -243,6 +244,14 @@ public sealed record SlabExecutionReport
   public required double ThicknessMm { get; init; }
   public required double CoverMm { get; init; }
   public required double EffectiveDepthMm { get; init; }
+
+  /// <summary>
+  /// Distance from the far face to the axis of each layer that has bars, mm.
+  /// Absent when no bar was placed.
+  /// </summary>
+  [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+  public IReadOnlyDictionary<string, double>? EffectiveDepthByLayer { get; init; }
+
   public required double AreaMm2 { get; init; }
   public required int OpeningCount { get; init; }
   public required BoundingBoxExecutionReport BoundingBox { get; init; }
