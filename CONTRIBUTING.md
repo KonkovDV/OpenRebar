@@ -13,36 +13,30 @@
 
 ### .NET
 
-```bash
-dotnet restore OpenRebar.sln
-dotnet build OpenRebar.sln
-dotnet test OpenRebar.sln
-```
+The restore, build, format, and five test commands are in the root README quick start. `dotnet test OpenRebar.sln` is not that suite: the CLI tests are .NET 10 only.
 
 ### Python ML module
 
 ```bash
 cd ml
-python -m pip install -r requirements.txt
-pytest tests -q
+python -m pip install --require-hashes -r requirements.locked.txt
+python -m pytest tests -q
 ```
 
 ## What To Validate Before Opening A PR
 
-1. `dotnet build OpenRebar.sln`
-2. `dotnet test OpenRebar.sln`
-3. `dotnet format OpenRebar.sln --verify-no-changes --no-restore`
-4. If you touched `ml/`, run `pytest tests -q` from `ml/`
-5. If you changed ML dependency or workflow surfaces, run the relevant steps from [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
-6. If you changed docs or governance surfaces, re-read [docs/README.md](docs/README.md), [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md), and the touched public-facing docs for consistency and GitHub safety
-7. Do not include local logs, generated temp files, ML checkpoints, or Revit SDK binaries
+1. The restore, build, format, and five test commands in the root README quick start
+2. `python tools/ci/verify_readme_regression_claim.py` after those tests, if the README count might have moved
+3. If you touched `ml/`, run `pytest tests -q` from `ml/`
+4. If you changed ML dependency or workflow surfaces, run the relevant steps from [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
+5. If you changed docs, re-read the root README and the pages you touched
+6. Do not include local logs, generated temp files, ML checkpoints, or Revit SDK binaries
 
 ## Documentation Contributions
 
-- Treat `README.md` and `README.ru.md` as synchronized public claim surfaces.
-- Keep current-state claims in canonical docs; keep historical notes in dated audit/plan files.
-- When test counts or CI behavior change, update command examples and claim wording in the same PR.
-- Prefer links to canonical docs over duplicated protocol blocks.
+- Keep `README.md` and `README.ru.md` saying the same thing.
+- When the test count or a CI command changes, update both pages in the same pull request.
+- Link to a page instead of pasting it twice.
 
 ## Architecture Guardrails
 

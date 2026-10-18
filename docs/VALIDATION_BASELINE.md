@@ -27,37 +27,19 @@ The same library and Application tests run again on `net10.0` and write `tfm-net
 
 Run these commands from the repository root unless noted otherwise:
 
-```bash
-dotnet build OpenRebar.sln --configuration Release
-dotnet test OpenRebar.sln --configuration Release
+The counted commands are the five `dotnet test` lines in the root README quick start. `dotnet test OpenRebar.sln` is not that suite: the CLI tests are .NET 10 only, and a solution-wide run does not write the `test-results.trx` files the count script sums.
 
+```bash
 # Optional benchmark summary gate (same thresholds as CI)
 $env:OPENREBAR_BENCH_SUMMARY_PATH="artifacts/benchmark/column-generation-summary.json"
 dotnet test tests/OpenRebar.Infrastructure.Tests/OpenRebar.Infrastructure.Tests.csproj --configuration Release --filter FullyQualifiedName~ColumnGenerationBenchmarkPackTests
 ```
 
-Expected interpretation:
-
-- `dotnet build` validates compile-time integrity for the .NET surface.
-- `dotnet test` validates the current executable regression baseline.
-
 ## CI-Parity Fast Lane
 
 Use this command sequence when you want local execution to mirror the CI `.NET` lane as closely as possible:
 
-```bash
-dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true
-dotnet build OpenRebar.sln --no-restore --configuration Release -p:EnableWindowsTargeting=true
-dotnet format OpenRebar.sln --verify-no-changes --no-restore
-dotnet test OpenRebar.sln --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
-python tools/ci/verify_readme_regression_claim.py
-```
-
-This lane catches the most common claim-surface drift classes before push:
-
-- formatting drift,
-- regression-count drift between README and TRX,
-- stale build/test assumptions.
+Restore, build, format, and the five test commands are in the root README quick start. After those tests, `python tools/ci/verify_readme_regression_claim.py` checks that both READMEs name the same passing total as the `test-results.trx` files.
 
 ## ML Baseline
 
@@ -88,12 +70,13 @@ Run from `ml/`:
 
 ```bash
 python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
-python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
+python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
 ```
 
 Why this exists:
 
-- The ML lane uses CPU PyTorch wheels (`torch==2.11.0+cpu`). CUDA packages are not in the lock.
+- The ML lane uses CPU PyTorch wheels (`torch==2.13.0+cpu`). CUDA packages are not in the lock.
+- numpy stays on 1.26. Those wheels are tagged `manylinux_2_17`, so the refresh names that platform together with `manylinux_2_28` and `manylinux2014`.
 - A Windows-only local refresh can miss Linux wheel hashes.
 - CI installs the committed lock with `--require-hashes` on Python 3.11. It does not rewrite the lock.
 

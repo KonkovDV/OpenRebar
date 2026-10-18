@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document describes the current architectural model of OpenRebar as an implemented system, not as a historical plan or an audit snapshot.
+This page describes the program as it is built.
 
 For executable validation expectations, use [VALIDATION_BASELINE.md](VALIDATION_BASELINE.md).
 
@@ -10,15 +10,7 @@ Dated April 2026 audits live in [archive/](archive/) and are not the source of t
 
 ## Overview
 
-OpenRebar-Reinforcement follows Clean Architecture with strict dependency inversion. The core insight: **domain logic (SP 63 rules, geometry processing, optimization algorithms) must be testable without Revit or any I/O**.
-
-This repository is a standalone project built from an extraction of proven MicroPhoenix architectural patterns:
-
-- domain-owned ports and business rules
-- application-layer orchestration without framework leakage
-- infrastructure adapters behind stable contracts
-- composition root at the outermost executable boundary
-- external AI/ML runtime kept out of the domain and .NET core
+OpenRebar lays out slab reinforcement. The SP 63 rules, the geometry, and the cutting run without Revit and without reading a file. Domain owns the ports. Application runs the pipeline. Infrastructure implements the ports. The CLI and the Revit add-in wire them. A Python process, when one is used, stays outside Domain.
 
 ## Layer Dependency Graph
 
@@ -55,11 +47,9 @@ This allows:
 - Swapping DXF parser for a different implementation
 - Running the full pipeline outside Revit
 
-### 2. Separate ML Module (Python)
+### 2. PNG and the optional Python service
 
-Image segmentation uses PyTorch U-Net which is impractical to host in .NET. The Python service runs as a standalone FastAPI server on port 8101. It now uses FastAPI lifespan-based startup/shutdown wiring, matching current official guidance. The C# `PngIsolineParser` can operate in two modes:
-1. **With ML**: Calls the Python service for neural segmentation
-2. **Without ML**: Falls back to color quantization + connected components (less accurate but works offline)
+`PngIsolineParser` matches each pixel to a legend colour by exact RGB, then groups the matches into connected components. The Python service is FastAPI and is used only when a caller passes a URL. The model manifest has no checkpoint, so that path is not a trained segmenter. The client allows loopback and the named host, and it refuses a redirect to another host.
 
 ### 3. Revit Placer as Domain Port
 
@@ -67,16 +57,12 @@ Image segmentation uses PyTorch U-Net which is impractical to host in .NET. The 
 
 ### 4. Optimization as Bin-Packing / Cutting Stock
 
-Rebar cutting is a **1D Cutting Stock Problem** (CSP). The repository now contains two optimizers behind `IRebarOptimizer`:
+Rebar cutting is a one-dimensional cutting-stock problem. Two optimizers sit behind `IRebarOptimizer`:
 
-1. **ColumnGenerationOptimizer** as the default implementation for production-oriented runs
-2. **BestFitDecreasingOptimizer** as a simple heuristic fallback and baseline
+1. `ColumnGenerationOptimizer` is the one a run uses. It is an LP relaxation, pricing, and rounding. The report records the optimizer id, the LP strategy, the integerization, and whether a fallback was used. It is not a complete branch-and-price solver.
+2. `BestFitDecreasingOptimizer` is the floor beside it. Each bar goes into the open stock piece with the smallest remainder. It is constructed directly and is not registered in dependency injection.
 
-This keeps the domain independent from any specific OR solver while allowing the standalone project to evolve toward exact or branch-and-price implementations later.
-
-Important implementation note: the current `ColumnGenerationOptimizer` is an LP-relaxation / pricing / rounding pipeline with an FFD non-regression floor. It should be presented as a strong production-oriented optimizer, not as a mathematically complete branch-and-price solver. The canonical report now persists optimizer provenance (LP strategy, pricing strategy, integerization, fallback usage) so that this distinction is machine-readable.
-
-For tiny instances, the optimizer now uses an exact discrete search path instead of forcing every case through the CG approximation stack. This keeps the production baseline honest while improving correctness on small mixed-stock batches.
+A small instance uses an exact discrete search.
 
 ### 5. Supplier Catalogs
 
@@ -97,7 +83,7 @@ All SP 63 / GOST calculations are in `OpenRebar.Domain.Rules/`:
 
 These are pure static functions with no I/O — fully testable with unit tests.
 
-Normative table values are now sourced from a versioned embedded resource (`ru.sp63.2018.tables.v1`) via a domain-level registry. This keeps table revisions explicit and gives the report a real table-set identifier rather than a placeholder string.
+Normative table values come from the embedded resource `ru.sp63.2018.tables.v3` through a domain registry. The report records that version.
 
 The polygon decomposition remains heuristic for arbitrary shapes, but it is no longer silent. Orthogonal thin and strongly concave zones now use an exact strip-based rectangle cover before the grid fallback is considered. Complex zones carry decomposition metrics (coverage ratio, over-coverage ratio, rectangle count, cell size, shortcut usage), and the canonical report aggregates those metrics into analysis provenance.
 

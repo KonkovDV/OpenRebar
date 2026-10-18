@@ -8,84 +8,45 @@
 
 English | [Русский](README.ru.md)
 
-OpenRebar turns a required-area map of a flat reinforced-concrete slab into bars, anchorage, laps, a schedule, a cutting plan, and an IFC file. The map arrives as a DXF isoline drawing, a calibrated PNG, or a numeric field. The core is deterministic. A language model does not place bars and does not set a pass/fail flag.
+OpenRebar lays out reinforcement for a flat reinforced-concrete slab from a map of required area. The map is a DXF isoline drawing, a calibrated PNG, or a numeric field. The run writes bars, anchorage, laps, a schedule, a cutting plan, and an IFC file.
 
-The libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is two builds, chosen by the process runtime: `RevitNet8` while Revit is still on .NET 8, and `RevitNet10` on .NET 10. Engineering rules are tested without Revit.
+Three places in the chain.
 
-**What this is not.** It is not a finite-element solver, not a trained segmenter, and not a crack-width or deflection calculator. It does not place bent bars in Revit. It does not claim a steel saving. The optional `ml/` service ships with an empty model manifest and stays offline.
+| Place | Role |
+|---|---|
+| Calculation program | Writes the required area |
+| **OpenRebar** | Lays out the bars and checks that area |
+| [AeroBIM](https://github.com/KonkovDV/AeroBIM) | Reads a documentation pack and sets its own pack flag |
+
+Other repositories on the same GitHub account are other products.
+
+The same input produces the same report.
+
+Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is two builds, chosen by the process runtime: `RevitNet8` while Revit is on .NET 8, and `RevitNet10` on .NET 10. The engineering rules are tested without Revit.
 
 ## Status
 
 Counted regression, the five commands under [Quick start](#quick-start): **467/467 tests passing**.
 
-| Surface | Now |
+| | |
 |---|---|
-| Report | `schemaVersion` 2.1.0, contract `OpenRebar.reinforcement.report.v2` |
+| Report | `schemaVersion` 2.1.0, contract `OpenRebar.reinforcement.report.v2`. Unknown fields are rejected |
 | Norms | SP 63.13330.2018, profile `ru.sp63.2018`, tables `ru.sp63.2018.tables.v3` |
-| Area check | Cell grid. `Passed` only at zero deficit. A hard clash does not replace that gate |
-| `checks` | `providedArea` follows the area check. Crack width and deflection stay `NotEvaluated` |
-| Cutting | Column generation (HiGHS) with a recorded provenance. Waste percent and `estimatedCost` (null when the catalogue has no price) |
-| IFC | IFC4. One bar type per diameter and steel class, a swept disk of radius d/2, a placement on the axis. CI checks those entity names |
-| Revit | Straight bars only. A hook, L, or U is an error, not a straight line |
+| Area check | Cell grid. `Passed` only when the deficit is zero. A hard clash is recorded beside that gate |
+| `checks` | `providedArea` follows the area check. Crack width and deflection stay `NotEvaluated` when the input is only required area |
+| Cutting | Column generation (HiGHS). `wastePercent` and `estimatedCost` (null when a used stock length has no price) |
+| IFC | IFC4. One bar type per diameter and steel class, a swept disk of radius d/2, a placement on the axis |
+| Revit | Straight bars. A hook, an L, or a U is an error |
 
-The worked example `examples/dxf/simple-slab` exits 2. Edges are free, the required area runs to the edge, and a hook is not credited. That failure is the regression, not a bug in the snapshot.
+`examples/dxf/simple-slab` exits 2. The edges are free, the required area runs to the edge, and a hook is not credited. That failure is the regression.
 
-## Stage
+The examples are fixtures for the tests. A design-office pilot and a certificate are still ahead of this page. If this page and the tests disagree, the tests win. A public number follows [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
-The examples are synthetic fixtures. They exercise the pipeline and the regression. They are not a measured pilot in a design office, and they are not a certificate.
-
-Shown on those fixtures:
-
-- a free-edge slab whose area check fails, and a supported slab whose area check passes
-- a report that rejects unknown fields
-- an IFC file whose bar type, body, and placement the CI check can see
-
-Not shown here:
-
-- a profile signed by an organisation, or a scan of every cited clause
-- a trained PNG segmenter
-- bent bars placed in a live Revit model
-- an IFC file opened again by another program
-- a saving of steel or money
-
-If this page and the tests disagree, the tests win. The rule for publishing a number is [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
-
-## Where it sits
-
-| Role | Program | Boundary |
-|---|---|---|
-| Required area | A calculation program writes As,req | OpenRebar does not solve the slab |
-| Layout and area check | **OpenRebar** | Does not accept the documentation pack |
-| Pack check | [AeroBIM](https://github.com/KonkovDV/AeroBIM) | Reads a model, a sheet, a schedule, and text. Sets its own pack flag. Does not design the bars |
-
-Scheduling engines, marketplaces, and research notes under the same GitHub account are other products.
-
-## Pipeline
-
-1. Read the isoline file. A DXF entity that is not a zone is counted, not dropped. A PNG is measured from its header before decode.
-2. Classify zones and record decomposition coverage.
-3. Place bars. Spacing on a face is measured on the combined layer. Anchorage and lap lengths come from the versioned tables. Hook credit is 0. The default hook tail is 0.
-4. Cut stock. A bar that cannot be bought or lapped is a critical error.
-5. Check provided area against required area and write `checks`.
-6. Write `*.result.json`, `*.schedule.csv`, `*.aerobim.json`, and `*.reinforcement.ifc`.
-
-## SOTA 2026, stated as a gap
-
-The comparison lives in [docs/SOTA_2026.md](docs/SOTA_2026.md). The short form:
-
-| Topic | In this repository | Not in this repository |
-|---|---|---|
-| Area certificate | Per-cell margin and a deficit polygon | A claim that the layout is optimal |
-| Provenance | Profile id, table version, optimizer id, parameter source | A norm typed from memory |
-| Cutting | Column generation plus a recorded waste and purchase cost | A measured saving in percent or money |
-| IFC | IFC4 bar type, swept disk, placement, IDS entity names in CI | IFC 4.3 lap-splice encoding, a viewer round-trip |
-| Image segmentation | Exact RGB match. The U-Net path has no checkpoint | SAM2, DINOv2, a published mIoU |
-| Layout search | Zone rules and a spacing check | GNN, reinforcement learning, a physics-informed net |
-| Serviceability | `NotEvaluated` for crack width and deflection | A PINN or a code check of those limits |
+Where the 2026 literature is ahead of this repository is written in [docs/SOTA_2026.md](docs/SOTA_2026.md).
 
 ## Quick start
 
-Requirements: .NET SDK 8 and 10, Python 3.11 for the CI scripts and the optional ML lane.
+.NET SDK 8 and 10. Python 3.11 for the CI scripts and the optional ML lane.
 
 ```bash
 dotnet restore OpenRebar.sln --locked-mode -p:EnableWindowsTargeting=true -p:Platform=x64
@@ -105,53 +66,55 @@ One slab:
 dotnet run --project src/OpenRebar.Cli --configuration Release -- examples/dxf/simple-slab/input.dxf --thickness 220 --cover 30 --slab-width 6000 --slab-height 4000 --layer BottomX
 ```
 
-Exit 2 means the area check failed and the files were still written. Exit 1 is an input or IO failure. Exit 3 is a critical detailing error.
+Exit 2: the area check failed and the files were still written. Exit 1: input or IO. Exit 3: a critical detailing error, such as a bar that cannot be bought or lapped, or a supported edge on a non-rectangular outline (`edgesRequireRectangularSlab`).
 
-Useful flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--thickness`, `--cover`. `--ml-url` talks only to that host. Loopback is allowed without an extra name. A redirect to another host is refused.
+Flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--thickness`, `--cover`. `--ml-url` talks to that host. Loopback is allowed on its own. A redirect to another host is refused.
 
-## Outputs
+## What you get
 
 | File | Role |
 |---|---|
-| `*.result.json` | Canonical report. Unknown properties are rejected |
-| `*.schedule.csv` | Positions and mass. Spreadsheet-safe quoting |
-| `*.aerobim.json` | Short summary for a downstream checker |
+| `*.result.json` | The report |
+| `*.schedule.csv` | Positions and mass |
+| `*.aerobim.json` | A short summary for a downstream checker |
 | `*.reinforcement.ifc` | IFC4 bars |
 
-The report keeps the normative profile, the table version, optimizer provenance, kerf-aware `wastePercent`, and `estimatedCost`. A new top-level field requires a schema bump. `checks[].status` is `Passed`, `Failed`, or `NotEvaluated`.
+On simple-slab, Ø20 and 30 mm cover, `effectiveDepthMm` and `effectiveDepthByLayer.BottomX` are both 180. That is `220 − 30 − 20/2`: thickness, minus cover, minus half the bar. A layer with no bars is left out of the map. `estimatedCost` is null because the example catalogue has no price.
 
-## Layout
+The report records the profile, the table version, and the optimizer. `checks[].status` is `Passed`, `Failed`, or `NotEvaluated`.
+
+## How it is built
 
 ```
 Domain ← Application ← Infrastructure ← CLI and Revit plugin
 ```
 
-Domain has no NuGet packages. NetTopologySuite, HiGHS, xBIM, and ImageSharp stay in Infrastructure behind ports in `src/OpenRebar.Domain/Ports/`. The Revit API is referenced only in `src/OpenRebar.RevitPlugin/` under `#if REVIT_SDK`.
+Domain has no NuGet packages. NetTopologySuite, HiGHS, xBIM, and ImageSharp stay in Infrastructure, behind ports in `src/OpenRebar.Domain/Ports/`. The Revit API is referenced only in `src/OpenRebar.RevitPlugin/` under `#if REVIT_SDK`.
 
 | Port | Role |
 |---|---|
 | `IIsolineParser` | DXF and PNG zones |
 | `IReinforcementCalculator` | Bars in a zone |
-| `IRebarOptimizer` | 1D cutting stock |
+| `IRebarOptimizer` | 1D cutting |
 | `IIfcExporter` | IFC4 |
 | `IRevitPlacer` | Straight bars in a live document |
-| `IImageSegmentationService` | Optional HTTP bridge. Offline. No hosted model |
+| `IImageSegmentationService` | Optional local HTTP bridge. No hosted model |
 
-Column generation is the production cutter. It records when the dual bound is `Proven`. The floor is `BestFitDecreasingOptimizer`: each bar goes into the open stock piece with the smallest remainder. Neither one is a claim of minimum waste on a real project. A diagnostic stack is stored as `stackTraceSha256`. The text stays in the log.
+The cutter used in a run is column generation. It records when the dual bound is `Proven`. Beside it sits `BestFitDecreasingOptimizer`: each bar goes into the open stock piece with the smallest remainder. A diagnostic stack is stored as `stackTraceSha256`. The text stays in the log.
 
-## Known limits
+## Limits
 
-- One drawing is one layer. A project file can name up to four drawings.
-- A Supported or Continuous edge is named on the bounding box. On any other outline the run stops with `edgesRequireRectangularSlab` (exit 3) and does not invent that box. Free edges of an oblique slab stay on the outline. An oblique bar is stepped outward by 10 mm, then clipped so its end stays inside the contour.
-- `effectiveDepthByLayer` is the distance from the far face to that layer's axis, and only a layer with bars is listed. `effectiveDepthMm` stays the figure for the largest placed bar.
-- The later piece of a lap is drawn one diameter off the design axis: beside it when `laps.representation` is `inPlane`, above it when `stacked`. An omitted profile keeps `inPlane`.
-- Anchorage stops at the working area. A hook is the centerline arc and has no straight tail until a profile sets `hooks.tailDiameters`. Couplers are not modeled. Openings are counted and are still inside the checked area.
-- Column generation packs one stock length at a time.
-- The schedule is CSV. XLSX is not written.
-- IFC is IFC4. It is not an IFC 4.3 splice model, and it has not been round-tripped through a Revit importer in this repository.
-- Revit placement of a hook, L, or U is refused. The schedule and the IFC remain the record.
-- A PNG needs calibration (`--px-per-mm` and an origin). Frames above 25 million pixels are rejected before decode.
-- `examples/dxf/simple-slab` at Ø20 and 30 mm cover: `edgeDevelopmentAreaM2` 6.12, `realDeficitAreaM2` 0.99, `underReinforcedAreaM2` 7.11.
+One drawing is one layer. A project file can name up to four drawings.
+
+A `Supported` or `Continuous` edge is a side of the bounding box. On any other outline the run stops with `edgesRequireRectangularSlab` and exit 3. Free edges of an oblique slab stay on the outline. An oblique bar is stepped outward by 10 mm and then clipped, so the end stays inside the contour.
+
+The later piece of a lap is drawn one diameter off the design axis: beside it when `laps.representation` is `inPlane`, above it when `stacked`. A profile that omits the field keeps `inPlane`. Anchorage stops at the working area. A hook is the centerline arc. The straight tail stays 0 until a profile sets `hooks.tailDiameters`. Couplers are not modeled.
+
+The schedule is CSV. IFC here is IFC4: bar type, swept disk, placement. An IFC 4.3 splice, and a round-trip through another program, are still ahead. Revit accepts a straight bar. A hook, an L, or a U is refused. The schedule and the IFC remain the record.
+
+A PNG needs `--px-per-mm` and an origin. A frame above 25 million pixels is rejected from the header, before decode.
+
+On simple-slab the area figures are `edgeDevelopmentAreaM2` 6.12, `realDeficitAreaM2` 0.99, `underReinforcedAreaM2` 7.11.
 
 ## Examples
 
@@ -172,7 +135,7 @@ python -m pytest tests -q
 python scripts/validate_model_manifest.py models/MANIFEST.json
 ```
 
-CI installs that lock with hashes on Python 3.11. There is no call to a hosted model. An empty manifest means the service has no checkpoint to run.
+CI installs that lock with hashes on Python 3.11. The manifest is empty: there is no checkpoint to run, and there is no call to a hosted model. Without a checkpoint, a PNG is read by exact color match.
 
 ## Revit
 
@@ -180,19 +143,16 @@ Copy `addin/RevitNet8` next to the `net8.0-windows` build, or `addin/RevitNet10`
 
 ## Supply chain
 
-- NuGet restore is locked.
-- The ML lane installs `ml/requirements.locked.txt` with hashes and does not call a hosted model.
-- Scorecard runs on `main`. A release builds an SBOM, attests the published files, and attests that SBOM against the CLI archive.
-- ImageSharp stays on 3.1.12. Version 4 needs a license key. Five advisories on that line are accepted because that line has no patch. Any other high finding still fails the audit.
+NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with hashes. Scorecard runs on `main`. A release builds an SBOM, attests the published files, and attests that SBOM against the CLI archive. ImageSharp stays on 3.1.12: version 4 needs a license key, and the five advisories on 3.1.12 have no patch on that line. Any other high finding still fails the audit.
 
 ## Documents
 
 - [docs/README.md](docs/README.md) — map
 - [docs/architecture.md](docs/architecture.md)
 - [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — clause, code, test
-- [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md) — how a public number is earned
-- [docs/SOTA_2026.md](docs/SOTA_2026.md) — gap list
-- [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) — current queue
+- [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
+- [docs/SOTA_2026.md](docs/SOTA_2026.md)
+- [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) — work queue
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
 
 April 2026 audits under `docs/archive/` are history.
