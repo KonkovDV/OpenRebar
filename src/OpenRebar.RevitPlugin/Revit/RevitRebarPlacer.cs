@@ -119,9 +119,11 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                         coverTopMm,
                         outerDiameter,
                         innerDiameter);
+                    var drawn = LapPlacement.ForDrawing(segment, settings.LapRepresentation);
+                    axisMm += LapPlacement.VerticalMm(segment, settings.LapRepresentation);
                     double tailMm = settings.HookTailDiameters * segment.DiameterMm;
                     if (!HookCenterline.TryBuild(
-                            segment,
+                            drawn,
                             axisMm,
                             tailMm,
                             bendUp: zone.Layer != RebarLayer.Top,

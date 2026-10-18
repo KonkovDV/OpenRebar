@@ -38,7 +38,9 @@
       "required": ["jointRatioMax", "couplers"],
       "properties": {
         "jointRatioMax": { "type": "number", "minimum": 0, "maximum": 1 },
-        "couplers": { "type": "boolean" }
+        "couplers": { "type": "boolean" },
+        "representation": { "type": "string", "enum": ["inPlane", "stacked"] },
+        "source": { "type": "string", "enum": ["default", "profile"] }
       }
     },
     "positions": {

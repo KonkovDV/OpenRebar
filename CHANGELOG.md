@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A lap's later piece is drawn one diameter off the design axis. `laps.representation` is `inPlane` (beside) or `stacked` (above). An omitted profile keeps `inPlane` and `source: default`. `lapClearance` treats an in-plane lap as two diameters wide and a stacked lap as one diameter wide in plan. The design axis, the cut length, and simple-slab are unchanged.
 - The slab report lists `effectiveDepthByLayer` for each layer that has bars. A bottom layer is `h − z` and a top layer is `z`, where `z` is the axis elevation already used for placement. On simple-slab the only layer is BottomX at Ø20 and 30 mm cover, so the entry is 180, the same figure as `effectiveDepthMm` (`220 − 30 − 20/2`). A layer with no bar is omitted. Lengths and masses are unchanged. `schemaVersion` stays 2.1.0.
 - The report lists `checks`. Crack width and deflection stay `NotEvaluated` when the input is only required area. `providedArea` follows the area-check status. `transverseInLap` is listed only when a lap exists, and stays `NotEvaluated`. On simple-slab the area check is `Failed` and there is no lap, so the list is those three entries. `schemaVersion` is 2.1.0. Lengths and masses are unchanged.
 

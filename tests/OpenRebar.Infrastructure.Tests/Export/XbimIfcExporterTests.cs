@@ -177,6 +177,39 @@ public class XbimIfcExporterTests
     }
   }
 
+  [Fact]
+  public async Task ExportAsync_MovesTheLaterLapPieceOffTheDesignAxis()
+  {
+    var exporter = new XbimIfcExporter();
+    string path = Path.Combine(Path.GetTempPath(), $"OpenRebar-{Guid.NewGuid():N}.ifc");
+    var (slab, zones) = Sample();
+    var zone = zones[0];
+    zone.Rebars =
+    [
+      zone.Rebars[0] with { BarId = "axis", LapPieceParity = 0, Start = new Point2D(0, 0), End = new Point2D(1000, 0) },
+      zone.Rebars[0] with { BarId = "later", LapPieceParity = 1, Start = new Point2D(800, 0), End = new Point2D(1800, 0) }
+    ];
+
+    try
+    {
+      await exporter.ExportAsync(zones, slab, path, lapRepresentation: LapPlacement.Stacked);
+      var stacked = Placement(path, "later");
+      stacked.Y.Should().BeApproximately(0, 1e-6);
+      stacked.Z.Should().BeApproximately(0.043, 1e-6);
+
+      await exporter.ExportAsync(zones, slab, path, lapRepresentation: LapPlacement.InPlane);
+      var beside = Placement(path, "later");
+      var axis = Placement(path, "axis");
+      beside.Y.Should().BeApproximately(0.012, 1e-6);
+      beside.Z.Should().BeApproximately(axis.Z, 1e-6);
+    }
+    finally
+    {
+      if (File.Exists(path))
+        File.Delete(path);
+    }
+  }
+
   private static (SlabGeometry Slab, IReadOnlyList<ReinforcementZone> Zones) Sample()
   {
     var slab = new SlabGeometry
@@ -229,6 +262,16 @@ public class XbimIfcExporterTests
     ];
 
     return (slab, zones);
+  }
+
+  private static (double X, double Y, double Z) Placement(string path, string name)
+  {
+    using var model = IfcStore.Open(path);
+    var bar = model.Instances.OfType<IIfcReinforcingBar>().Single(item => item.Name.ToString() == name);
+    var placement = (IIfcLocalPlacement)bar.ObjectPlacement;
+    var axis = (IIfcAxis2Placement3D)placement.RelativePlacement;
+    var coordinates = axis.Location.Coordinates;
+    return (coordinates[0], coordinates[1], coordinates[2]);
   }
 
   private static IReadOnlyList<(string Name, string GlobalId)> BarIdentity(string path)

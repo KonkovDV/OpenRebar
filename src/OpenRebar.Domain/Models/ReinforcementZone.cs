@@ -210,6 +210,9 @@ public sealed record RebarSegment
   /// <summary>Stable instance id from layer, coordinates, and diameter.</summary>
   public string BarId { get; init; } = "";
 
+  /// <summary>0 stays on the design axis. 1 is the later piece of a lap and is drawn beside or above it.</summary>
+  public int LapPieceParity { get; init; }
+
   /// <summary>Position number shared by bars of the same type. Assigned by <c>PositionAssigner</c>.</summary>
   public string? Mark { get; init; }
 

@@ -67,6 +67,12 @@ public sealed record LapProfile
 {
   public required double JointRatioMax { get; init; }
   public required bool Couplers { get; init; }
+
+  /// <summary><c>inPlane</c> places the later piece beside the first. <c>stacked</c> places it above.</summary>
+  public string Representation { get; init; } = "inPlane";
+
+  /// <summary><c>default</c> until a profile sets the representation.</summary>
+  public string Source { get; init; } = "default";
 }
 
 public sealed record PositionProfile

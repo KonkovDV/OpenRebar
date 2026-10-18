@@ -377,7 +377,12 @@ public sealed class GenerateReinforcementPipeline
             Alpha = link.Alpha
           })
           .ToList();
-      result.Clashes = ClearanceChecker.Check(zonesWithRebars, input.Slab, _planar, input.JointRatioMax);
+      result.Clashes = ClearanceChecker.Check(
+          zonesWithRebars,
+          input.Slab,
+          _planar,
+          input.JointRatioMax,
+          input.LapRepresentation);
       result.TotalRebarSegments = zonesWithRebars.Sum(z => z.Rebars.Count);
       _logger.Info(
           "Calculated reinforcement layout",
@@ -635,7 +640,7 @@ public sealed class GenerateReinforcementPipeline
       {
         var placementResult = await _placer.PlaceReinforcementAsync(
             zonesWithRebars,
-            input.PlacementSettings,
+            input.PlacementSettings with { LapRepresentation = input.LapRepresentation },
             cancellationToken);
         result.PlacementResult = placementResult;
         stages.Complete("Placement", processed: placementResult.TotalRebarsPlaced, partial: !placementResult.Success);
@@ -1435,6 +1440,9 @@ public sealed record PipelineInput
   public IReadOnlyList<int> FieldSpacingsMm { get; init; } = [];
   public string AdditionalSpacingMode { get; init; } = "interleave";
   public double JointRatioMax { get; init; } = 0.5;
+
+  /// <summary>inPlane or stacked. The later lap piece is drawn beside or above the design axis.</summary>
+  public string LapRepresentation { get; init; } = LapPlacement.InPlane;
 
   /// <summary>Profile end rule. NeedsHook when the profile does not say otherwise.</summary>
   public string EndCondition { get; init; } = "NeedsHook";
