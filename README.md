@@ -79,7 +79,7 @@ Flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--
 | `*.aerobim.json` | A short summary for a downstream checker |
 | `*.reinforcement.ifc` | IFC4 bars |
 
-On simple-slab, Ø20 and 30 mm cover, `effectiveDepthMm` and `effectiveDepthByLayer.BottomX` are both 180. That is `220 − 30 − 20/2`: thickness, minus cover, minus half the bar. A layer with no bars is left out of the map. `estimatedCost` is null because the example catalogue has no price.
+On simple-slab, Ø20 and 30 mm cover, `effectiveDepthMm` and `effectiveDepthByLayer.BottomX` are both 180. That is `220 − 30 − 20 / 2`: thickness, minus cover, minus half the bar. A layer with no bars is left out of the map. `estimatedCost` is null because the example catalogue has no price.
 
 The report records the profile, the table version, and the optimizer. `checks[].status` is `Passed`, `Failed`, or `NotEvaluated`.
 

@@ -177,7 +177,7 @@
       "clauseId": "SP63.13330.2018:10.3.24",
       "method": "AnchorageRules.CalculateBasicAnchorageLength",
       "test": "AnchorageRulesTests.BasicAnchorage_MatchesIndependentFormula",
-      "sourceQuote": "l₀,an = Rₛ·d / (4·η₁·η₂·Rbt)."
+      "sourceQuote": "l₀,an = Rₛ·d / (4·η₁·η₂·R_bt)."
     },
     {
       "clauseId": "SP63.13330.2018:10.3.24",
