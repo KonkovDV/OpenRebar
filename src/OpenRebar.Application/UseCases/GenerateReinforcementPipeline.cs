@@ -77,6 +77,35 @@ public sealed class GenerateReinforcementPipeline
         ("levelName", input.Metadata.LevelName),
         ("isolineFilePath", input.IsolineFilePath));
 
+    if (SlabEdges.SupportEdgesNeedARectangle(input.Slab))
+    {
+      var diagnostic = new PipelineFailureDiagnostic
+      {
+        Stage = "RebarCalculation",
+        ErrorMessage = SlabEdges.EdgesRequireRectangularSlabMessage,
+        ExceptionType = SlabEdges.EdgesRequireRectangularSlab,
+        OccurredAtUtc = DateTimeOffset.UtcNow,
+        IsCritical = true
+      };
+      failures.Add(diagnostic);
+      stages.Fail(
+          "RebarCalculation",
+          StageRecorder.Reason(
+              ReasonCode.StructuralLimit,
+              diagnostic.ErrorMessage,
+              context: diagnostic.ExceptionType));
+      _logger.Warn(diagnostic.ErrorMessage, ("slabId", input.Metadata.SlabId));
+      result.Report = Publish(BuildPartialReport(input, failures, result));
+      if (input.PersistReport)
+      {
+        var outputPath = ResolveReportOutputPath(input);
+        result.StoredReport = await _reportStore.SaveAsync(result.Report, outputPath, cancellationToken);
+        _logger.Info("Stored partial reinforcement report after a non-rectangular support outline", ("outputPath", result.StoredReport.OutputPath));
+      }
+
+      return Finish();
+    }
+
     // 1. Parse isoline file (CRITICAL - abort on failure)
     IReadOnlyList<ReinforcementZone> rawZones;
     bool layersAlreadyAssigned = input.Layers.Count > 0;

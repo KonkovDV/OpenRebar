@@ -134,6 +134,62 @@ public class SlabEdgeTests
     SlabEdges.AnyDefaulted(slab).Should().BeFalse();
   }
 
+  [Fact]
+  public void Outline_AcceptsAnAxisAlignedRectangle_AndRejectsASlantOrAnL()
+  {
+    SlabEdges.IsAxisAlignedRectangle(Rectangle(0, 0, 6000, 4000)).Should().BeTrue();
+    SlabEdges.IsAxisAlignedRectangle(new Polygon(
+    [
+        new Point2D(0, 0),
+        new Point2D(6000, 0),
+        new Point2D(4500, 4000),
+        new Point2D(0, 4000)
+    ])).Should().BeFalse();
+    SlabEdges.IsAxisAlignedRectangle(new Polygon(
+    [
+        new Point2D(0, 0),
+        new Point2D(4000, 0),
+        new Point2D(4000, 2000),
+        new Point2D(2000, 2000),
+        new Point2D(2000, 4000),
+        new Point2D(0, 4000)
+    ])).Should().BeFalse();
+  }
+
+  [Fact]
+  public void WorkingRectangle_RefusesASupportedOutlineThatIsNotARectangle()
+  {
+    var oblique = new Polygon(
+    [
+        new Point2D(0, 0),
+        new Point2D(6000, 0),
+        new Point2D(4500, 4000),
+        new Point2D(0, 4000)
+    ]);
+    var supported = Slab(oblique, SlabEdgeKind.Supported);
+    var free = Slab(oblique, SlabEdgeKind.Free);
+
+    SlabEdges.SupportEdgesNeedARectangle(supported).Should().BeTrue();
+    SlabEdges.SupportEdgesNeedARectangle(free).Should().BeFalse();
+    SlabEdges.SupportEdgesNeedARectangle(Slab(Rectangle(0, 0, 6000, 4000), SlabEdgeKind.Supported)).Should().BeFalse();
+
+    var act = () => SlabEdges.WorkingRectangle(supported, 12);
+    act.Should().Throw<InvalidDataException>()
+        .WithMessage("*edgesRequireRectangularSlab*");
+    var box = SlabEdges.WorkingRectangle(free, 12).GetBoundingBox();
+    box.Min.X.Should().BeApproximately(36, 1e-6);
+    box.Max.X.Should().BeApproximately(5964, 1e-6);
+  }
+
+  private static SlabGeometry Slab(Polygon outline, SlabEdgeKind kind) => new()
+  {
+    OuterBoundary = outline,
+    ThicknessMm = 220,
+    CoverMm = 30,
+    ConcreteClass = "B25",
+    Edges = [new SlabEdge { Segment = "minX", Kind = kind, SupportDepthMm = kind == SlabEdgeKind.Free ? null : 400 }]
+  };
+
   private static Polygon Rectangle(double minX, double minY, double maxX, double maxY) => new(
   [
       new Point2D(minX, minY),

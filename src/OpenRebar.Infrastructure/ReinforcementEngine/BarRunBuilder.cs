@@ -36,7 +36,12 @@ public static class BarRunBuilder
           ? Cut(boundary, holes, slab.Openings, station, horizontal: true)
           : Cut(boundary, holes, slab.Openings, station, horizontal: false);
       if (oblique)
-        intervals = intervals.Select(interval => QuantizeOutward(interval, LengthStepMm)).ToList();
+      {
+        intervals = intervals
+            .Select(interval => ClipToContour(QuantizeOutward(interval, LengthStepMm), interval))
+            .Where(interval => interval.End - interval.Start > 1e-6)
+            .ToList();
+      }
       if (intervals.Count == 0 || !Compatible(open, intervals, snap))
       {
         finished.AddRange(open);
@@ -72,6 +77,18 @@ public static class BarRunBuilder
     double end = Math.Ceiling(interval.End / step - 1e-9) * step;
     if (end <= start)
       end = start + step;
+    return (start, end);
+  }
+
+  /// <summary>
+  /// The 10 mm step grows a bar outward. The placed end stays on the contour cut.
+  /// </summary>
+  private static (double Start, double End) ClipToContour(
+      (double Start, double End) expanded,
+      (double Start, double End) contour)
+  {
+    double start = Math.Max(expanded.Start, contour.Start);
+    double end = Math.Min(expanded.End, contour.End);
     return (start, end);
   }
 

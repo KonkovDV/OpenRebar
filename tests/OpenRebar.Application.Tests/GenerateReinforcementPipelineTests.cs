@@ -100,6 +100,43 @@ public class GenerateReinforcementPipelineTests
   }
 
   [Fact]
+  public async Task ExecuteAsync_SupportedObliqueOutline_StopsBeforeLayout()
+  {
+    var sut = CreateSut();
+    var input = CreateInput("plan.dxf", placeInRevit: true) with
+    {
+      Slab = new SlabGeometry
+      {
+        OuterBoundary = new Polygon(
+        [
+            new Point2D(0, 0),
+            new Point2D(6000, 0),
+            new Point2D(4500, 4000),
+            new Point2D(0, 4000)
+        ]),
+        ThicknessMm = 220,
+        CoverMm = 30,
+        ConcreteClass = "B25",
+        Edges = [new SlabEdge { Segment = "minX", Kind = SlabEdgeKind.Supported, SupportDepthMm = 400 }]
+      }
+    };
+
+    var result = await sut.ExecuteAsync(input);
+
+    result.Report.Should().NotBeNull();
+    result.Report!.PartialResult.Should().BeTrue();
+    result.Report.Errors.Should().ContainSingle(error =>
+        error.ExceptionType == SlabEdges.EdgesRequireRectangularSlab && error.IsCritical);
+    result.ClassifiedZones.Should().BeNullOrEmpty();
+    await _dxfParser.DidNotReceive().ParseAsync(Arg.Any<string>(), Arg.Any<ColorLegend>(), Arg.Any<CancellationToken>());
+    _calculator.DidNotReceive().CalculateRebars(Arg.Any<IReadOnlyList<ReinforcementZone>>(), Arg.Any<SlabGeometry>());
+    await _placer.DidNotReceive().PlaceReinforcementAsync(
+        Arg.Any<IReadOnlyList<ReinforcementZone>>(),
+        Arg.Any<PlacementSettings>(),
+        Arg.Any<CancellationToken>());
+  }
+
+  [Fact]
   public async Task ExecuteAsync_UnsupportedInputFormat_ShouldReturnPartialResultWithError()
   {
     var sut = CreateSut();
