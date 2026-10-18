@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The ML lock is refreshed for CPython 3.11 manylinux. Pillow is 12.3.0, pytest is 9.1.1, python-multipart is 0.0.32, onnx is 1.23.2, torch is 2.13.0+cpu, and the transitive floors are anyio 4.15.1, starlette 1.8.0, idna 3.20, fsspec 2026.9.0, and setuptools 84.0.0. numpy stays 1.26.4. Hashes are the digests published by PyPI and the PyTorch CPU index.
 - A release attests the SPDX SBOM against the CLI ZIP with pinned `actions/attest-sbom` v4.1.0. Provenance of the three published files stays as it was.
 - The ML client allowlist is loopback unless the caller names more hosts. `--ml-url` names its own host. The client does not follow redirects, and a redirect to another host is refused. simple-slab does not call the service.
 - The cutter that keeps the open bar with the smallest remainder is named `BestFitDecreasingOptimizer`, id `best-fit-decreasing-v1`. It is the column-generation floor, not a registered service. The emergency packer still fills the first bar that fits, so its label stays `first-fit-decreasing` and its cuts are unchanged. `MinScrapLengthMm` is removed; it was never read. A diagnostic stack is stored as `stackTraceSha256`. The text is logged only when diagnostics are on. simple-slab still uses `column-generation-relaxation-v2`. The only golden change is `stackTrace: null` to `stackTraceSha256: null`. Lengths and masses are unchanged. `schemaVersion` stays 2.1.0.

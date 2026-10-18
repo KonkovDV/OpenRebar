@@ -73,7 +73,7 @@ If the change touches ML dependency governance or workflow behavior, also verify
 
 ```bash
 python -m pip install --require-hashes -r ..\.github\requirements\pip-tools.locked.txt
-python -m piptools compile --allow-unsafe --generate-hashes --output-file=requirements.locked.txt requirements.in
+python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
 ```
 
 ## Documentation PR Checklist

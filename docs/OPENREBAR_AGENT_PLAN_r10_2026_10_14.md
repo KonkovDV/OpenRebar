@@ -72,7 +72,7 @@
 | # | ID | Задача | Среда | Эталоны | Схема |
 |---|---|---|---|---|---|
 | 1 | D-1 | Разбор PR Dependabot и `dependabot.yml` — сделано | MCP | нет | нет |
-| 2 | D-2 | Обновить ML lock, закрыть 36 алертов | SDK | нет | нет |
+| 2 | D-2 | Обновить ML lock, закрыть pip-алерты — сделано, numpy остаётся 1.26 | SDK | нет | нет |
 | 3 | PR-12 | Каталог CSV/JSON без тихих потерь — сделано | MCP | нет | нет |
 | 4 | RT-7 | PNG: размер до декодирования — сделано | MCP | нет | нет |
 | 5 | PR-11 | DXF без тихих потерь — сделано | MCP | возможно `ignoredByReason` | нет |
@@ -118,7 +118,7 @@
 2. Перегенерировать lock тем путём, что в `docs/README.md` («lock-refresh path»): `.github/requirements/pip-tools.locked.txt`, затем `piptools compile --allow-unsafe --generate-hashes`. torch остаётся CPU-колесом (`+cpu`, индекс PyTorch CPU), как в r7 P0-1′.
 3. numpy 2.x — отдельный шаг внутри задачи: поднимать, только если `pytest tests -q` и `validate_model_manifest.py` зелёные; иначе оставить 1.26.x и записать причину в PR.
 4. Проверить локально: `python -m pip install --require-hashes -r ml/requirements.locked.txt`, `pytest tests -q`, `python ml/scripts/validate_model_manifest.py ml/models/MANIFEST.json`.
-5. Приёмка: 0 открытых Dependabot alerts для `ml/`, `python-smoke` зелёный. Хэши записаны в lock — правило `ml/AGENTS.md`.
+5. Приёмка: 0 открытых Dependabot alerts для `ml/`, `python-smoke` зелёный. Хэши записаны в lock — правило `ml/AGENTS.md`. Сделано: пины для CPython 3.11 manylinux, numpy остаётся 1.26.4. Хэши взяты из индексов PyPI и PyTorch CPU, потому что полная загрузка колёс на этой машине обрывалась и не сходилась с опубликованным sha256.
 
 ### 4.3 PR-12. Каталог без тихих потерь (MCP)
 
