@@ -134,6 +134,12 @@ jobs:
             ./publish/OpenRebar-sbom.spdx.json
             ./publish/SHA256SUMS
 
+      - name: Attest the SBOM against the CLI archive
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: ./publish/OpenRebar-cli-${{ github.ref_name }}.zip
+          sbom-path: ./publish/OpenRebar-sbom.spdx.json
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
         with:

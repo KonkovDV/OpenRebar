@@ -182,7 +182,7 @@ Copy `addin/RevitNet8` next to the `net8.0-windows` build, or `addin/RevitNet10`
 
 - NuGet restore is locked.
 - The ML lane installs `ml/requirements.locked.txt` with hashes and does not call a hosted model.
-- Scorecard runs on `main`. A release builds an SBOM and attests the published files.
+- Scorecard runs on `main`. A release builds an SBOM, attests the published files, and attests that SBOM against the CLI archive.
 - ImageSharp stays on 3.1.12. Version 4 needs a license key. Five advisories on that line are accepted because that line has no patch. Any other high finding still fails the audit.
 
 ## Documents
