@@ -55,7 +55,8 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
     using var service = new HttpImageSegmentationService(
         baseUrl: "http://ml-server:9000",
         minArea: 5000.0,
-        timeoutSeconds: 60);
+        timeoutSeconds: 60,
+        allowedHosts: ["ml-server"]);
 
     // No exception = success. Service is just configured, not connected.
     service.Should().NotBeNull();
@@ -70,6 +71,14 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
     var act = () => new HttpImageSegmentationService(baseUrl: url);
 
     act.Should().Throw<ArgumentException>();
+  }
+
+  [Fact]
+  public void Constructor_RejectsAHostOutsideTheAllowList()
+  {
+    var act = () => new HttpImageSegmentationService(baseUrl: "http://ml-server:9000");
+
+    act.Should().Throw<ArgumentException>().WithMessage("*allowlist*");
   }
 
   [Fact]
@@ -93,7 +102,8 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
     using var service = new HttpImageSegmentationService(
         baseUrl: "http://ml-server:9000",
         maxRetryAttempts: 1,
-        messageHandler: handler);
+        messageHandler: handler,
+        allowedHosts: ["ml-server"]);
     var tmpFile = Path.GetTempFileName() + ".png";
     await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
 
@@ -125,7 +135,8 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
     using var service = new HttpImageSegmentationService(
         baseUrl: "http://ml-server:9000",
         maxRetryAttempts: 1,
-        messageHandler: handler);
+        messageHandler: handler,
+        allowedHosts: ["ml-server"]);
     var tmpFile = Path.GetTempFileName() + ".png";
     await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
 
@@ -150,7 +161,8 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
         maxRetryAttempts: 1,
         failureThreshold: 2,
         circuitBreakSeconds: 60,
-        messageHandler: handler);
+        messageHandler: handler,
+        allowedHosts: ["ml-server"]);
 
     var tmpFile = Path.GetTempFileName() + ".png";
     await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
@@ -207,7 +219,8 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
         baseUrl: "http://ml-server:9000",
         minArea: 1000.5,
         maxRetryAttempts: 1,
-        messageHandler: handler);
+        messageHandler: handler,
+        allowedHosts: ["ml-server"]);
 
     var tmpFile = Path.GetTempFileName() + ".png";
     await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
@@ -223,6 +236,37 @@ public sealed class HttpImageSegmentationServiceTests : IDisposable
     {
       CultureInfo.CurrentCulture = previousCulture;
       CultureInfo.CurrentUICulture = previousUiCulture;
+      File.Delete(tmpFile);
+    }
+  }
+
+  [Fact]
+  public async Task SegmentAsync_DoesNotFollowARedirectToAnotherHost()
+  {
+    var hosts = new List<string>();
+    var handler = new CountingHttpMessageHandler(request =>
+    {
+      hosts.Add(request.RequestUri!.Host);
+      var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+      response.Headers.Location = new Uri("http://evil.example/segment");
+      return response;
+    });
+    using var service = new HttpImageSegmentationService(
+        baseUrl: "http://127.0.0.1:8101",
+        maxRetryAttempts: 1,
+        messageHandler: handler);
+    var tmpFile = Path.GetTempFileName() + ".png";
+    await File.WriteAllBytesAsync(tmpFile, [0x89, 0x50, 0x4E, 0x47]);
+
+    try
+    {
+      await service.Invoking(sut => sut.SegmentAsync(tmpFile))
+          .Should().ThrowAsync<ImageSegmentationServiceException>()
+          .WithMessage("*another host*");
+      hosts.Should().Equal("127.0.0.1");
+    }
+    finally
+    {
       File.Delete(tmpFile);
     }
   }

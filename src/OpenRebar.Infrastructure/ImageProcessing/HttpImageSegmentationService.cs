@@ -23,7 +23,15 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   private const int MaxTotalVertices = 1_000_000;
   private const int MaxCoordinateMagnitude = 50_000_000;
 
+  private static readonly HashSet<string> LoopbackHosts = new(StringComparer.OrdinalIgnoreCase)
+  {
+    "localhost",
+    "127.0.0.1",
+    "::1"
+  };
+
   private readonly HttpClient _httpClient;
+  private readonly HashSet<string> _allowedHosts;
   private readonly double _minArea;
   private readonly int _maxRetryAttempts;
   private readonly int _failureThreshold;
@@ -50,15 +58,25 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
       int failureThreshold = 3,
       int circuitBreakSeconds = 30,
       TimeProvider? timeProvider = null,
-      HttpMessageHandler? messageHandler = null)
+      HttpMessageHandler? messageHandler = null,
+      IReadOnlyCollection<string>? allowedHosts = null)
   {
-    ValidateConfiguration(baseUrl, minArea, timeoutSeconds);
+    _allowedHosts = ValidateConfiguration(baseUrl, minArea, timeoutSeconds, allowedHosts);
     _minArea = minArea;
     _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
     _failureThreshold = Math.Max(1, failureThreshold);
     _circuitBreakDuration = TimeSpan.FromSeconds(Math.Max(1, circuitBreakSeconds));
     _timeProvider = timeProvider ?? TimeProvider.System;
-    _httpClient = messageHandler is null ? new HttpClient() : new HttpClient(messageHandler);
+    if (messageHandler is null)
+    {
+      var handler = new SocketsHttpHandler { AllowAutoRedirect = false };
+      _httpClient = new HttpClient(handler, disposeHandler: true);
+    }
+    else
+    {
+      _httpClient = new HttpClient(messageHandler);
+    }
+
     _httpClient.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
     _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     _ownsHttpClient = true;
@@ -74,6 +92,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
   {
     if (!double.IsFinite(minArea) || minArea < 0)
       throw new ArgumentOutOfRangeException(nameof(minArea));
+    _allowedHosts = new HashSet<string>(LoopbackHosts, StringComparer.OrdinalIgnoreCase);
     _httpClient = httpClient;
     _minArea = minArea;
     _maxRetryAttempts = Math.Max(1, maxRetryAttempts);
@@ -125,6 +144,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
             request,
             HttpCompletionOption.ResponseHeadersRead,
             ct);
+        RejectRedirect(response);
         response.EnsureSuccessStatusCode();
 
         return await ReadJsonLimitedAsync<SegmentationResponseDto>(
@@ -155,6 +175,7 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
         "/health",
         HttpCompletionOption.ResponseHeadersRead,
         ct);
+    RejectRedirect(response);
     response.EnsureSuccessStatusCode();
 
     var health = await ReadJsonLimitedAsync<HealthDto>(
@@ -199,7 +220,11 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
     return await JsonSerializer.DeserializeAsync<T>(buffer, JsonOptions, ct);
   }
 
-  private static void ValidateConfiguration(string baseUrl, double minArea, int timeoutSeconds)
+  private static HashSet<string> ValidateConfiguration(
+      string baseUrl,
+      double minArea,
+      int timeoutSeconds,
+      IReadOnlyCollection<string>? allowedHosts)
   {
     if (!double.IsFinite(minArea) || minArea < 0)
       throw new ArgumentOutOfRangeException(nameof(minArea));
@@ -213,6 +238,44 @@ public sealed class HttpImageSegmentationService : IImageSegmentationService, ID
           "ML service URL must be an absolute HTTP(S) URL without user information.",
           nameof(baseUrl));
     }
+
+    var allowed = new HashSet<string>(LoopbackHosts, StringComparer.OrdinalIgnoreCase);
+    if (allowedHosts is not null)
+    {
+      foreach (string name in allowedHosts)
+      {
+        if (!string.IsNullOrWhiteSpace(name))
+          allowed.Add(name.Trim().Trim('[', ']'));
+      }
+    }
+
+    string host = uri.Host.Trim('[', ']');
+    if (!allowed.Contains(host))
+    {
+      throw new ArgumentException(
+          $"ML service host '{uri.Host}' is not in the allowlist ({string.Join(", ", allowed.Order(StringComparer.OrdinalIgnoreCase))}).",
+          nameof(baseUrl));
+    }
+
+    return allowed;
+  }
+
+  private void RejectRedirect(HttpResponseMessage response)
+  {
+    int status = (int)response.StatusCode;
+    if (status is < 300 or >= 400)
+      return;
+
+    Uri? location = response.Headers.Location;
+    string target = location?.IsAbsoluteUri == true ? location.Host : _httpClient.BaseAddress?.Host ?? "";
+    if (!_allowedHosts.Contains(target.Trim('[', ']')))
+    {
+      throw new ImageSegmentationServiceException(
+          $"ML service redirected to another host '{location}'. Redirects off the allowlist are refused.");
+    }
+
+    throw new ImageSegmentationServiceException(
+        $"ML service redirected to '{location}'. Redirects are not followed.");
   }
 
   private async Task<T> ExecuteWithRetriesAsync<T>(

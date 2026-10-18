@@ -16,7 +16,7 @@ The libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in
 
 ## Status
 
-Counted regression, the five commands under [Quick start](#quick-start): **465/465 tests passing**.
+Counted regression, the five commands under [Quick start](#quick-start): **467/467 tests passing**.
 
 | Surface | Now |
 |---|---|
@@ -107,7 +107,7 @@ dotnet run --project src/OpenRebar.Cli --configuration Release -- examples/dxf/s
 
 Exit 2 means the area check failed and the files were still written. Exit 1 is an input or IO failure. Exit 3 is a critical detailing error.
 
-Useful flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--thickness`, `--cover`.
+Useful flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--thickness`, `--cover`. `--ml-url` talks only to that host. Loopback is allowed without an extra name. A redirect to another host is refused.
 
 ## Outputs
 
