@@ -114,6 +114,23 @@ public class ClearanceCheckerTests
   }
 
   [Fact]
+  public void StackedLaps_UseOneDiameterInPlan()
+  {
+    var bars = new[]
+    {
+      Bar("a1", 0, 100, 600, 100),
+      Bar("a2", 300, 100, 900, 100),
+      Bar("b1", 0, 142, 600, 142),
+      Bar("b2", 300, 142, 900, 142)
+    };
+    var beside = ClearanceChecker.Check([Zone(bars)], Slab(), lapRepresentation: LapPlacement.InPlane);
+    var stacked = ClearanceChecker.Check([Zone(bars)], Slab(), lapRepresentation: LapPlacement.Stacked);
+
+    beside.Should().Contain(item => item.Kind == "lapClearance" && item.Type == "hard");
+    stacked.Should().NotContain(item => item.Kind == "lapClearance");
+  }
+
+  [Fact]
   public void LapsOnFarApartLines_AreNotALapClearanceClash()
   {
     var clashes = Check(

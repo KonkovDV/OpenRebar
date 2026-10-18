@@ -122,7 +122,8 @@ public static class LapPlanner
         BendRadiusMm = shape.InnerRadiusMm,
         BendArcMm = shape.ArcMm,
         Mark = null,
-        BarId = ""
+        BarId = "",
+        LapPieceParity = i % 2
       });
       if (!last)
       {

@@ -45,6 +45,9 @@ public sealed record PlacementSettings
   /// <summary>Host slab elevation offset in Revit internal feet.</summary>
   public double ElevationOffsetFeet { get; init; }
 
+  /// <summary>inPlane draws the later lap piece beside the design axis. stacked draws it above.</summary>
+  public string LapRepresentation { get; init; } = "inPlane";
+
   /// <summary>Straight tail after a hook, in bar diameters. Zero draws the arc only.</summary>
   public double HookTailDiameters
   {

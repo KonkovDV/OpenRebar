@@ -62,6 +62,8 @@ public class LapPlannerTests
 
     double lap = AnchorageRules.CalculateLapLength(12, "A500C", "B25", AnchorageRules.LapSpliceShare.Full100);
     zone.Rebars.Should().HaveCountGreaterThan(1);
+    zone.Rebars[0].LapPieceParity.Should().Be(0);
+    zone.Rebars[1].LapPieceParity.Should().Be(1);
     zone.Rebars.Should().OnlyContain(bar => bar.TotalLength + Kerf <= Stock.Max() + 0.1);
     laps.Should().NotBeEmpty();
     laps.Should().OnlyContain(link =>

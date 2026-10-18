@@ -1,7 +1,7 @@
 # OpenRebar: план r10 для ИИ-агента (`main` @ `6e9bea0`, 14.10.2026)
 
 > **Кому:** ИИ-агенту, который работает с `KonkovDV/OpenRebar` через GitHub (MCP или `gh`), в том числе без локального .NET SDK.
-> **Срез `main`:** `6e9bea0` (merge PR #186). CI на `main` зелёный. Регрессия **461/461**: Domain 157, Infrastructure 173, TestCorpus 7, Application 98 (net8.0), Cli 26 (net10.0).
+> **Срез `main`:** `6e9bea0` (merge PR #186). CI на `main` зелёный. Регрессия **465/465**: Domain 157, Infrastructure 176, TestCorpus 7, Application 99 (net8.0), Cli 26 (net10.0).
 > **Приоритет источников:** код и тесты `main` → r10 → r9 → r8 → r7 → r6 → r5. Ответ владельца в `docs/agent/decisions/DECISIONS.md` сильнее любого плана (сейчас там нет ни одной строки).
 > **Что это:** сводная очередь. r9 §3 закрыт частично; всё открытое из r9, Red Team 2026-10-03 и r7 §7 перенесено сюда с проверенным статусом.
 
@@ -84,7 +84,7 @@
 | 11 | PR-10b | IDS в CI — сделано | MCP | нет | нет |
 | 12 | PR-17 | Раскрой: имя алгоритма, `MinScrapLengthMm`, хэш стека — сделано | SDK | да | 2.1.0 |
 | 13 | RT-4 | Два KPI раскроя — уже есть: `wastePercent` и `estimatedCost` | SDK | нет | нет |
-| 14 | RT-6 | `laps.representation` | SDK | нет | профиль |
+| 14 | RT-6 | `laps.representation` — сделано | SDK | нет | профиль |
 | 15 | S-1 | Supply chain: OSV, SBOM, ML endpoint | MCP | нет | нет |
 | 16 | P3 | Аудитор КЖ, ЛИРА, сравнение раскладок | владелец | — | — |
 
@@ -206,9 +206,9 @@
 
 `wastePercent` и `estimatedCost`. Стоимость считается в `EstimatePurchasedStockCost`: масса закупленного хлыста в тоннах умножается на `PricePerTon`. Если у длины нет цены, поле `null`. В эталоне `simple-slab` оба уровня (`optimizationByDiameter` и `summary`) уже `estimatedCost: null`. Второе поле `purchaseCost` не добавлять.
 
-### 4.14 RT-6. Представление нахлёста (SDK)
+### 4.14 RT-6. Представление нахлёста (SDK) — сделано
 
-1. Профиль: `laps.representation: "inPlane" | "stacked"`, по умолчанию `inPlane` + `source: default`. Схема профиля и allow-list загрузчика.
+1. Профиль: `laps.representation: "inPlane" | "stacked"`, по умолчанию `inPlane` + `source: default`. Схема профиля и allow-list загрузчика. Сделано. `generic.json` поле не пишет, поэтому его хэш и эталон simple-slab не меняются.
 2. В IFC (после PR-10a) и в Revit-плейсере (`#if REVIT_SDK`) второй кусок сдвигается на d в плоскости (`inPlane`) или по высоте (`stacked`), чтобы тела не пересекались.
 3. Проверка `lapClearance` учитывает сдвиг. Тест на оба режима.
 

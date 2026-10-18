@@ -31,7 +31,7 @@ public static class CompanyProfileLoader
     ["hooks"] = ["tailDiameters", "source"],
     ["additional"] = ["diametersMm", "spacingMode", "maxDiameterCount"],
     ["ends"] = ["condition", "shapeStandard"],
-    ["laps"] = ["jointRatioMax", "couplers"],
+    ["laps"] = ["jointRatioMax", "couplers", "representation", "source"],
     ["positions"] = ["includeLayerInKey"],
     ["schedule"] = ["culture", "template"],
     ["supply"] = ["supplierName", "stockLengthsMm", "specialLengths", "offcuts"],
@@ -256,6 +256,10 @@ public static class CompanyProfileLoader
       throw new CompanyProfileLoadException($"safety.maxSpacingMm cannot exceed the normative cap of {norm.MaxSpacingThickSlabCapMm:0} mm.");
     if (profile.Laps.JointRatioMax is < 0 or > 1)
       throw new CompanyProfileLoadException("laps.jointRatioMax must be from 0 to 1.");
+    if (!LapPlacement.IsKnown(profile.Laps.Representation))
+      throw new CompanyProfileLoadException("laps.representation must be inPlane or stacked.");
+    if (profile.Laps.Source is not ("default" or "profile"))
+      throw new CompanyProfileLoadException("laps.source must be default or profile.");
     if (profile.Verification.UnderCoverageRatio is < 0 or > 1)
       throw new CompanyProfileLoadException("verification.underCoverageRatio must be from 0 to 1.");
     if (profile.Additional.SpacingMode is not ("interleave" or "explicit" or "s/2"))

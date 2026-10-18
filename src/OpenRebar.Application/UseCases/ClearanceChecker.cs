@@ -19,7 +19,8 @@ public static class ClearanceChecker
       IReadOnlyList<ReinforcementZone> zones,
       SlabGeometry slab,
       IPlanarGeometry? geometry = null,
-      double jointRatioMax = 0.5)
+      double jointRatioMax = 0.5,
+      string lapRepresentation = LapPlacement.InPlane)
   {
     var clashes = new List<ClashReport>();
     var bars = Collect(zones);
@@ -51,7 +52,7 @@ public static class ClearanceChecker
         AddStackClash(clashes, left, right, slab);
     }
 
-    AddLapClashes(clashes, bars, slab, jointRatioMax);
+    AddLapClashes(clashes, bars, slab, jointRatioMax, lapRepresentation);
     AddLayerSpacing(clashes, bars, slab);
     return clashes
         .OrderBy(clash => clash.Kind, StringComparer.Ordinal)
@@ -161,7 +162,8 @@ public static class ClearanceChecker
       List<ClashReport> clashes,
       IReadOnlyList<BarRef> bars,
       SlabGeometry slab,
-      double jointRatioMax)
+      double jointRatioMax,
+      string lapRepresentation)
   {
     foreach (var layer in bars.GroupBy(bar => LayerKeyOf(bar.Zone)))
     {
@@ -222,7 +224,7 @@ public static class ClearanceChecker
       }
 
       foreach (var run in ClusterRuns(lines))
-        AddLapClearanceClashes(clashes, run, Project);
+        AddLapClearanceClashes(clashes, run, Project, lapRepresentation);
     }
   }
 
@@ -243,10 +245,14 @@ public static class ClearanceChecker
 
   /// <summary>
   /// SP 63 clause 10.3.30, Amendment 1: adjacent lap splices across the width keep a clear
-  /// distance of at least 2 ds and 30 mm. A lap is modelled as two bars in contact, centred on
-  /// the line, so it is 2 ds wide. Lapped bars in contact meet the 4 ds gap limit by construction.
+  /// distance of at least 2 ds and 30 mm. An in-plane lap is two bars in contact, so it reaches
+  /// one diameter past the design axis. A stacked lap stays one diameter wide in plan.
   /// </summary>
-  private static void AddLapClearanceClashes(List<ClashReport> clashes, List<LineCluster> run, Func<Point2D, double> project)
+  private static void AddLapClearanceClashes(
+      List<ClashReport> clashes,
+      List<LineCluster> run,
+      Func<Point2D, double> project,
+      string lapRepresentation)
   {
     var profile = NormativeProfiles.Sp63_2018;
     for (int i = 0; i < run.Count; i++)
@@ -263,7 +269,7 @@ public static class ClearanceChecker
         if (lateral <= SameLineMm)
           continue;
 
-        var hit = FirstTightLapPair(run[i], run[j], lateral, project, profile);
+        var hit = FirstTightLapPair(run[i], run[j], lateral, project, profile, lapRepresentation);
         if (hit is null)
           continue;
 
@@ -287,7 +293,8 @@ public static class ClearanceChecker
       LineCluster second,
       double lateral,
       Func<Point2D, double> project,
-      NormativeProfileData profile)
+      NormativeProfileData profile,
+      string lapRepresentation)
   {
     foreach (var left in first.Joints)
     {
@@ -299,7 +306,9 @@ public static class ClearanceChecker
 
         double leftDiameter = Math.Max(left.Left.Segment.DiameterMm, left.Right.Segment.DiameterMm);
         double rightDiameter = Math.Max(right.Left.Segment.DiameterMm, right.Right.Segment.DiameterMm);
-        double clear = lateral - leftDiameter - rightDiameter;
+        double clear = lateral
+            - LapPlacement.ReachFromAxisMm(leftDiameter, lapRepresentation)
+            - LapPlacement.ReachFromAxisMm(rightDiameter, lapRepresentation);
         double required = Math.Max(
             profile.LapClearMinimumDiameters * Math.Max(leftDiameter, rightDiameter),
             profile.LapClearMinimumMm);

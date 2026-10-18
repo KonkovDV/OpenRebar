@@ -11,5 +11,6 @@ public interface IIfcExporter
       IReadOnlyList<ReinforcementZone> zones,
       SlabGeometry slab,
       string outputPath,
-      CancellationToken ct = default);
+      CancellationToken ct = default,
+      string lapRepresentation = "inPlane");
 }

@@ -23,6 +23,33 @@ public class CompanyProfileLoaderTests
   }
 
   [Fact]
+  public void GenericProfile_DefaultsTheLapToTheDesignAxis()
+  {
+    var laps = CompanyProfileLoader.Load(Profile("generic.json")).Profile.Laps;
+
+    laps.Representation.Should().Be("inPlane");
+    laps.Source.Should().Be("default");
+  }
+
+  [Fact]
+  public void Profile_RejectsAnUnknownLapRepresentation()
+  {
+    string path = Write("""
+      {
+        "id": "laps",
+        "version": "1",
+        "extends": "generic",
+        "laps": { "jointRatioMax": 0.5, "couplers": false, "representation": "angled", "source": "profile" }
+      }
+      """);
+
+    var act = () => CompanyProfileLoader.Load(path);
+
+    act.Should().Throw<CompanyProfileLoadException>()
+        .WithMessage("*laps.representation*");
+  }
+
+  [Fact]
   public void GenericProfile_OmitsTheHookTail()
   {
     var hooks = CompanyProfileLoader.Load(Profile("generic.json")).Profile.Hooks;

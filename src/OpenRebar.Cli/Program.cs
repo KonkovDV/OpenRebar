@@ -450,6 +450,7 @@ public static class Program
         CompanyProfileId = loadedProfile?.Profile.Id,
         CompanyProfileVersion = loadedProfile?.Profile.Version ?? "0",
         JointRatioMax = loadedProfile?.Profile.Laps.JointRatioMax ?? 0.5,
+        LapRepresentation = loadedProfile?.Profile.Laps.Representation ?? LapPlacement.InPlane,
         EndCondition = loadedProfile?.Profile.Ends.Condition ?? "NeedsHook",
         Couplers = loadedProfile?.Profile.Laps.Couplers ?? false,
         SupplierCatalog = catalogPath is null && loadedProfile is not null
@@ -554,7 +555,11 @@ public static class Program
       }
 
       string ifcPath = Path.ChangeExtension(isolineFile, ".reinforcement.ifc");
-      await ifcExporter.ExportAsync(result.ClassifiedZones, input.Slab, ifcPath);
+      await ifcExporter.ExportAsync(
+          result.ClassifiedZones,
+          input.Slab,
+          ifcPath,
+          lapRepresentation: input.LapRepresentation);
       Console.WriteLine($"IFC export written to: {ifcPath}");
 
       return exitCode;

@@ -36,7 +36,8 @@ public sealed class XbimIfcExporter : IIfcExporter
       IReadOnlyList<ReinforcementZone> zones,
       SlabGeometry slab,
       string outputPath,
-      CancellationToken ct = default)
+      CancellationToken ct = default,
+      string lapRepresentation = LapPlacement.InPlane)
   {
     if (string.IsNullOrWhiteSpace(outputPath))
       throw new ArgumentException("Output path is required.", nameof(outputPath));
@@ -138,7 +139,7 @@ public sealed class XbimIfcExporter : IIfcExporter
         AttachBarQuantities(model, bar, segment);
         AttachBarMaterial(model, bar, zone.Spec.SteelClass, materialCache);
         AttachBarType(model, bar, zone, segment, typeCache);
-        AttachBarShape(model, bar, zone, segment, slab, context);
+        AttachBarShape(model, bar, zone, segment, slab, context, lapRepresentation);
       }
     }
 
@@ -343,8 +344,10 @@ public sealed class XbimIfcExporter : IIfcExporter
       ReinforcementZone zone,
       RebarSegment segment,
       SlabGeometry slab,
-      IfcGeometricRepresentationContext context)
+      IfcGeometricRepresentationContext context,
+      string lapRepresentation)
   {
+    var drawn = LapPlacement.ForDrawing(segment, lapRepresentation);
     double elevationMm = LayerElevations.AxisElevationMm(
         zone.Layer,
         zone.Direction,
@@ -353,12 +356,13 @@ public sealed class XbimIfcExporter : IIfcExporter
         slab.CoverMm,
         segment.DiameterMm,
         segment.DiameterMm);
-    if (!HookCenterline.TryBuild(segment, elevationMm, tailMm: 0, bendUp: zone.Layer != RebarLayer.Bottom, out var spans, out _))
+    elevationMm += LapPlacement.VerticalMm(segment, lapRepresentation);
+    if (!HookCenterline.TryBuild(drawn, elevationMm, tailMm: 0, bendUp: zone.Layer != RebarLayer.Bottom, out var spans, out _))
       return;
 
     var origin = spans[0].Start;
-    double dx = segment.End.X - segment.Start.X;
-    double dy = segment.End.Y - segment.Start.Y;
+    double dx = drawn.End.X - drawn.Start.X;
+    double dy = drawn.End.Y - drawn.Start.Y;
     double length = Math.Sqrt(dx * dx + dy * dy);
     if (length < 1e-6)
       return;
