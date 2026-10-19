@@ -20,9 +20,9 @@ Three places in the chain.
 | **OpenRebar** | Lays out the bars and checks that area |
 | [AeroBIM](https://github.com/KonkovDV/AeroBIM) | Reads a documentation pack and sets its own pack flag |
 
-Other repositories on the same GitHub account are other products.
+Other repositories on the same GitHub account are their own work.
 
-Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is two builds, chosen by the process runtime: `RevitNet8` while Revit is on .NET 8, and `RevitNet10` on .NET 10. The engineering rules are tested without Revit.
+Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is two builds, chosen by the process runtime: `RevitNet8` while Revit is on .NET 8, and `RevitNet10` on .NET 10.
 
 ## Status
 
@@ -36,11 +36,11 @@ The five commands under [Quick start](#quick-start): **467/467 tests passing**.
 | `checks` | `providedArea` follows the area check. Crack width and deflection stay `NotEvaluated` when the input is only required area |
 | Cutting | Column generation (HiGHS). `wastePercent` and `estimatedCost` (null when a used stock length has no price) |
 | IFC | IFC4. One bar type per diameter and steel class, a swept disk of radius d/2, a placement on the axis |
-| Revit | Straight bars. A hook, an L, or a U is an error |
+| Revit | Straight bars in a live document |
 
-`examples/dxf/simple-slab` is the house slab. The edges are free, the required area runs to the edge, a hook is not credited, and the run exits 2 with the files on the table. That is the regression the tests keep.
+`examples/dxf/simple-slab` is the house slab: free edges, required area to the very edge, a hook left out of the credit, exit 2, and the files on the table. Depth is 180 mm, `220 − 30 − 20 / 2`. The area figures are 6.12, 0.99, and 7.11.
 
-If this page and the tests ever part ways, the tests win. A public number follows [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md). The 2026 papers are gathered in [docs/SOTA_2026.md](docs/SOTA_2026.md).
+The numbers on this page are the ones the tests hold. See [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
 ## Quick start
 
@@ -77,9 +77,9 @@ Flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--
 | `*.aerobim.json` | A short summary for a downstream checker |
 | `*.reinforcement.ifc` | IFC4 bars |
 
-On simple-slab, Ø20 and 30 mm cover, `effectiveDepthMm` and `effectiveDepthByLayer.BottomX` are both 180. That is `220 − 30 − 20 / 2`: thickness, minus cover, minus half the bar. A layer with no bars is left out of the map. `estimatedCost` is null because the example catalogue has no price.
+On simple-slab, Ø20 and 30 mm cover, `effectiveDepthMm` and `effectiveDepthByLayer.BottomX` are both 180. That is `220 − 30 − 20 / 2`: thickness, minus cover, minus half the bar. A layer with no bars stays out of the map.
 
-The report records the profile, the table version, and the optimizer. `checks[].status` is `Passed`, `Failed`, or `NotEvaluated`.
+The report keeps the profile, the table version, and the optimizer. `checks[].status` is `Passed`, `Failed`, or `NotEvaluated`.
 
 ## How it is built
 
@@ -108,7 +108,7 @@ A `Supported` or `Continuous` edge is a side of the rectangle. Any other outline
 
 The later piece of a lap sits one diameter off the design axis: beside it when `laps.representation` is `inPlane`, above it when `stacked`. A profile that omits the field keeps `inPlane`. Anchorage ends at the working area. A hook is the arc along the axis. The straight tail stays 0 until a profile sets `hooks.tailDiameters`.
 
-The schedule is CSV. IFC4 carries a bar type, a swept disk, and a placement on the axis. Revit takes the straight bar. A hook, an L, or a U comes back as an error, and the schedule with the IFC stay the record.
+The schedule is CSV. IFC4 carries a bar type, a swept disk, and a placement on the axis. Revit takes the straight bar; a hook, an L, or a U returns as an error. The schedule and the IFC are the record.
 
 A PNG brings `--px-per-mm` and an origin. A frame above 25 million pixels is turned away from the header, before a single pixel is decoded.
 
@@ -116,13 +116,11 @@ On simple-slab the area figures are `edgeDevelopmentAreaM2` 6.12, `realDeficitAr
 
 ## Examples
 
-- `examples/dxf/simple-slab/` — free edges, area check fails, exit 2
+- `examples/dxf/simple-slab/` — free edges, exit 2, files written
 - `examples/png/simple-slab/` — the same slab from a calibrated PNG
 - `examples/fe-field/supported-slab.csv` with `supported-slab.project.json` — slab on walls, area check passes
 
-Regenerate snapshots with `tools/examples/generate_expected_outputs.ps1` or `.sh`. Every changed figure belongs in the pull request.
-
-The batch corpus is outside the push lane. Without `OPENREBAR_BATCH_CORPUS_ROOT` the corpus job writes `corpus: NotEvaluated`.
+Regenerate snapshots with `tools/examples/generate_expected_outputs.ps1` or `.sh`. A changed figure is explained in the pull request.
 
 ## Optional ML lane
 
@@ -141,7 +139,7 @@ Copy `addin/RevitNet8` next to the `net8.0-windows` build, or `addin/RevitNet10`
 
 ## Supply chain
 
-NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with hashes. Scorecard runs on `main`. A release builds an SBOM and attests it against the CLI archive. ImageSharp stays on 3.1.12.
+NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with hashes. Scorecard runs on `main`. A release builds an SBOM and attests it against the CLI archive.
 
 ## Documents
 
@@ -153,8 +151,6 @@ NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with 
 - [docs/AUDIT_2026-10-18.md](docs/AUDIT_2026-10-18.md)
 - [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md)
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
-
-April 2026 audits under `docs/archive/` are history.
 
 ## License
 
