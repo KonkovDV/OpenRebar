@@ -1,16 +1,18 @@
-# OpenRebar
-
-[![CI](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg)](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge)](https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar)
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-purple)](https://dotnet.microsoft.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-English | [Русский](README.ru.md)
-
 <p align="center">
   <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
 </p>
+
+# OpenRebar
+
+<p align="center">
+  <a href="https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml"><img src="https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar"><img src="https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge" alt="OpenSSF Scorecard"></a>
+  <img src="https://img.shields.io/badge/.NET-8.0-purple" alt=".NET 8">
+  <img src="https://img.shields.io/badge/.NET-10.0-purple" alt=".NET 10">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+
+English | [Русский](README.ru.md)
 
 OpenRebar lays the reinforcement of a flat slab on the map the calculation already drew. Isolines in DXF, a calibrated PNG, or a field of required area come in. Bars, anchorage, laps, a schedule, a cutting plan, and an IFC file come out.
 
@@ -28,6 +30,34 @@ Other repositories on the same GitHub account are their own work.
 
 Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is two builds, chosen by the process runtime: `RevitNet8` while Revit is on .NET 8, and `RevitNet10` on .NET 10.
 
+## Contents
+
+- [What a run looks like](#what-a-run-looks-like)
+- [Status](#status)
+- [Quick start](#quick-start)
+- [What you get](#what-you-get)
+- [How it is built](#how-it-is-built)
+- [How a run behaves](#how-a-run-behaves)
+- [Examples](#examples)
+- [Optional ML lane](#optional-ml-lane)
+- [Revit](#revit)
+- [Supply chain](#supply-chain)
+- [Documents](#documents)
+- [License](#license)
+
+## What a run looks like
+
+Ø20, cover 30 mm, slab 220 mm thick. The bar axis sits at 180 mm: `220 − 30 − 20 / 2`.
+
+On the house slab, `examples/dxf/simple-slab`, the edges are free and the required area runs to the edge. The check exits 2 and leaves the files on the table. The areas are `edgeDevelopmentAreaM2` 6.12, `realDeficitAreaM2` 0.99, `underReinforcedAreaM2` 7.11.
+
+```mermaid
+flowchart LR
+  M["DXF, PNG, or the area field"] --> B["Bars, anchorage, laps"]
+  B --> C["Area check, cell by cell"]
+  C --> O["Schedule, cut, IFC"]
+```
+
 ## Status
 
 The five commands under [Quick start](#quick-start): **467/467 tests passing**.
@@ -41,8 +71,6 @@ The five commands under [Quick start](#quick-start): **467/467 tests passing**.
 | Cutting | Column generation (HiGHS). `wastePercent` and `estimatedCost` (null when a used stock length has no price) |
 | IFC | IFC4. One bar type per diameter and steel class, a swept disk of radius d/2, a placement on the axis |
 | Revit | Straight bars in a live document |
-
-`examples/dxf/simple-slab` is the house slab: free edges, required area to the very edge, a hook left out of the credit, exit 2, and the files on the table. Depth is 180 mm, `220 − 30 − 20 / 2`. The area figures are 6.12, 0.99, and 7.11.
 
 The numbers on this page are the ones the tests hold. See [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 
