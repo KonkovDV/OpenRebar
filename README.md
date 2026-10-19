@@ -8,6 +8,10 @@
 
 English | [Русский](README.ru.md)
 
+<p align="center">
+  <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
+</p>
+
 OpenRebar lays the reinforcement of a flat slab on the map the calculation already drew. Isolines in DXF, a calibrated PNG, or a field of required area come in. Bars, anchorage, laps, a schedule, a cutting plan, and an IFC file come out.
 
 Same drawing. Same report.
