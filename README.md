@@ -8,7 +8,9 @@
 
 English | [Русский](README.ru.md)
 
-OpenRebar lays out reinforcement for a flat reinforced-concrete slab from a map of required area. The map is a DXF isoline drawing, a calibrated PNG, or a numeric field. The run writes bars, anchorage, laps, a schedule, a cutting plan, and an IFC file.
+OpenRebar lays the reinforcement of a flat slab on the map the calculation already drew. Isolines in DXF, a calibrated PNG, or a field of required area come in. Bars, anchorage, laps, a schedule, a cutting plan, and an IFC file come out.
+
+Same drawing. Same report.
 
 Three places in the chain.
 
@@ -20,13 +22,11 @@ Three places in the chain.
 
 Other repositories on the same GitHub account are other products.
 
-The same input produces the same report.
-
 Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is two builds, chosen by the process runtime: `RevitNet8` while Revit is on .NET 8, and `RevitNet10` on .NET 10. The engineering rules are tested without Revit.
 
 ## Status
 
-Counted regression, the five commands under [Quick start](#quick-start): **467/467 tests passing**.
+The five commands under [Quick start](#quick-start): **467/467 tests passing**.
 
 | | |
 |---|---|
@@ -38,11 +38,9 @@ Counted regression, the five commands under [Quick start](#quick-start): **467/4
 | IFC | IFC4. One bar type per diameter and steel class, a swept disk of radius d/2, a placement on the axis |
 | Revit | Straight bars. A hook, an L, or a U is an error |
 
-`examples/dxf/simple-slab` exits 2. The edges are free, the required area runs to the edge, and a hook is not credited. That failure is the regression.
+`examples/dxf/simple-slab` is the house slab. The edges are free, the required area runs to the edge, a hook is not credited, and the run exits 2 with the files on the table. That is the regression the tests keep.
 
-The examples are fixtures for the tests. A design-office pilot and a certificate are still ahead of this page. If this page and the tests disagree, the tests win. A public number follows [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
-
-Where the 2026 literature is ahead of this repository is written in [docs/SOTA_2026.md](docs/SOTA_2026.md).
+If this page and the tests ever part ways, the tests win. A public number follows [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md). The 2026 papers are gathered in [docs/SOTA_2026.md](docs/SOTA_2026.md).
 
 ## Quick start
 
@@ -98,21 +96,21 @@ Domain has no NuGet packages. NetTopologySuite, HiGHS, xBIM, and ImageSharp stay
 | `IRebarOptimizer` | 1D cutting |
 | `IIfcExporter` | IFC4 |
 | `IRevitPlacer` | Straight bars in a live document |
-| `IImageSegmentationService` | Optional local HTTP bridge. No hosted model |
+| `IImageSegmentationService` | Optional local HTTP bridge |
 
 The cutter used in a run is column generation. It records when the dual bound is `Proven`. Beside it sits `BestFitDecreasingOptimizer`: each bar goes into the open stock piece with the smallest remainder. A diagnostic stack is stored as `stackTraceSha256`. The text stays in the log.
 
-## Limits
+## How a run behaves
 
-One drawing is one layer. A project file can name up to four drawings.
+One drawing, one layer. A project file can name four.
 
-A `Supported` or `Continuous` edge is a side of the bounding box. On any other outline the run stops with `edgesRequireRectangularSlab` and exit 3. Free edges of an oblique slab stay on the outline. An oblique bar is stepped outward by 10 mm and then clipped, so the end stays inside the contour.
+A `Supported` or `Continuous` edge is a side of the rectangle. Any other outline stops with `edgesRequireRectangularSlab` and exit 3, before a bar is placed. Free edges of an oblique slab stay on the real outline. An oblique bar steps outward by 10 mm and is clipped so the end sits inside the contour.
 
-The later piece of a lap is drawn one diameter off the design axis: beside it when `laps.representation` is `inPlane`, above it when `stacked`. A profile that omits the field keeps `inPlane`. Anchorage stops at the working area. A hook is the centerline arc. The straight tail stays 0 until a profile sets `hooks.tailDiameters`. Couplers are not modeled.
+The later piece of a lap sits one diameter off the design axis: beside it when `laps.representation` is `inPlane`, above it when `stacked`. A profile that omits the field keeps `inPlane`. Anchorage ends at the working area. A hook is the arc along the axis. The straight tail stays 0 until a profile sets `hooks.tailDiameters`.
 
-The schedule is CSV. IFC here is IFC4: bar type, swept disk, placement. An IFC 4.3 splice, and a round-trip through another program, are still ahead. Revit accepts a straight bar. A hook, an L, or a U is refused. The schedule and the IFC remain the record.
+The schedule is CSV. IFC4 carries a bar type, a swept disk, and a placement on the axis. Revit takes the straight bar. A hook, an L, or a U comes back as an error, and the schedule with the IFC stay the record.
 
-A PNG needs `--px-per-mm` and an origin. A frame above 25 million pixels is rejected from the header, before decode.
+A PNG brings `--px-per-mm` and an origin. A frame above 25 million pixels is turned away from the header, before a single pixel is decoded.
 
 On simple-slab the area figures are `edgeDevelopmentAreaM2` 6.12, `realDeficitAreaM2` 0.99, `underReinforcedAreaM2` 7.11.
 
@@ -135,7 +133,7 @@ python -m pytest tests -q
 python scripts/validate_model_manifest.py models/MANIFEST.json
 ```
 
-CI installs that lock with hashes on Python 3.11. The manifest is empty: there is no checkpoint to run, and there is no call to a hosted model. Without a checkpoint, a PNG is read by exact color match.
+CI installs that lock with hashes on Python 3.11. A PNG is read by an exact match to the legend color. `--ml-url` is there when you already have a service of your own.
 
 ## Revit
 
@@ -143,7 +141,7 @@ Copy `addin/RevitNet8` next to the `net8.0-windows` build, or `addin/RevitNet10`
 
 ## Supply chain
 
-NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with hashes. Scorecard runs on `main`. A release builds an SBOM, attests the published files, and attests that SBOM against the CLI archive. ImageSharp stays on 3.1.12: version 4 needs a license key, and the five advisories on 3.1.12 have no patch on that line. Any other high finding still fails the audit.
+NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with hashes. Scorecard runs on `main`. A release builds an SBOM and attests it against the CLI archive. ImageSharp stays on 3.1.12.
 
 ## Documents
 
@@ -152,8 +150,8 @@ NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with 
 - [docs/NORMATIVE_TRACEABILITY.md](docs/NORMATIVE_TRACEABILITY.md) — clause, code, test
 - [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
 - [docs/SOTA_2026.md](docs/SOTA_2026.md)
-- [docs/AUDIT_2026-10-18.md](docs/AUDIT_2026-10-18.md) — which 3 October findings are closed
-- [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md) — work queue
+- [docs/AUDIT_2026-10-18.md](docs/AUDIT_2026-10-18.md)
+- [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md)
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
 
 April 2026 audits under `docs/archive/` are history.
