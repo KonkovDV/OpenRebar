@@ -1,16 +1,18 @@
-# OpenRebar
-
-[![CI](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg)](https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge)](https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar)
-[![.NET 8](https://img.shields.io/badge/.NET-8.0-purple)](https://dotnet.microsoft.com/)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-purple)](https://dotnet.microsoft.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-Русский | [English](README.md)
-
 <p align="center">
   <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
 </p>
+
+# OpenRebar
+
+<p align="center">
+  <a href="https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml"><img src="https://github.com/KonkovDV/OpenRebar/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/KonkovDV/OpenRebar"><img src="https://api.scorecard.dev/projects/github.com/KonkovDV/OpenRebar/badge" alt="OpenSSF Scorecard"></a>
+  <img src="https://img.shields.io/badge/.NET-8.0-purple" alt=".NET 8">
+  <img src="https://img.shields.io/badge/.NET-10.0-purple" alt=".NET 10">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+
+Русский | [English](README.md)
 
 OpenRebar кладёт арматуру плоской плиты на карту, которую уже нарисовал расчёт. На входе изолинии DXF, калиброванный PNG или поле требуемой площади. На выходе стержни, анкеровка, нахлёсты, ведомость, раскрой и файл IFC.
 
@@ -28,6 +30,34 @@ OpenRebar кладёт арматуру плоской плиты на карт�
 
 Библиотеки собираются под .NET 8 и .NET 10. CLI — на .NET 10. Надстройка Revit — две сборки по рантайму процесса: `RevitNet8`, пока Revit на .NET 8, и `RevitNet10` на .NET 10.
 
+## Содержание
+
+- [Как выглядит прогон](#как-выглядит-прогон)
+- [Состояние](#состояние)
+- [Быстрый старт](#быстрый-старт)
+- [Что получается](#что-получается)
+- [Как устроено](#как-устроено)
+- [Как ведёт себя прогон](#как-ведёт-себя-прогон)
+- [Примеры](#примеры)
+- [Необязательная ветка ML](#необязательная-ветка-ml)
+- [Revit](#revit)
+- [Цепочка поставки](#цепочка-поставки)
+- [Документы](#документы)
+- [Лицензия](#лицензия)
+
+## Как выглядит прогон
+
+Ø20, защитный слой 30 мм, плита толщиной 220 мм. Ось стержня сидит на 180 мм: `220 − 30 − 20 / 2`.
+
+На домашней плите `examples/dxf/simple-slab` края свободные, требуемая площадь доходит до края. Проверка выходит с кодом 2 и оставляет файлы на столе. Площади: `edgeDevelopmentAreaM2` 6,12, `realDeficitAreaM2` 0,99, `underReinforcedAreaM2` 7,11.
+
+```mermaid
+flowchart LR
+  M["DXF, PNG или поле площади"] --> B["Стержни, анкеровка, нахлёсты"]
+  B --> C["Проверка площади по ячейкам"]
+  C --> O["Ведомость, раскрой, IFC"]
+```
+
 ## Состояние
 
 Пять команд из раздела [Быстрый старт](#быстрый-старт): **467/467 тестов проходят**.
@@ -41,8 +71,6 @@ OpenRebar кладёт арматуру плоской плиты на карт�
 | Раскрой | Генерация столбцов (HiGHS). `wastePercent` и `estimatedCost` (null, если у использованной складской длины нет цены) |
 | IFC | IFC4. Один тип на диаметр и класс стали, диск радиуса d/2, размещение на оси |
 | Revit | Прямые стержни в открытом документе |
-
-`examples/dxf/simple-slab` — домашняя плита: свободные края, площадь до самого края, крюк без зачёта, код 2, файлы на столе. Глубина 180 мм, `220 − 30 − 20 / 2`. Площади 6,12, 0,99 и 7,11.
 
 Цифры этой страницы держат тесты. Правило — [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md).
 

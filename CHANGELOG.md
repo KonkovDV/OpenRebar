@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The OpenRebar lockup sits centered on both public pages. The full brand sheet, with the app icon and the four colors, is kept at `docs/brand/openrebar-brand-sheet.jpg`.
-- The public pages drop the remaining apologies: the null cost excuse, the ImageSharp hold, and the line that the page loses to the tests. The house slab, the depth `220 − 30 − 20 / 2`, and **467/467** stay.
+- The public README follows the family page: a centered mark, a contents list, and one scene of a run. The house slab, the depth `220 − 30 − 20 / 2`, and **467/467** stay.
 - Microsoft.Extensions packages move from 10.0.12 to 10.0.13, and System.Text.Json from 10.0.7 to 10.0.13. FluentAssertions in the test projects moves from 7.1.0 to 7.2.2. HiGHS and xBIM stay, because those bumps can change a golden file.
 - A status note, `docs/AUDIT_2026-10-18.md`, records which 3 October findings the code has since closed. Dependabot on that date had 10 open alerts, all ImageSharp 3.1.12.
 - Normative formulas in the traceability table use HTML subscripts, so the indices render in the browser. Historical plans keep the symbol names as they were written.
