@@ -4,7 +4,9 @@
 
 reads input.reinforcement.ifc, input.verification.json, and input.result.json.
 Bars are the swept-disk directrices projected onto the slab plane. Cells are
-the under-reinforced cells, merged into rows. A ring marks each hard clash.
+the under-reinforced cells, merged into rows. A ring marks each hard clash
+that is in the plan. hookOutsideConcrete leaves through the top face, so it
+is not drawn.
 """
 
 from __future__ import annotations
@@ -230,6 +232,8 @@ def render(run: Path, out_path: Path) -> None:
         f'fill="none" stroke="{NAVY}" stroke-width="12"/>'
     )
     for clash in hard:
+        if clash.get("kind") == "hookOutsideConcrete":
+            continue
         lines.append(
             f'<circle cx="{sx(clash["x"])}" cy="{sy(clash["y"])}" r="130" fill="none" '
             f'stroke="{ORANGE}" stroke-width="36"/>'

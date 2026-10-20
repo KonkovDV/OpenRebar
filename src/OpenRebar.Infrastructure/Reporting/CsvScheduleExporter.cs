@@ -8,7 +8,7 @@ namespace OpenRebar.Infrastructure.Reporting;
 
 /// <summary>
 /// Exports a semicolon-delimited specification and a steel-mass sheet.
-/// A position name is Ø20 A500C l = 6485. The designation column stays empty.
+/// A position name is Ø20 A500C l = 6305. The designation column stays empty.
 /// Piece mass and the steel total use the exact cut length and are rounded only here.
 /// Rows are positions, ordered by the numeric mark.
 /// </summary>

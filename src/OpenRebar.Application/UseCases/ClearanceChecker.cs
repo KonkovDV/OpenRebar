@@ -54,6 +54,7 @@ public static class ClearanceChecker
 
     AddLapClashes(clashes, bars, slab, jointRatioMax, lapRepresentation);
     AddLayerSpacing(clashes, bars, slab);
+    AddHookClashes(clashes, bars, slab, lapRepresentation);
     return clashes
         .OrderBy(clash => clash.Kind, StringComparer.Ordinal)
         .ThenBy(clash => clash.BarIds[0], StringComparer.Ordinal)
@@ -721,6 +722,105 @@ public static class ClearanceChecker
     var bSpan = Span(right);
     return Math.Min(aSpan.End, bSpan.End) - Math.Max(aSpan.Start, bSpan.Start) > SameLineMm;
   }
+
+  private static void AddHookClashes(
+      List<ClashReport> clashes,
+      IReadOnlyList<BarRef> bars,
+      SlabGeometry slab,
+      string lapRepresentation)
+  {
+    foreach (var bar in bars)
+    {
+      var segment = bar.Segment;
+      if (segment.EndConditionStart != BarEndCondition.NeedsHook
+          && segment.EndConditionEnd != BarEndCondition.NeedsHook)
+        continue;
+
+      var drawn = LapPlacement.ForDrawing(segment, lapRepresentation);
+      if (!TryAxisElevation(bar, slab, drawn, out double elevation))
+      {
+        clashes.Add(HookClash(bar, drawn.Start));
+        continue;
+      }
+
+      elevation += LapPlacement.VerticalMm(drawn, lapRepresentation);
+      bool bendUp = HookCenterline.BendsUp(bar.Zone.Layer);
+      if (!HookCenterline.TryBuild(drawn, elevation, tailMm: 0, bendUp, out var spans, out _))
+        continue;
+
+      double radius = drawn.DiameterMm / 2.0;
+      HookCenterline.Point? worst = null;
+      double worstPast = InsideToleranceMm;
+      foreach (var span in spans)
+      {
+        if (span.Through is not HookCenterline.Point through)
+          continue;
+
+        foreach (var point in new[] { span.Start, through, span.End })
+        {
+          double past = ConcretePastMm(point, radius, slab);
+          if (past > worstPast)
+          {
+            worstPast = past;
+            worst = point;
+          }
+        }
+      }
+
+      if (worst is HookCenterline.Point at)
+        clashes.Add(HookClash(bar, new Point2D(at.X, at.Y)));
+    }
+  }
+
+  private static bool TryAxisElevation(BarRef bar, SlabGeometry slab, RebarSegment drawn, out double elevationMm)
+  {
+    try
+    {
+      elevationMm = LayerElevations.AxisElevationMm(
+          bar.Zone.Layer,
+          bar.Zone.Direction,
+          slab.ThicknessMm,
+          slab.CoverMm,
+          slab.CoverMm,
+          drawn.DiameterMm,
+          drawn.DiameterMm);
+      return true;
+    }
+    catch (ArgumentException)
+    {
+      elevationMm = 0;
+      return false;
+    }
+  }
+
+  private static double ConcretePastMm(HookCenterline.Point point, double radius, SlabGeometry slab)
+  {
+    double vertical = Math.Max(radius - point.Z, point.Z + radius - slab.ThicknessMm);
+    var plan = new Point2D(point.X, point.Y);
+    double horizontal = PlanPastMm(plan, radius, slab.OuterBoundary, outsideIsVoid: true);
+    foreach (var opening in slab.Openings)
+      horizontal = Math.Max(horizontal, PlanPastMm(plan, radius, opening, outsideIsVoid: false));
+    return Math.Max(vertical, horizontal);
+  }
+
+  private static double PlanPastMm(Point2D point, double radius, Polygon ring, bool outsideIsVoid)
+  {
+    bool inside = new PlanarPolygon(ring).Contains(point);
+    double distance = DistanceToRing(point, ring);
+    if (outsideIsVoid)
+      return inside ? Math.Max(0, radius - distance) : distance + radius;
+
+    return inside ? distance + radius : Math.Max(0, radius - distance);
+  }
+
+  private static ClashReport HookClash(BarRef bar, Point2D at) => new()
+  {
+    Type = "hard",
+    Kind = "hookOutsideConcrete",
+    X = at.X,
+    Y = at.Y,
+    BarIds = [bar.Id]
+  };
 
   private static void AddLayerSpacing(List<ClashReport> clashes, IReadOnlyList<BarRef> bars, SlabGeometry slab)
   {
