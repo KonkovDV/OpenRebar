@@ -382,6 +382,34 @@ public class StandardReinforcementCalculatorTests
   }
 
   [Fact]
+  public void CalculateRebars_ClosingStation_KeepsTheClearGap()
+  {
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = new Polygon([
+          new Point2D(0, 0), new Point2D(6000, 0),
+          new Point2D(6000, 4000), new Point2D(0, 4000)
+      ]),
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+    var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+        new BoundingBox(new Point2D(0, 0), new Point2D(6000, 4000)));
+    zone.LayoutSpec = new ReinforcementSpec { DiameterMm = 20, SpacingMm = 150, SteelClass = "A500C" };
+
+    CreateCalculator().CalculateRebars([zone], slab);
+
+    double pitch = ReinforcementLimits.MinimumCenterDistanceMm(20, topFace: false);
+    var ordinates = zone.Rebars.Select(bar => bar.Start.Y).Order().ToArray();
+    ordinates.Should().HaveCount(26);
+    ordinates[^1].Should().BeApproximately(3885, 0.1);
+    ordinates.Zip(ordinates.Skip(1), (first, second) => second - first)
+        .Should()
+        .OnlyContain(gap => gap >= pitch - 0.1);
+  }
+
+  [Fact]
   public void CalculateRebars_HookReachLongerThanTheSpan_DoesNotInvertTheBar()
   {
     var slab = new SlabGeometry

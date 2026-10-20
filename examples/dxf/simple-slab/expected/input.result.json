@@ -1,7 +1,7 @@
 {
   "contractId": "OpenRebar.reinforcement.report.v2",
   "schemaVersion": "2.1.0",
-  "generatedAtUtc": "2026-10-20T13:37:09.8191206+00:00",
+  "generatedAtUtc": "2026-10-20T13:49:45.2028187+00:00",
   "metadata": {
     "projectCode": "OpenRebar-CLI",
     "slabId": "input",
@@ -76,9 +76,9 @@
       "layer": "Bottom",
       "diameterMm": 20,
       "spacingMm": 150,
-      "rebarCount": 27,
-      "totalClearSpanMm": 154980,
-      "totalLengthMm": 170248.1402964464,
+      "rebarCount": 26,
+      "totalClearSpanMm": 149240,
+      "totalLengthMm": 163942.65361880022,
       "boundingBox": {
         "minX": 0,
         "minY": 0,
@@ -97,26 +97,17 @@
     {
       "diameterMm": 20,
       "supplierName": "Default (Russian market)",
-      "rebarCount": 27,
-      "stockBarsNeeded": 27,
-      "totalWasteMm": 72670.8597035536,
+      "rebarCount": 26,
+      "stockBarsNeeded": 26,
+      "totalWasteMm": 69979.34638119975,
       "totalWastePercent": 29.905703581709297,
-      "totalRebarLengthMm": 170248.1402964464,
-      "totalMassKg": 420.51290653222264,
+      "totalRebarLengthMm": 163942.65361880022,
+      "totalMassKg": 404.9383544384366,
       "estimatedCost": null,
-      "dualBound": 27,
+      "dualBound": 26,
       "gap": 0,
       "boundStatus": "Proven",
       "cuttingPlans": [
-        {
-          "stockLengthMm": 9000,
-          "cutsMm": [
-            6305.486677646163
-          ],
-          "sawCutWidthMm": 3,
-          "wasteMm": 2691.513322353837,
-          "wastePercent": 29.905703581709297
-        },
         {
           "stockLengthMm": 9000,
           "cutsMm": [
@@ -367,17 +358,17 @@
   "summary": {
     "parsedZoneCount": 1,
     "classifiedZoneCount": 1,
-    "totalRebarSegments": 27,
+    "totalRebarSegments": 26,
     "totalWastePercent": 29.905703581709297,
-    "totalWasteMm": 72670.8597035536,
-    "totalMassKg": 420.51290653222264,
-    "massInstalledKg": 420.51290653222264,
-    "massPurchasedKg": 600.21,
+    "totalWasteMm": 69979.34638119975,
+    "totalMassKg": 404.9383544384366,
+    "massInstalledKg": 404.9383544384366,
+    "massPurchasedKg": 577.98,
     "estimatedCost": null
   },
   "warnings": [
     "DXF $INSUNITS is unset; coordinates were interpreted as millimetres.",
-    "Anchorage stays inside the working area. Ends that cannot take the full length: NeedsHook 54.",
+    "Anchorage stays inside the working area. Ends that cannot take the full length: NeedsHook 52.",
     "EdgeKindDefaulted: edges that were not set are Free. Anchorage is not carried into a support.",
     "EdgeCoverBelowCover: coverEdgeMm is below coverMm. A free edge is inset by max(coverEdgeMm, coverMm + d/2)."
   ],
@@ -386,7 +377,7 @@
       "stage": "Verification",
       "errorMessage": "Under-reinforced region in DXF-0001 at (0, 0)-(6000, 4000) mm.",
       "exceptionType": "VerificationFailed",
-      "occurredAtUtc": "2026-10-20T13:37:09.6674588+00:00",
+      "occurredAtUtc": "2026-10-20T13:49:45.126912+00:00",
       "stackTraceSha256": null,
       "isCritical": true
     }
@@ -399,9 +390,9 @@
       "steelClass": "A500C",
       "shapeCode": "H",
       "lengthMm": 6305,
-      "quantity": 27,
+      "quantity": 26,
       "massPerPieceKg": 15.574552093786023,
-      "totalMassKg": 420.51290653222264,
+      "totalMassKg": 404.9383544384366,
       "layer": "BottomX"
     }
   ],
@@ -412,7 +403,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 51.6859,
+      "durationMs": 59.8644,
       "algorithmId": "dxf",
       "counters": {
         "processed": 1,
@@ -426,7 +417,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 0.7812,
+      "durationMs": 0.7001,
       "algorithmId": null,
       "counters": {
         "processed": 1,
@@ -440,7 +431,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 9.4737,
+      "durationMs": 11.0043,
       "algorithmId": "bar-runs/v1",
       "counters": {
         "processed": 1,
@@ -454,10 +445,10 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 117.8594,
+      "durationMs": 146.4242,
       "algorithmId": null,
       "counters": {
-        "processed": 27,
+        "processed": 26,
         "max": null
       },
       "reasons": []
@@ -468,7 +459,7 @@
       "complete": false,
       "budgetExhausted": false,
       "partialResults": true,
-      "durationMs": 63.849,
+      "durationMs": 67.1556,
       "algorithmId": "grid-as-v0",
       "counters": {
         "processed": 0,
@@ -489,7 +480,7 @@
       "complete": true,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 145.7437,
+      "durationMs": 68.6249,
       "algorithmId": "column-generation-relaxation-v2",
       "counters": {
         "processed": 1,
@@ -503,7 +494,7 @@
       "complete": false,
       "budgetExhausted": false,
       "partialResults": false,
-      "durationMs": 0.0574,
+      "durationMs": 0.1044,
       "algorithmId": null,
       "counters": {
         "processed": 0,
@@ -514,9 +505,9 @@
   ],
   "verification": {
     "status": "Failed",
-    "underReinforcedAreaM2": 7.890000000000001,
-    "edgeDevelopmentAreaM2": 5.37,
-    "realDeficitAreaM2": 2.52,
+    "underReinforcedAreaM2": 8.01,
+    "edgeDevelopmentAreaM2": 5.46,
+    "realDeficitAreaM2": 2.5500000000000003,
     "remedy": [
       "anchorIntoSupport",
       "uBarAtFreeEdge",
@@ -528,16 +519,16 @@
     "cellSizeMm": 50,
     "underCoverageRatio": 0,
     "peakSmoothingWindowMm": null,
-    "underReinforcedCells": 3156,
-    "excessSteelKg": 11.08579098744178,
+    "underReinforcedCells": 3204,
+    "excessSteelKg": 0,
     "layers": [
       {
         "layer": "DXF-0001",
         "status": "Failed",
-        "underReinforcedAreaM2": 7.890000000000001,
-        "underReinforcedCells": 3156,
+        "underReinforcedAreaM2": 8.01,
+        "underReinforcedCells": 3204,
         "minMarginMm2PerM": -2094.3951023931954,
-        "excessSteelKg": 11.08579098744178
+        "excessSteelKg": 0
       }
     ],
     "deficitRegions": [
@@ -579,13 +570,13 @@
           "steelClass": "A500C",
           "shapeCode": "H",
           "lengthMm": 6305,
-          "quantity": 27,
+          "quantity": 26,
           "massPerPieceKg": 15.574552093786023,
-          "totalMassKg": 420.51290653222264,
+          "totalMassKg": 404.9383544384366,
           "layer": "BottomX"
         }
       ],
-      "massKg": 420.51290653222264
+      "massKg": 404.9383544384366
     },
     {
       "layer": "BottomY",
@@ -765,15 +756,6 @@
       "type": "hard",
       "kind": "hookOutsideConcrete",
       "x": 130,
-      "y": 3865,
-      "barIds": [
-        "4fa12bbc78662ec6"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "hookOutsideConcrete",
-      "x": 130,
       "y": 1765,
       "barIds": [
         "5048aa2f026a1e23"
@@ -939,16 +921,6 @@
       "y": 2215,
       "barIds": [
         "fdad952c1477a231"
-      ]
-    },
-    {
-      "type": "hard",
-      "kind": "layerClearance",
-      "x": 130,
-      "y": 3875,
-      "barIds": [
-        "4fa12bbc78662ec6",
-        "5fb1466f7db3ba4e"
       ]
     }
   ],

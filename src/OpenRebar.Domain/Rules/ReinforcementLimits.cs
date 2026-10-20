@@ -43,6 +43,21 @@ public static class ReinforcementLimits
   }
 
   /// <summary>
+  /// Centre distance for two bars of one diameter, mm.
+  /// The clear gap is the larger of the diameter and the face minimum
+  /// already stored for clause 10.3.5.
+  /// </summary>
+  public static double MinimumCenterDistanceMm(double diameterMm, bool topFace)
+  {
+    if (diameterMm < 0)
+      throw new ArgumentOutOfRangeException(nameof(diameterMm), diameterMm, "Diameter cannot be negative.");
+
+    var profile = NormativeProfiles.Sp63_2018;
+    double clear = topFace ? profile.ClearSpacingTopMm : profile.ClearSpacingBottomMm;
+    return Math.Max(diameterMm, clear) + diameterMm;
+  }
+
+  /// <summary>
   /// Minimum reinforcement area per SP 63 §10.3.6, μ_min = 0.1% of b·h0.
   /// </summary>
   public static double MinReinforcementArea(double effectiveDepthMm, double widthMm)
