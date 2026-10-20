@@ -1,14 +1,13 @@
-# OpenRebar ML — Training Data Layout
-#
-# Place training data in:
-#   data/train/images/  — input isoline PNGs from LIRA-SAPR
-#   data/train/masks/   — corresponding class-index masks (0-7)
-#   data/val/images/    — validation images
-#   data/val/masks/     — validation masks
-#
-# Mask format: grayscale PNG where pixel value = class index
-#   0 = background (no reinforcement)
-#   1-7 = reinforcement zones by legend color
-#
-# Trained model checkpoint: models/isoline_unet.pt
-# ONNX export: models/isoline_unet.onnx
+# Training data
+
+```
+ml/data/
+  train/images/   isoline PNGs
+  train/masks/    class-index masks, one per image
+  val/images/
+  val/masks/
+```
+
+A mask is a grayscale PNG of the same size as its image. Each pixel holds its class: 0 is background, 1 to 7 are the legend colors. `IsolineUNet` has 8 classes.
+
+Training writes `models/isoline_unet.pt`. `python -m src.training.export_onnx --model models/isoline_unet.pt` writes `models/isoline_unet.onnx`. Neither file goes into git; `ml/models/MANIFEST.json` lists the files a service may load.

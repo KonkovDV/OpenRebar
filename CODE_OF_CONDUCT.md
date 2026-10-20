@@ -25,5 +25,5 @@ violate this document in order to keep collaboration safe and productive.
 
 ## Reporting
 
-If conduct on a repository surface becomes unsafe, contact the maintainer privately
-and include links or screenshots so the problem can be reviewed quickly.
+Use **Report content** on the comment, issue, or pull request. Add a link or a
+screenshot so the problem can be read quickly.

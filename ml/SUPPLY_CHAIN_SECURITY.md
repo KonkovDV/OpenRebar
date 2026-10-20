@@ -1,252 +1,46 @@
 # ML Supply-Chain Security
 
-**Audit Finding**: ML-1 (ML Supply-Chain Hardening)  
-**Date**: 2026-04-25  
-**Status**: Implemented and runtime-enforced
+The ML lane is optional. A run without `--ml-url` never calls it.
 
-## Overview
+## The lock
 
-The OpenRebar ML module implements reproducible, cryptographically-verified dependency and model management to prevent supply-chain attacks.
+`ml/requirements.locked.txt` is the CPython 3.11 manylinux resolution of `ml/requirements.in`. Every package carries its sha256. torch is `2.13.0+cpu` from the PyTorch CPU index; numpy stays on 1.26.
 
-## 1. Dependency Lock File
+CI installs that file and does not rewrite it. The `python-smoke` job:
 
-### Using the Locked Requirements
+1. installs the lock with `--require-hashes`;
+2. checks that the lock still carries hash entries;
+3. validates `ml/models/MANIFEST.json`;
+4. runs `pytest tests -q`.
 
-The locked requirements file (`requirements.locked.txt`) contains all transitive dependencies pinned to exact versions with SHA256 hashes:
+Refresh the lock from `ml/` with the pinned pip-tools bootstrap and the same platform tags as the lock header:
 
 ```bash
-# Install with hash verification (prevents package substitution attacks)
-python -m pip install --require-hashes -r ml/requirements.locked.txt
-
-# Refresh the lock with the pinned pip-tools bootstrap used in CI
-python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
-python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in
+python -m pip install --require-hashes -r ../.github/requirements/pip-tools.locked.txt
+python -m piptools compile --allow-unsafe --generate-hashes --newline lf --output-file=requirements.locked.txt --pip-args "--python-version 3.11 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 --implementation cp --abi cp311 --only-binary=:all:" requirements.in
 ```
 
-### Why Hash Verification?
+numpy 1.26 wheels are tagged `manylinux_2_17`, which is why that tag is on the list. A lock compiled for Linux does not install on Windows; the `python-smoke` job on GitHub is the install check.
 
-- **Dependency Confusion**: Prevents hijacked packages from being installed (e.g., `torch` vs `torch-malicious`)
-- **Reproducibility**: Ensures exact same binary is downloaded across environments
-- **Audit Trail**: Hashes visible in git history for security reviews
+## Models
 
-### Generating/Updating Locks
+`ml/models/MANIFEST.json` lists the model files a service may load: a unique `model_id`, a relative `filename`, and a lowercase `sha256`. The list is empty. No checkpoint lives in git.
 
-1. Edit `ml/requirements.in` with version constraints
-2. Install the pinned pip-tools bootstrap from `.github/requirements/pip-tools.locked.txt`
-3. Run `python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in`
-4. Commit the new `ml/requirements.locked.txt` with a detailed commit message
-5. Review all transitive dependencies added/removed
-
-### Platform Nuance: Linux-only Torch Dependencies
-
-PyTorch 2.11 introduces Linux-only sidecar dependencies that may not materialize when a lock is regenerated on Windows alone. To keep GitHub Actions reproducible, the Ubuntu workflows refresh `ml/requirements.locked.txt` before installation using the pinned pip-tools bootstrap in `.github/requirements/pip-tools.locked.txt`.
-
-Operational rule:
-
-- keep `ml/requirements.in` as the declarative source of truth,
-- keep `ml/requirements.locked.txt` committed for reviewability,
-- let Ubuntu CI regenerate the lock before install so Linux-only dependency hashes are present.
-
-## 2. Model Checkpoint Verification
-
-### MANIFEST.json
-
-The `ml/models/MANIFEST.json` file tracks all ONNX model checkpoints:
-
-- **SHA256 hashes**: Cryptographic fingerprints of model files
-- **Metadata**: Training date, framework, performance metrics, input/output shapes
-- **Provenance**: Source, license, training dataset reference
-- **Verification command**: How to recompute the hash locally
-
-The repository keeps this manifest in git even when the model registry is empty; model binaries remain release artifacts and are not committed into source control.
-
-### Verifying Model Integrity
-
-The API verifies the selected model **before** deserialization. By default the resolved model path must match a safe relative `filename` in `MANIFEST.json`, and the streamed SHA-256 digest must match that entry. A mismatch, missing registration, absolute path, or `..` traversal prevents startup.
-
-For a model mounted from an external read-only volume, set `OpenRebar_MODEL_SHA256` to the trusted lowercase digest. This explicit digest is the only supported manifest bypass.
+At startup the service looks for `OpenRebar_MODEL_PATH`, by default `ml/models/isoline_unet.pt`. If the file is there, it is hashed in 1 MB blocks and compared with its manifest entry before torch reads it. `OpenRebar_MODEL_SHA256` replaces the manifest entry for a model mounted from elsewhere. A missing entry, an absolute path, a `..` segment, or a different digest stops startup. torch then loads the weights with `weights_only=True`.
 
 ```bash
-# Validate manifest structure in a source checkout
 python ml/scripts/validate_model_manifest.py ml/models/MANIFEST.json
-
-# In a downloaded release bundle, verify every listed model file
 python ml/scripts/validate_model_manifest.py --verify-files ml/models/MANIFEST.json
 ```
 
-### Model Deployment
+The second command also hashes every listed file, for a downloaded bundle.
 
-1. Download model from trusted release artifact (GitHub Releases)
-2. Compute SHA256 of downloaded file
-3. Cross-reference against `MANIFEST.json`
-4. Load model only if hash matches
+## The service
 
-Example in Python:
+The FastAPI service binds `127.0.0.1` and has no authentication. Put it behind a proxy that adds one before anything else can reach it. An upload is at most 20 MB, a frame at most 40 million pixels (`OpenRebar_MAX_IMAGE_PIXELS`), one inference runs at a time, and each has 120 s. The file type comes from its first bytes, not from the client's file name.
 
-```python
-import hashlib
-import json
+The C# client talks to loopback, plus the host named by `--ml-url`. It refuses a redirect to any other host.
 
-def load_verified_model(model_path, model_id, manifest_path="ml/models/MANIFEST.json"):
-    # Read manifest
-    with open(manifest_path) as f:
-        manifest = json.load(f)
-    
-    # Compute hash
-    sha256_hash = hashlib.sha256()
-    with open(model_path, "rb") as f:
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha256_hash.update(byte_block)
-    
-    computed_hash = sha256_hash.hexdigest()
-    
-    # Verify against manifest
-    model_entry = next((m for m in manifest["models"] if m["model_id"] == model_id), None)
-    if model_entry is None:
-      raise ValueError(f"Model {model_id} not found in manifest")
-    expected_hash = model_entry["sha256"]
-    if computed_hash != expected_hash:
-        raise ValueError(f"Hash mismatch! {computed_hash} != {expected_hash}")
-    
-    # Safe to load
-    import onnx
-    return onnx.load(model_path)
-```
+## OSV
 
-## 3. CI/CD Integration
-
-### GitHub Actions Verification
-
-When a PR modifies ML code or dependencies:
-
-1. **Dependency check**: Install from `requirements.locked.txt` with `--require-hashes` and verify lock formatting
-2. **Manifest check**: Validate `MANIFEST.json` has valid SHA256 formats
-3. **Security scan**: Check for known vulnerable packages via `pip-audit` or similar
-4. **Model integrity**: (If models included in repo) Verify model hashes
-
-Example CI step (add to `.github/workflows/ci.yml`):
-
-```yaml
-- name: Verify ML dependencies
-  run: |
-    python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
-    python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in
-    python -m pip install --require-hashes -r ml/requirements.locked.txt --dry-run
-
-- name: Validate model manifest
-  run: |
-    python ml/scripts/validate_model_manifest.py ml/models/MANIFEST.json
-```
-
-### Weekly Re-pinning (Optional)
-
-To keep dependencies fresh while maintaining security:
-
-```yaml
-name: Weekly Dependency Update
-
-on:
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly on Sunday
-
-jobs:
-  update-deps:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Update requirements.locked.txt
-        run: |
-          python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt
-          python -m piptools compile --allow-unsafe --generate-hashes -U --output-file=ml/requirements.locked.txt ml/requirements.in
-      
-      - name: Create PR with updated dependencies
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: "chore: weekly dependency update"
-          title: "Weekly dependency refresh"
-          body: "Automated weekly update of Python dependencies with hash verification"
-```
-
-## 4. Development Workflow
-
-### Adding a New Dependency
-
-1. Add to `requirements.in` with version constraint
-2. Run `python -m pip install --require-hashes -r .github/requirements/pip-tools.locked.txt`
-3. Run `python -m piptools compile --allow-unsafe --generate-hashes --output-file=ml/requirements.locked.txt ml/requirements.in`
-4. Review the transitive dependencies added
-5. Commit both files with explanation of why dependency was added
-
-### Adding a New Model
-
-1. Train/obtain ONNX model
-2. Compute SHA256:
-   ```bash
-   sha256sum unet_segmentation_v2.onnx
-   ```
-3. Add entry to `MANIFEST.json` with:
-   - Model ID and version
-   - Filename and SHA256
-   - Input/output shapes
-   - Training metadata
-   - Performance metrics
-4. Commit manifest with model as release artifact (not in git)
-
-## 5. Security Best Practices
-
-| Practice | Implementation |
-|----------|-----------------|
-| Pinned versions | All in `requirements.locked.txt` with hashes |
-| Transitive lock | pinned `pip-tools` bootstrap + `python -m piptools compile` captures all dependencies |
-| Hash verification | `pip install --require-hashes` enforces verification |
-| Model provenance | `MANIFEST.json` tracks training date, framework, metrics |
-| Audit trail | Git commit history shows all dependency changes |
-| No auto-updates | Manual review required for all version bumps |
-| Release artifacts | Models stored separately, not in git repository |
-| CI validation | Automated checks for lock file format, manifest validity |
-
-## 6. Troubleshooting
-
-### "Hash mismatch" on `pip install`
-
-**Cause**: Package was re-uploaded or cache corruption  
-**Solution**:
-```bash
-pip cache purge
-python -m pip install --require-hashes --no-cache-dir -r requirements.locked.txt
-```
-
-### `pip-compile` fails
-
-**Cause**: Conflicting version constraints  
-**Solution**:
-1. Review constraints in `requirements.in`
-2. Remove one constraint and try again
-3. Document conflicts in code comments
-
-### Model SHA256 mismatch
-
-**Cause**: Corrupted download or wrong model file  
-**Solution**:
-```bash
-# Verify download integrity
-sha256sum unet_segmentation_v1.onnx
-
-# If mismatch, re-download from official source:
-# https://github.com/KonkovDV/OpenRebar/releases/download/models-v1.0.0/unet_segmentation_v1.onnx
-```
-
-## References
-
-- **Audit Finding**: ML-1 (ML Supply-Chain Hardening)
-- **pip-tools**: https://pip-tools.readthedocs.io/
-- **Python Security**: https://peps.python.org/pep-0665/ (Hash verification)
-- **ONNX Spec**: https://github.com/onnx/onnx/blob/main/docs/IR.md
-- **OWASP**: Supply Chain Security https://owasp.org/www-project-dependency-check/
-
----
-
-**Custodian**: OpenRebar ML Team  
-**Last Updated**: 2026-10-03  
-**Review Interval**: Quarterly
+`ml/osv-scanner.toml` is the OSV-Scanner ignore file for this directory. It holds 164 advisory ids under one shared reason, all expiring on 2026-12-31. Replacing them with one entry per package and version is open; see [docs/AUDIT_2026-10-20.md](../docs/AUDIT_2026-10-20.md).

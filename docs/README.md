@@ -15,6 +15,8 @@ The product page is [README.md](../README.md) ([Russian](../README.ru.md)). This
 | What the 3 October findings look like now | [AUDIT_2026-10-18.md](AUDIT_2026-10-18.md) |
 | What was checked on 20 October | [AUDIT_2026-10-20.md](AUDIT_2026-10-20.md) |
 | The mark, the icon, and the colors | [brand/openrebar-brand-sheet.jpg](brand/openrebar-brand-sheet.jpg) |
+| The house slab in plan | [images/simple-slab-plan.svg](images/simple-slab-plan.svg), drawn by `tools/examples/render_plan.py` |
+| How the ML lane is locked and how a model is checked | [../ml/SUPPLY_CHAIN_SECURITY.md](../ml/SUPPLY_CHAIN_SECURITY.md) |
 
 `archive/` and the older plan files are history. The code on `main` wins if a page and the tests disagree.
 

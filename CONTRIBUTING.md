@@ -43,7 +43,7 @@ python -m pytest tests -q
 - Ports live in `src/OpenRebar.Domain/Ports/`
 - Adapters live in `src/OpenRebar.Infrastructure/`
 - Use cases live in `src/OpenRebar.Application/UseCases/`
-- Composition root stays in `src/OpenRebar.RevitPlugin/Bootstrap.cs`
+- Services are registered in `src/OpenRebar.Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`. The CLI and `src/OpenRebar.RevitPlugin/Bootstrap.cs` compose them
 - New I/O paths must be introduced as ports first, adapters second
 
 ## Pull Requests

@@ -622,28 +622,17 @@ OpenRebar Reinforcement CLI — run the full pipeline without Revit.
 Usage:
   dotnet run --project src/OpenRebar.Cli -- <isoline-file> [options]
 
-Options:
-  --catalog <path>     Supplier catalog (JSON/CSV). Default: Russian market standard.
-    --legend <path>      Legend config (JSON). Default: built-in 7-color A500C legend.
-  --ml-url <url>       ML segmentation service URL. Default: color quantization fallback.
-    --aerobim-storage-dir <path>
-                                                Copy the canonical report into an AeroBIM storage root and emit a handoff manifest.
+Input:
   --project <path>     Project file (slab, materials, layers). --design is the same flag.
                        A CSV field may be passed with it. A drawing may not.
-  --profile <path>     Company profile. Default: profiles/generic.json.
-                       profile init | validate | diff  — see profile --help.
-  --norm <id>          Normative profile id. Currently ru.sp63.2018.
   --layer-input <BottomX=path.dxf;legend=legend.json;bg=10@200>
                        One layer. Repeat for up to four layers. Do not combine with --project.
   --layer <BottomX|BottomY|TopX|TopY>
-                       A .csv field table already names its layers. Do not combine it with --layer.
                        Reinforcement layer for a single drawing. Required unless the DXF layer name maps to one,
-                       or --legacy-direction-heuristic is set.
+                       or --legacy-direction-heuristic is set. A .csv field already names its layers.
   --legacy-direction-heuristic
                        Infer bar direction from the zone bounding box and warn.
-  --steel <class>      Steel class. Default: A500C.
-  --csv-culture <ru|invariant>
-                       Number format in the schedule CSV. Default: ru.
+  --legend <path>      Legend config (JSON). Default: built-in 7-color A500C legend.
   --dxf-units <mm|cm|m|in>
                        Unit assumed when the DXF header has no $INSUNITS. Default: mm.
   --px-per-mm <value>  PNG scale. Required for raster input, together with --origin-px.
@@ -651,30 +640,44 @@ Options:
   --roi-px <x,y,w,h>   Slab rectangle on the image. Default: the whole image, with a warning.
   --min-zone-area-mm2 <mm2>
                        Drop raster components smaller than this. Default: 100000 (0.1 m²).
-  --include-diagnostics
-                       Write exception stack traces into the report.
+  --ml-url <url>       Local segmentation service. Default: exact legend color match.
 
-Exit codes:
-  0  passed
-  1  input or IO error
-  2  verification failed
-  3  partial result
-  --concrete <class>   Concrete class. Default: B25.
+Slab and materials:
   --thickness <mm>     Slab thickness. Default: 200.
   --cover <mm>         Concrete cover. Default: 25.
   --edge-cover <mm>    Working-area inset from the slab edge. Default: 0.
   --opening-clearance <mm>
                        Extra gap around each opening. Default: 0.
-    --slab-width <mm>    Slab outer boundary width. Default: 30000.
-    --slab-height <mm>   Slab outer boundary height. Default: 20000.
+  --slab-width <mm>    Slab outer boundary width. Default: 30000.
+  --slab-height <mm>   Slab outer boundary height. Default: 20000.
+  --concrete <class>   Concrete class. Default: B25.
+  --steel <class>      Steel class. Default: A500C.
+
+Rules and output:
+  --profile <path>     Company profile. Default: profiles/generic.json.
+                       profile init | validate | diff  — see profile --help.
+  --norm <id>          Normative profile id. Currently ru.sp63.2018.
+  --catalog <path>     Supplier catalog (JSON/CSV). Default: 6000, 9000, 11700, 12000 mm.
+  --csv-culture <ru|invariant>
+                       Number format in the schedule CSV. Default: ru.
+  --aerobim-storage-dir <path>
+                       Copy the canonical report into an AeroBIM storage root and emit a handoff manifest.
+  --include-diagnostics
+                       Log each exception stack and write its SHA-256 into the report.
+
+Exit codes:
+  0  passed
+  1  input or IO error
+  2  verification failed; every file is still written
+  3  partial result after a critical detailing error
 
 Examples:
-  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf
-    dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --legend configs/lira.legend.json
-  dotnet run --project src/OpenRebar.Cli -- data/isoline.png --ml-url http://localhost:8101
-  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --catalog suppliers/evraz.json
-    dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --aerobim-storage-dir ../AeroBIM/var/reports
-    dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --slab-width 18000 --slab-height 9000
+  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --layer BottomX
+  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --layer BottomX --legend configs/lira.legend.json
+  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --layer BottomX --catalog suppliers/evraz.json
+  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --layer BottomX --slab-width 18000 --slab-height 9000
+  dotnet run --project src/OpenRebar.Cli -- data/isoline.png --layer BottomX --px-per-mm 0.1 --origin-px 24,424 --ml-url http://127.0.0.1:8101
+  dotnet run --project src/OpenRebar.Cli -- data/floor5.dxf --layer BottomX --aerobim-storage-dir ../AeroBIM/var/reports
 ");
   }
 
