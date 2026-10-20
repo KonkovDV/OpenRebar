@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/openrebar-logo-dark.png">
+    <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
+  </picture>
 </p>
 
 # OpenRebar
@@ -47,9 +50,15 @@ Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is 
 
 ## What a run looks like
 
-Ø20, cover 30 mm, slab 220 mm thick. The bar axis sits at 180 mm: `220 − 30 − 20 / 2`.
+Ø20 at 150 mm, cover 30 mm, slab 220 mm thick. The effective depth is 180 mm: `220 − 30 − 20 / 2`.
 
-On the house slab, `examples/dxf/simple-slab`, the edges are free and the required area runs to the edge. The check exits 2 and leaves the files on the table. The areas are `edgeDevelopmentAreaM2` 6.12, `realDeficitAreaM2` 0.99, `underReinforcedAreaM2` 7.11.
+<p align="center">
+  <img src="docs/images/simple-slab-plan.svg" alt="Plan of the house slab: 27 bars across 6000 by 4000 mm, pale bands at both free ends, an orange rim, and a ring on the top pair of bars" width="760">
+</p>
+
+That is the house slab, `examples/dxf/simple-slab`, drawn from its own IFC and verification files. 27 bars run the 6000 mm span. The pale bands are cells within anchorage reach of a free end: `edgeDevelopmentAreaM2` 6.12. The orange rim is the 50 mm strip no bar reaches: `realDeficitAreaM2` 0.99. Together, `underReinforcedAreaM2` 7.11. The run exits 2 and leaves every file on the table.
+
+The ring is the one hard clash, `layerClearance`: the top two rows sit 20 mm apart. Hooks are drawn in plan. At each free end the arc reaches 50 mm past the face.
 
 ```mermaid
 flowchart LR
@@ -108,6 +117,8 @@ Flags: `--legend`, `--catalog`, `--ml-url`, `--slab-width`, `--slab-height`, `--
 | `*.schedule.csv` | Positions and mass |
 | `*.aerobim.json` | A short summary for a downstream checker |
 | `*.reinforcement.ifc` | IFC4 bars |
+| `*.verification.png` | One pixel per cell: green holds, red is short |
+| `*.verification.json` | The short cells, with their margin and status |
 
 On simple-slab, Ø20 and 30 mm cover, `effectiveDepthMm` and `effectiveDepthByLayer.BottomX` are both 180. That is `220 − 30 − 20 / 2`: thickness, minus cover, minus half the bar. A layer with no bars stays out of the map.
 
@@ -129,8 +140,9 @@ Domain has no NuGet packages. NetTopologySuite, HiGHS, xBIM, and ImageSharp stay
 | `IIfcExporter` | IFC4 |
 | `IRevitPlacer` | Straight bars in a live document |
 | `IImageSegmentationService` | Optional local HTTP bridge |
+| `IStructuredLogger` | The run log; console by default |
 
-The cutter used in a run is column generation. It records when the dual bound is `Proven`. Beside it sits `BestFitDecreasingOptimizer`: each bar goes into the open stock piece with the smallest remainder. A diagnostic stack is stored as `stackTraceSha256`. The text stays in the log.
+The cutter used in a run is column generation. It records when the dual bound is `Proven`. Beside it sits `BestFitDecreasingOptimizer`: each bar goes into the open stock piece with the smallest remainder. With `--include-diagnostics`, an exception stack goes to the log and its SHA-256 to the report as `stackTraceSha256`.
 
 ## How a run behaves
 
@@ -153,6 +165,8 @@ On simple-slab the area figures are `edgeDevelopmentAreaM2` 6.12, `realDeficitAr
 - `examples/fe-field/supported-slab.csv` with `supported-slab.project.json` — slab on walls, area check passes
 
 Regenerate snapshots with `tools/examples/generate_expected_outputs.ps1` or `.sh`. A changed figure is explained in the pull request.
+
+Draw the plan of any run with `python tools/examples/render_plan.py <folder>/input out.svg`. It reads the IFC, the verification cells, and the report that the run wrote into that folder.
 
 ## Optional ML lane
 

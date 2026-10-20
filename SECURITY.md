@@ -1,52 +1,46 @@
 # Security Policy
 
-## Supported Scope
+## Report a vulnerability
 
-This repository is prepared for public GitHub publication, but some security controls
-must still be enabled in GitHub settings after the first push.
+Report it privately on GitHub: **Security → Report a vulnerability**, or open [a new advisory](https://github.com/KonkovDV/OpenRebar/security/advisories/new) directly. Please do not open a public issue for it.
 
-Current support expectations:
+Include the commit, the steps to reproduce, the impact, and whether secrets or project data can leak.
 
-| Surface | Status |
+## What is supported
+
+| Surface | Support |
 | --- | --- |
-| `main` branch before first public release | Best effort |
-| Latest public tag after release process exists | Supported |
-| Older unpublished branches and local forks | Not guaranteed |
+| `main` | Fixes land here first |
+| A `v*` release tag | Supported once tags exist; none has been cut yet |
+| Forks and old branches | Not covered |
 
-## Reporting A Vulnerability
+## In scope
 
-1. Do not open a public issue for a suspected vulnerability.
-2. If GitHub private vulnerability reporting is enabled for the repository, use the
-   Security tab and submit a private report there.
-3. Preferred reporting channel: https://github.com/KonkovDV/OpenRebar/security/advisories/new
-4. If private reporting is not enabled yet, contact the maintainer privately at
-   KonkovDV@users.noreply.github.com before any public disclosure.
-5. Include the affected commit or branch, reproduction steps, impact, and whether
-   secrets or customer data may be exposed.
+- GitHub Actions workflows and the supply chain: locked NuGet restore, the hashed ML lock, the release SBOM and its attestation
+- Secrets in history or in workflow logs
+- DXF and PNG parsing, including the 25-million-pixel frame limit
+- The ML HTTP client: loopback by default, the named `--ml-url` host, no redirect to another host
+- The report contracts in `contracts/` and every file a run writes
 
-## In Scope
+## Out of scope
 
-- GitHub Actions workflows and supply-chain configuration
-- Secret exposure in repository history or workflow logs
-- DXF / PNG parsing boundaries and report export paths
-- ML HTTP integration boundary (`ml/` and `HttpImageSegmentationService`)
-- Contracts in `contracts/` and machine-readable report artifacts
+- A local Revit installation and project models that are not in this repository
+- A flaw that exists only in a private fork and cannot be reproduced here
+- Social engineering and phishing
 
-## Out Of Scope
+## What happens next
 
-- Local Autodesk Revit installations and proprietary project models not stored here
-- Vulnerabilities introduced only in downstream private forks without reproduction
-- Social engineering, phishing, or attacks that do not involve this repository
+- An acknowledgement within 5 business days
+- A high or critical finding is triaged as soon as it is confirmed
+- Disclosure is coordinated until a fix or a mitigation is out
 
-## Disclosure Expectations
+## Controls on this repository
 
-- Initial acknowledgement target: 5 business days
-- High / critical issues: triage immediately after confirmation
-- Coordinated disclosure is expected until a fix or mitigation is available
-
-## GitHub-Side Controls To Enable After Publication
-
-- Private vulnerability reporting
-- Secret scanning and push protection
-- Code scanning / CodeQL
-- Branch rulesets with pull-request review requirements
+| Control | State |
+| --- | --- |
+| Private vulnerability reporting | On |
+| Secret scanning and push protection | On |
+| CodeQL for C# and Python | Every push, pull request, and a weekly run |
+| OpenSSF Scorecard | On `main` |
+| Dependency review | Every pull request; a moderate finding or an AGPL or SSPL license fails it |
+| Branch rules on `main` and `v*` tags | Set by the owner; see [.github/BRANCH_PROTECTION_CHECKLIST.md](.github/BRANCH_PROTECTION_CHECKLIST.md) |

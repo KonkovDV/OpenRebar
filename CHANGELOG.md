@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The README shows the house slab in plan, drawn from its own IFC and verification files by `tools/examples/render_plan.py`: 27 bars, the anchorage bands at both free ends, the 50 mm rim no bar reaches, and a ring on the one hard clash. The logo has a dark-theme variant cut by `tools/brand/make_logo.py`, and the outputs table lists `*.verification.png` and `*.verification.json`.
+- The CLI help groups its options as input, slab, rules and output, then the exit codes. `--include-diagnostics` is described as logging the stack and writing its SHA-256, and the PNG example carries its calibration.
+- `tools/examples/generate_expected_outputs.ps1` and `.sh` run the examples with the snapshot test's arguments in a temporary folder. The bash version no longer stops at the expected exit 2. A rerun reproduces both goldens except the time fields.
+- `SECURITY.md`, `ml/SUPPLY_CHAIN_SECURITY.md`, `ml/data/README.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `CITATION.cff`, `docs/architecture.md`, `docs/VALIDATION_BASELINE.md`, and the branch-protection checklist now match the code and the repository settings. Private vulnerability reporting is on.
 - The architecture page now says what IFC4 writes, and the parser box names DXF, PNG, or a numeric field. A short check of the public pages against the code is in `docs/AUDIT_2026-10-20.md`.
 - The OpenRebar lockup sits centered on both public pages. The full brand sheet, with the app icon and the four colors, is kept at `docs/brand/openrebar-brand-sheet.jpg`.
 - The public README follows the family page: a centered mark, a contents list, and one scene of a run. The house slab, the depth `220 − 30 − 20 / 2`, and **467/467** stay.

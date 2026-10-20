@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/openrebar-logo-dark.png">
+    <img src="docs/brand/openrebar-logo.png" alt="OpenRebar" width="640">
+  </picture>
 </p>
 
 # OpenRebar
@@ -47,9 +50,15 @@ OpenRebar кладёт арматуру плоской плиты на карт�
 
 ## Как выглядит прогон
 
-Ø20, защитный слой 30 мм, плита толщиной 220 мм. Ось стержня сидит на 180 мм: `220 − 30 − 20 / 2`.
+Ø20 с шагом 150 мм, защитный слой 30 мм, плита толщиной 220 мм. Рабочая высота 180 мм: `220 − 30 − 20 / 2`.
 
-На домашней плите `examples/dxf/simple-slab` края свободные, требуемая площадь доходит до края. Проверка выходит с кодом 2 и оставляет файлы на столе. Площади: `edgeDevelopmentAreaM2` 6,12, `realDeficitAreaM2` 0,99, `underReinforcedAreaM2` 7,11.
+<p align="center">
+  <img src="docs/images/simple-slab-plan.svg" alt="План домашней плиты: 27 стержней на 6000 на 4000 мм, бледные полосы у обоих свободных концов, оранжевая кромка и кольцо на верхней паре стержней" width="760">
+</p>
+
+Это домашняя плита `examples/dxf/simple-slab`, нарисованная по её собственным IFC и файлам проверки. 27 стержней идут через пролёт 6000 мм. Бледные полосы — ячейки в зоне анкеровки у свободного конца: `edgeDevelopmentAreaM2` 6,12. Оранжевая кромка — полоса 50 мм, до которой не доходит ни один стержень: `realDeficitAreaM2` 0,99. Вместе `underReinforcedAreaM2` 7,11. Прогон выходит с кодом 2 и оставляет все файлы на столе.
+
+Кольцо — единственная жёсткая коллизия, `layerClearance`: два верхних ряда стоят в 20 мм друг от друга. Крюки нарисованы в плане. У каждого свободного конца дуга выходит на 50 мм за грань.
 
 ```mermaid
 flowchart LR
@@ -108,6 +117,8 @@ dotnet run --project src/OpenRebar.Cli --configuration Release -- examples/dxf/s
 | `*.schedule.csv` | Позиции и масса |
 | `*.aerobim.json` | Короткая сводка для внешней проверки |
 | `*.reinforcement.ifc` | Стержни IFC4 |
+| `*.verification.png` | Пиксель на ячейку: зелёный держит, красный в недоборе |
+| `*.verification.json` | Ячейки в недоборе, с запасом и статусом |
 
 На simple-slab, Ø20 и защитный слой 30 мм, `effectiveDepthMm` и `effectiveDepthByLayer.BottomX` оба равны 180. Это `220 − 30 − 20 / 2`: толщина, минус защитный слой, минус половина диаметра. Слой без стержней в карту не входит.
 
@@ -129,8 +140,9 @@ Domain ← Application ← Infrastructure ← CLI и плагин Revit
 | `IIfcExporter` | IFC4 |
 | `IRevitPlacer` | Прямые стержни в открытом документе |
 | `IImageSegmentationService` | Необязательный локальный HTTP-мост |
+| `IStructuredLogger` | Журнал прогона; по умолчанию консоль |
 
-Раскрой в прогоне — генерация столбцов. Она записывает, когда двойственная граница имеет статус `Proven`. Рядом стоит `BestFitDecreasingOptimizer`: стержень кладётся в открытый хлыст с наименьшим остатком. Стек диагностики хранится как `stackTraceSha256`. Текст остаётся в журнале.
+Раскрой в прогоне — генерация столбцов. Она записывает, когда двойственная граница имеет статус `Proven`. Рядом стоит `BestFitDecreasingOptimizer`: стержень кладётся в открытый хлыст с наименьшим остатком. С флагом `--include-diagnostics` стек исключения уходит в журнал, а его SHA-256 — в отчёт как `stackTraceSha256`.
 
 ## Как ведёт себя прогон
 
@@ -153,6 +165,8 @@ PNG приносит `--px-per-mm` и начало координат. Кадр 
 - `examples/fe-field/supported-slab.csv` и `supported-slab.project.json` — плита на стенах, проверка площади проходит
 
 Эталоны пересобираются скриптами `tools/examples/generate_expected_outputs.ps1` и `.sh`. Изменённая цифра объясняется в запросе на слияние.
+
+План любого прогона рисует `python tools/examples/render_plan.py <папка>/input out.svg`. Скрипт читает IFC, ячейки проверки и отчёт, которые прогон записал в эту папку.
 
 ## Необязательная ветка ML
 

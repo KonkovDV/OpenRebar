@@ -88,25 +88,16 @@ Use these when the claim surface is broader than local correctness:
 git fsck --full
 dotnet list OpenRebar.sln package --include-transitive --vulnerable
 dotnet list OpenRebar.sln package --outdated
-dotnet format OpenRebar.sln --verify-no-changes
+dotnet format OpenRebar.sln --verify-no-changes --no-restore
 ```
 
-GitHub workflow and dependency-governance audit checks:
+CI runs the vulnerable list on `OpenRebar.audit.sln`, without the Revit plugin, as JSON, and `tools/ci/check_dotnet_vulnerabilities.py` fails a high finding. Each run uploads:
 
-```bash
-dotnet list OpenRebar.sln package --include-transitive --vulnerable
-dotnet list OpenRebar.sln package --outdated
-```
-
-The CI workflow exports these command outputs as artifacts:
-
-- `dependency-audit/deps-vulnerable.txt`
-- `dependency-audit/deps-outdated.txt`
-
-CI also exports benchmark evidence:
-
-- `benchmark-summary/column-generation-summary.json`
-- `benchmark-results.trx`
+| Artifact | Files |
+|---|---|
+| `test-results` | every `test-results.trx` |
+| `dependency-audit` | `deps-vulnerable.json`, `deps-outdated.txt` |
+| `benchmark-summary` | `column-generation-summary.json`, `benchmark-results.trx` |
 
 Review these control-plane files when claim scope includes CI/CD security posture:
 
