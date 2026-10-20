@@ -1,4 +1,5 @@
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 
 namespace OpenRebar.Infrastructure.ReinforcementEngine;
 
@@ -223,7 +224,10 @@ public static class BarRunBuilder
         && zone.GridOriginMm is double origin)
       return LayerGridStations(origin, backgroundSpacing, min, max);
 
-    return CoveringStations(min, max, spacing);
+    double pitch = ReinforcementLimits.MinimumCenterDistanceMm(
+        zone.EffectiveSpec.DiameterMm,
+        zone.Layer == RebarLayer.Top);
+    return CoveringStations(min, max, spacing, pitch);
   }
 
   /// <summary>origin + k·spacing. A line on the boundary is moved 0.1 mm inward so the scan hits.</summary>
@@ -264,7 +268,7 @@ public static class BarRunBuilder
     }
   }
 
-  private static IEnumerable<double> CoveringStations(double min, double max, double spacing)
+  private static IEnumerable<double> CoveringStations(double min, double max, double spacing, double minimumPitch)
   {
     if (max - min <= 1e-6 || spacing <= 0)
       yield break;
@@ -276,15 +280,26 @@ public static class BarRunBuilder
       yield break;
     }
 
+    var placed = new List<double>();
     double last = min;
     for (double position = min + half; position < max - 1e-6; position += spacing)
     {
-      yield return position;
+      placed.Add(position);
       last = position;
     }
 
     if (last + half < max - 1e-6)
-      yield return max - half;
+    {
+      double closing = max - half;
+      bool room = placed.Count == 0 || closing - placed[^1] >= minimumPitch - 1e-9;
+      if (room)
+        placed.Add(closing);
+      else if (placed.Count == 1 || closing - placed[^2] >= minimumPitch - 1e-9)
+        placed[^1] = closing;
+    }
+
+    foreach (double position in placed)
+      yield return position;
   }
 
   private sealed class OpenRun

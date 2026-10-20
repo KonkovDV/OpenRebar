@@ -33,8 +33,8 @@ public class CliAsFieldExampleTests
       var bottomX = layers.Single(layer => layer.GetProperty("layer").GetString() == "BottomX");
       var position = bottomX.GetProperty("positions").EnumerateArray().Single();
       position.GetProperty("diameterMm").GetInt32().Should().Be(20);
-      position.GetProperty("quantity").GetInt32().Should().Be(27);
-      bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(420.513, 1e-3);
+      position.GetProperty("quantity").GetInt32().Should().Be(26);
+      bottomX.GetProperty("massKg").GetDouble().Should().BeApproximately(404.938, 1e-3);
     }
     finally
     {
