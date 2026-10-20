@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `docs/SOTA_2026.md` is rebuilt from sources that resolve: every DOI checked against Crossref and every arXiv id against arXiv on 20 October 2026. Three DOIs that do not exist, one that named an unrelated paper, a non-entity `IfcReinforcingBarSpliceType`, and figures not printed in the abstracts read are gone. The page is in English, like the rest of `docs/`.
 - The README shows the house slab in plan, drawn from its own IFC and verification files by `tools/examples/render_plan.py`: 27 bars, the anchorage bands at both free ends, the 50 mm rim no bar reaches, and a ring on the one hard clash. The logo has a dark-theme variant cut by `tools/brand/make_logo.py`, and the outputs table lists `*.verification.png` and `*.verification.json`.
 - The CLI help groups its options as input, slab, rules and output, then the exit codes. `--include-diagnostics` is described as logging the stack and writing its SHA-256, and the PNG example carries its calibration.
 - `tools/examples/generate_expected_outputs.ps1` and `.sh` run the examples with the snapshot test's arguments in a temporary folder. The bash version no longer stops at the expected exit 2. A rerun reproduces both goldens except the time fields.
