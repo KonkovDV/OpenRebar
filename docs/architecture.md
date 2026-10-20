@@ -99,7 +99,7 @@ The application pipeline now applies a decomposition quality gate for complex zo
                                    │
                          ┌─────────▼──────────┐
                          │  IIsolineParser     │
-                         │  (DXF or PNG+ML)    │
+                         │  DXF, PNG, or field │
                          └─────────┬──────────┘
                                    │  List<ReinforcementZone>
                          ┌─────────▼──────────┐
@@ -129,18 +129,18 @@ The application pipeline now applies a decomposition quality gate for complex zo
 
 ## Integration Boundary
 
-The standalone project now exposes a canonical report artifact for external systems:
+The report is the contract a downstream reader takes:
 
 - schema: `contracts/aerobim-reinforcement-report.schema.json`
 - payload: `ReinforcementExecutionReport`
 - persistence port: `IReportStore`
 
-This gives AeroBIM or other downstream consumers a stable machine-readable interface even before a fully validated IFC exporter exists.
+IFC4 writes one bar type per diameter and steel class, a swept disk of radius d/2, and a placement on the axis.
 
-The contract now carries two additional audit-oriented surfaces:
+The contract carries:
 
-- `normativeProfile`: explicit normative profile id, jurisdiction, design code, and table-set version
-- `analysisProvenance`: geometry and optimization provenance used for reproducibility and review
+- `normativeProfile`: profile id, jurisdiction, design code, and table-set version
+- `analysisProvenance`: geometry and optimization provenance for a second reading
 
 ## Logging Boundary
 
@@ -169,7 +169,7 @@ Geometry predicates now use a shared `GeometryTolerance` policy in the Domain mo
 2. **Strengthen polygon decomposition further** toward exact clipping / coverage proofs for thin or highly concave zones
 3. **Complete the live Revit production boundary** beyond the currently validated standalone and testable host-independent surfaces
 4. **Add richer Revit-side visualization and QA affordances** such as view filters for color-coded zone review
-5. **Expand ML benchmarking and customer-specific fine-tuning** beyond the current optional segmentation surface
+5. **Image reading stays on the legend color.** A checkpoint is not part of this repository.
 
 ## Claim Boundary
 

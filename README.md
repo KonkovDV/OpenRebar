@@ -181,6 +181,8 @@ NuGet restore is locked. The ML lane installs `ml/requirements.locked.txt` with 
 - [docs/VALIDATION_BASELINE.md](docs/VALIDATION_BASELINE.md)
 - [docs/SOTA_2026.md](docs/SOTA_2026.md)
 - [docs/AUDIT_2026-10-18.md](docs/AUDIT_2026-10-18.md)
+- [docs/AUDIT_2026-10-20.md](docs/AUDIT_2026-10-20.md)
+- [docs/brand/openrebar-brand-sheet.jpg](docs/brand/openrebar-brand-sheet.jpg)
 - [docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md](docs/OPENREBAR_AGENT_PLAN_r10_2026_10_14.md)
 - [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CITATION.cff](CITATION.cff)
 
