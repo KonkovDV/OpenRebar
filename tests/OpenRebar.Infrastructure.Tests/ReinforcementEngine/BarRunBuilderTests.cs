@@ -41,7 +41,8 @@ public class BarRunBuilderTests
 
     var bars = new StandardReinforcementCalculator(new ConsoleStructuredLogger(), new NtsPlanarGeometry())
         .CalculateRebars([zone], Slab(1040, 800));
-    bars[0].Rebars.Should().OnlyContain(bar => bar.End.X >= 1003.9 && bar.End.X <= 1004.1);
+    double end = 1040 - SlabEdges.FreeInsetMm(Slab(1040, 800), 12) - BendRules.CenterlineRadiusMm(12, "A500C");
+    bars[0].Rebars.Should().OnlyContain(bar => Math.Abs(bar.End.X - end) < 0.2);
     bars[0].Rebars.Should().Contain(bar => bar.Start.Y < 400);
   }
 

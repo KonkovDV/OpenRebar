@@ -56,9 +56,9 @@ Libraries build for .NET 8 and .NET 10. The CLI is .NET 10. The Revit add-in is 
   <img src="docs/images/simple-slab-plan.svg" alt="Plan of the house slab: 27 bars across 6000 by 4000 mm, pale bands at both free ends, an orange rim, and a ring on the top pair of bars" width="760">
 </p>
 
-That is the house slab, `examples/dxf/simple-slab`, drawn from its own IFC and verification files. 27 bars run the 6000 mm span. The pale bands are cells within anchorage reach of a free end: `edgeDevelopmentAreaM2` 6.12. The orange rim is the 50 mm strip no bar reaches: `realDeficitAreaM2` 0.99. Together, `underReinforcedAreaM2` 7.11. The run exits 2 and leaves every file on the table.
+That is the house slab, `examples/dxf/simple-slab`, drawn from its own IFC and verification files. 27 bars run the 6000 mm span. The straight bar stops 130 mm from each free face, so the hook crown sits on the cover line, 40 mm in. The pale bands are cells within anchorage reach of a free end: `edgeDevelopmentAreaM2` 5.37. The orange rim is the cells no bar reaches: `realDeficitAreaM2` 2.52. Together, `underReinforcedAreaM2` 7.89. The run exits 2 and leaves every file on the table.
 
-The ring is the one hard clash, `layerClearance`: the top two rows sit 20 mm apart. Hooks are drawn in plan. At each free end the arc reaches 50 mm past the face.
+The ring is the hard clash `layerClearance`: the top two rows sit 20 mm apart. Each bar also carries `hookOutsideConcrete`. The semicircle rises 180 mm from the axis at 40 mm, and the bar surface crosses the top face by 10 mm. The plan does not ring that clash: the exit is vertical.
 
 ```mermaid
 flowchart LR
@@ -69,7 +69,7 @@ flowchart LR
 
 ## Status
 
-The five commands under [Quick start](#quick-start): **467/467 tests passing**.
+The five commands under [Quick start](#quick-start): **472/472 tests passing**.
 
 | | |
 |---|---|
@@ -156,7 +156,7 @@ The schedule is CSV. IFC4 carries a bar type, a swept disk, and a placement on t
 
 A PNG brings `--px-per-mm` and an origin. A frame above 25 million pixels is turned away from the header, before a single pixel is decoded.
 
-On simple-slab the area figures are `edgeDevelopmentAreaM2` 6.12, `realDeficitAreaM2` 0.99, `underReinforcedAreaM2` 7.11.
+On simple-slab the area figures are `edgeDevelopmentAreaM2` 5.37, `realDeficitAreaM2` 2.52, `underReinforcedAreaM2` 7.89.
 
 ## Examples
 

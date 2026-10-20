@@ -108,6 +108,15 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
             AllowedAlong(slab, blocked, line, alongX, diameter));
         var startCondition = AnchorageExtender.Condition(placed.AchievedStart, anchorageLength, requestedEnd);
         var endCondition = AnchorageExtender.Condition(placed.AchievedEnd, anchorageLength, requestedEnd);
+        double start = placed.Start;
+        double end = placed.End;
+        double startReach = BendRules.HookCenterlineReachMm(startCondition, diameter, spec.SteelClass);
+        double endReach = BendRules.HookCenterlineReachMm(endCondition, diameter, spec.SteelClass);
+        if (startReach + endReach + AnchorageExtender.FitToleranceMm < end - start)
+        {
+          start += startReach;
+          end -= endReach;
+        }
         var shape = BendRules.Describe(diameter, spec.SteelClass, startCondition, endCondition);
         var anchorageStatus = AnchorageStatus.WithinZone;
         if (runLength + 1e-6 < anchorageLength)
@@ -119,11 +128,11 @@ public sealed class StandardReinforcementCalculator : IReinforcementCalculator
         rebars.Add(new RebarSegment
         {
           Start = alongX
-              ? new Point2D(placed.Start, line)
-              : new Point2D(line, placed.Start),
+              ? new Point2D(start, line)
+              : new Point2D(line, start),
           End = alongX
-              ? new Point2D(placed.End, line)
-              : new Point2D(line, placed.End),
+              ? new Point2D(end, line)
+              : new Point2D(line, end),
           DiameterMm = diameter,
           AnchorageLengthStart = anchorageLength,
           AnchorageLengthEnd = anchorageLength,

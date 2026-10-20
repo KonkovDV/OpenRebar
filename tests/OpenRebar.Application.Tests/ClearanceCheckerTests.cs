@@ -219,6 +219,33 @@ public class ClearanceCheckerTests
   }
 
   [Fact]
+  public void HookInsideTheConcrete_IsNotAClash()
+  {
+    double reach = BendRules.CenterlineRadiusMm(20, "A500C");
+    var clashes = Check(Hooked("fit", 40 + reach, 200, 1000 - 40 - reach, 200), thicknessMm: 400);
+
+    clashes.Should().NotContain(clash => clash.Kind == "hookOutsideConcrete");
+  }
+
+  [Fact]
+  public void HookThroughTheTopFace_IsAHardClash()
+  {
+    double reach = BendRules.CenterlineRadiusMm(20, "A500C");
+    var clashes = Check(Hooked("out", 40 + reach, 200, 1000 - 40 - reach, 200), thicknessMm: 220);
+
+    clashes.Should().ContainSingle(clash =>
+        clash.Kind == "hookOutsideConcrete" && clash.Type == "hard" && clash.BarIds[0] == "out");
+  }
+
+  [Fact]
+  public void HookCrownPastTheFace_IsAHardClash()
+  {
+    var clashes = Check(Hooked("past", 40, 200, 960, 200), thicknessMm: 400);
+
+    clashes.Should().ContainSingle(clash => clash.Kind == "hookOutsideConcrete" && clash.Type == "hard");
+  }
+
+  [Fact]
   public void CombinedLayer_AcceptsAnAdditionalBarBetweenTheMesh()
   {
     var background = Zone([Bar("a", 0, 0, 200, 0), Bar("b", 0, 400, 200, 400)]);
@@ -227,6 +254,9 @@ public class ClearanceCheckerTests
 
     clashes.Should().NotContain(clash => clash.Kind == "layerSpacing");
   }
+
+  private static IReadOnlyList<ClashReport> Check(RebarSegment bar, double thicknessMm) =>
+      ClearanceChecker.Check([Zone(bar)], Slab(thicknessMm: thicknessMm));
 
   private static IReadOnlyList<ClashReport> Check(params RebarSegment[] bars) =>
       ClearanceChecker.Check([Zone(bars)], Slab());
@@ -268,10 +298,26 @@ public class ClearanceCheckerTests
         BarId = id
       };
 
-  private static SlabGeometry Slab(double originX = 0, double originY = 0) => new()
+  private static RebarSegment Hooked(string id, double x0, double y, double x1, double y1) => new()
+  {
+    Start = new Point2D(x0, y),
+    End = new Point2D(x1, y1),
+    DiameterMm = 20,
+    AnchorageLengthStart = 0,
+    AnchorageLengthEnd = 0,
+    BarId = id,
+    Shape = BarShape.Hooked,
+    ShapeCode = "H",
+    BendRadiusMm = BendRules.InnerRadiusMm(20, "A500C"),
+    BendArcMm = 1,
+    EndConditionStart = BarEndCondition.NeedsHook,
+    EndConditionEnd = BarEndCondition.NeedsHook
+  };
+
+  private static SlabGeometry Slab(double originX = 0, double originY = 0, double thicknessMm = 220) => new()
   {
     OuterBoundary = Rectangle(originX, originY, originX + 1000, originY + 1000),
-    ThicknessMm = 220,
+    ThicknessMm = thicknessMm,
     CoverMm = 30,
     ConcreteClass = "B25"
   };

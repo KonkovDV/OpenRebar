@@ -126,7 +126,7 @@ public sealed class RevitRebarPlacer : IRevitPlacer
                             drawn,
                             axisMm,
                             tailMm,
-                            bendUp: zone.Layer != RebarLayer.Top,
+                            bendUp: HookCenterline.BendsUp(zone.Layer),
                             out var spans,
                             out var skip))
                     {

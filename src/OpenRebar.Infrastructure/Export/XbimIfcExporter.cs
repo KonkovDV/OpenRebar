@@ -357,7 +357,7 @@ public sealed class XbimIfcExporter : IIfcExporter
         segment.DiameterMm,
         segment.DiameterMm);
     elevationMm += LapPlacement.VerticalMm(segment, lapRepresentation);
-    if (!HookCenterline.TryBuild(drawn, elevationMm, tailMm: 0, bendUp: zone.Layer != RebarLayer.Bottom, out var spans, out _))
+    if (!HookCenterline.TryBuild(drawn, elevationMm, tailMm: 0, bendUp: HookCenterline.BendsUp(zone.Layer), out var spans, out _))
       return;
 
     var origin = spans[0].Start;

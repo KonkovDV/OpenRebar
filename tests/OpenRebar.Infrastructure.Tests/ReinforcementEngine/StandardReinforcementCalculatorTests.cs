@@ -1,6 +1,7 @@
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
 using OpenRebar.Domain.Ports;
+using OpenRebar.Domain.Rules;
 using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.ReinforcementEngine;
 using FluentAssertions;
@@ -239,7 +240,7 @@ public class StandardReinforcementCalculatorTests
         rebar.AnchorageStatus == AnchorageStatus.ExtendedBeyondZone &&
         rebar.EndConditionStart == BarEndCondition.NeedsHook &&
         rebar.EndConditionEnd == BarEndCondition.Straight &&
-        Math.Abs(rebar.Start.X - 35) < 0.2 &&
+        Math.Abs(rebar.Start.X - (35 + BendRules.CenterlineRadiusMm(20, "A500C"))) < 0.2 &&
         Math.Abs(rebar.ClearSpan - (400 - rebar.Start.X + rebar.AnchorageLengthEnd)) < 0.2 &&
         Math.Abs(rebar.BendArcMm - Math.PI * 90) < 0.2 &&
         rebar.ShapeCode == "H" &&
@@ -352,11 +353,11 @@ public class StandardReinforcementCalculatorTests
 
     zone.Rebars.Should().NotBeEmpty();
     zone.Rebars.Should().OnlyContain(bar =>
-        Math.Abs(bar.ClearSpan - 9938) < 0.2 &&
+        Math.Abs(bar.ClearSpan - 9866) < 0.2 &&
         Math.Abs(bar.BendArcMm - 2 * Math.PI * 36) < 0.2 &&
         bar.ShapeCode == "H" &&
-        bar.Start.X >= 30.9 &&
-        bar.End.X <= 9969.1 &&
+        bar.Start.X >= 66.9 &&
+        bar.End.X <= 9933.1 &&
         bar.EndConditionStart == BarEndCondition.NeedsHook &&
         bar.EndConditionEnd == BarEndCondition.NeedsHook &&
         bar.AnchorageLengthStart > 0);
@@ -378,6 +379,32 @@ public class StandardReinforcementCalculatorTests
         Math.Abs(bar.End.X - (4000 + bar.AnchorageLengthEnd)) < 0.2 &&
         bar.Start.X >= -1e-6 &&
         bar.End.X <= 10000);
+  }
+
+  [Fact]
+  public void CalculateRebars_HookReachLongerThanTheSpan_DoesNotInvertTheBar()
+  {
+    var slab = new SlabGeometry
+    {
+      OuterBoundary = new Polygon([
+          new Point2D(0, 0), new Point2D(100, 0),
+          new Point2D(100, 1000), new Point2D(0, 1000)
+      ]),
+      ThicknessMm = 220,
+      CoverMm = 30,
+      ConcreteClass = "B25"
+    };
+    var zone = MakeZone(RebarDirection.X, RebarLayer.Bottom,
+        new BoundingBox(new Point2D(0, 0), new Point2D(100, 1000)));
+    zone.LayoutSpec = new ReinforcementSpec { DiameterMm = 20, SpacingMm = 150, SteelClass = "A500C" };
+
+    CreateCalculator().CalculateRebars([zone], slab);
+
+    zone.Rebars.Should().NotBeEmpty();
+    zone.Rebars.Should().OnlyContain(bar =>
+        bar.End.X > bar.Start.X + 1 &&
+        bar.EndConditionStart == BarEndCondition.NeedsHook &&
+        bar.EndConditionEnd == BarEndCondition.NeedsHook);
   }
 
   [Fact]

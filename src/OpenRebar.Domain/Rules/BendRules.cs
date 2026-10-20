@@ -25,6 +25,15 @@ public static class BendRules
   public static double CenterlineRadiusMm(int diameterMm, string steelClass) =>
       InnerRadiusMm(diameterMm, steelClass) + diameterMm / 2.0;
 
+  /// <summary>
+  /// How far a hook centerline reaches past the straight joint, mm.
+  /// The crown of the semicircle is one centerline radius beyond the joint.
+  /// </summary>
+  public static double HookCenterlineReachMm(BarEndCondition condition, int diameterMm, string steelClass) =>
+      condition == BarEndCondition.NeedsHook
+          ? CenterlineRadiusMm(diameterMm, steelClass)
+          : 0;
+
   public static BarShapeDescription Describe(
       int diameterMm,
       string steelClass,

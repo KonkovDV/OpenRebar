@@ -8,6 +8,9 @@ namespace OpenRebar.Domain.Rules;
 /// </summary>
 public static class HookCenterline
 {
+  /// <summary>A bottom bar bends up into the slab. A top bar bends down into it.</summary>
+  public static bool BendsUp(RebarLayer layer) => layer == RebarLayer.Bottom;
+
   public readonly record struct Point(double X, double Y, double Z);
 
   /// <summary>A line, or an arc when <see cref="Through"/> is set.</summary>

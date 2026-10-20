@@ -61,6 +61,13 @@ public class HookCenterlineTests
   }
 
   [Fact]
+  public void BottomHook_BendsUp_AndTopHook_BendsDown()
+  {
+    HookCenterline.BendsUp(RebarLayer.Bottom).Should().BeTrue();
+    HookCenterline.BendsUp(RebarLayer.Top).Should().BeFalse();
+  }
+
+  [Fact]
   public void Hook_IsASemicircleWithoutATail()
   {
     double radius = BendRules.CenterlineRadiusMm(20, "A500C");

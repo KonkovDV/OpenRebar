@@ -1,6 +1,7 @@
 using FluentAssertions;
 using OpenRebar.Application.UseCases;
 using OpenRebar.Domain.Models;
+using OpenRebar.Domain.Rules;
 using OpenRebar.Infrastructure.Geometry;
 using OpenRebar.Infrastructure.Logging;
 using OpenRebar.Infrastructure.ReinforcementEngine;
@@ -10,34 +11,39 @@ namespace OpenRebar.Infrastructure.Tests.ReinforcementEngine;
 public class WorkingAreaTests
 {
   [Fact]
-  public void ZeroCover_InsetsTheAxisByHalfTheDiameter()
+  public void ZeroCover_InsetsTheHookCrownByHalfTheDiameter()
   {
     var calculated = Calculate(edgeCoverMm: 0, openingClearanceMm: 0, opening: null, coverMm: 0);
+    double joint = 6 + BendRules.CenterlineRadiusMm(12, "A500C");
 
     calculated[0].Rebars.Should().OnlyContain(bar =>
-        bar.Start.X >= 5.9 && bar.Start.X <= 6.1
-        && bar.End.X >= 1993.9 && bar.End.X <= 1994.1);
+        Math.Abs(bar.Start.X - joint) < 0.2
+        && Math.Abs(bar.End.X - (2000 - joint)) < 0.2);
   }
 
   [Fact]
-  public void FreeEdge_PullsTheAxisInsideCoverPlusHalfDiameter()
+  public void FreeEdge_PutsTheHookCrownOnTheCoverLine()
   {
     var calculated = Calculate(edgeCoverMm: 0, openingClearanceMm: 0, opening: null);
+    double joint = 36 + BendRules.CenterlineRadiusMm(12, "A500C");
 
     calculated[0].Rebars.Should().NotBeEmpty();
     calculated[0].Rebars.Should().OnlyContain(bar =>
-        bar.Start.X >= 35.9 && bar.Start.X <= 36.1
-        && bar.End.X >= 1963.9 && bar.End.X <= 1964.1);
+        Math.Abs(bar.Start.X - joint) < 0.2
+        && Math.Abs(bar.End.X - (2000 - joint)) < 0.2);
   }
 
   [Fact]
   public void EdgeCover_PullsBarsInsideTheInset()
   {
     var calculated = Calculate(edgeCoverMm: 40, openingClearanceMm: 0, opening: null);
+    double joint = 40 + BendRules.CenterlineRadiusMm(12, "A500C");
 
     calculated[0].Rebars.Should().NotBeEmpty();
     calculated[0].Rebars.Should().OnlyContain(bar =>
-        bar.Start.X >= 39.9 && bar.End.X <= 1960.1 && bar.Start.Y >= 39.9 && bar.Start.Y <= 960.1);
+        Math.Abs(bar.Start.X - joint) < 0.2
+        && Math.Abs(bar.End.X - (2000 - joint)) < 0.2
+        && bar.Start.Y >= 39.9 && bar.Start.Y <= 960.1);
   }
 
   [Fact]
@@ -67,10 +73,11 @@ public class WorkingAreaTests
   public void FreeEnds_StayOnTheSlab_AndAskForAHook()
   {
     var calculated = Calculate(edgeCoverMm: 0, openingClearanceMm: 0, opening: null);
+    double joint = 36 + BendRules.CenterlineRadiusMm(12, "A500C");
 
     calculated[0].Rebars.Should().OnlyContain(bar =>
-        bar.Start.X >= 35.9 && bar.Start.X <= 36.1
-        && bar.End.X >= 1963.9 && bar.End.X <= 1964.1
+        Math.Abs(bar.Start.X - joint) < 0.2
+        && Math.Abs(bar.End.X - (2000 - joint)) < 0.2
         && bar.EndConditionStart == BarEndCondition.NeedsHook
         && bar.EndConditionEnd == BarEndCondition.NeedsHook
         && bar.AnchorageLengthStart == 500);
@@ -84,10 +91,11 @@ public class WorkingAreaTests
         openingClearanceMm: 50,
         opening: Rectangle(800, 0, 1200, 1000));
 
+    double reach = BendRules.CenterlineRadiusMm(12, "A500C");
     calculated[0].Rebars.Should().NotBeEmpty();
     calculated[0].Rebars.Should().OnlyContain(bar => bar.End.X <= 750.1 || bar.Start.X >= 1249.9);
-    calculated[0].Rebars.Should().Contain(bar => bar.End.X >= 749.9 && bar.End.X <= 750.1);
-    calculated[0].Rebars.Should().Contain(bar => bar.Start.X >= 1249.9 && bar.Start.X <= 1250.1);
+    calculated[0].Rebars.Should().Contain(bar => Math.Abs(bar.End.X - (750 - reach)) < 0.2);
+    calculated[0].Rebars.Should().Contain(bar => Math.Abs(bar.Start.X - (1250 + reach)) < 0.2);
   }
 
   private static IReadOnlyList<ReinforcementZone> Calculate(
