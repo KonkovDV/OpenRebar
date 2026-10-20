@@ -13,6 +13,8 @@ The product page is [README.md](../README.md) ([Russian](../README.ru.md)). This
 | What the 2026 papers do that this repository does not | [SOTA_2026.md](SOTA_2026.md) |
 | What changed | [CHANGELOG.md](../CHANGELOG.md) |
 | What the 3 October findings look like now | [AUDIT_2026-10-18.md](AUDIT_2026-10-18.md) |
+| What was checked on 20 October | [AUDIT_2026-10-20.md](AUDIT_2026-10-20.md) |
+| The mark, the icon, and the colors | [brand/openrebar-brand-sheet.jpg](brand/openrebar-brand-sheet.jpg) |
 
 `archive/` and the older plan files are history. The code on `main` wins if a page and the tests disagree.
 
